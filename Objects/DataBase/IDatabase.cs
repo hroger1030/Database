@@ -24,13 +24,13 @@ namespace DAL
 {
     public interface IDatabase
     {
-        int ExecuteNonQuery(string sql_query, List<SqlParameter> parameters);
-        int ExecuteNonQuerySp(string sql_query, List<SqlParameter> parameters);
-        DataTable ExecuteQuery(string sql_query, List<SqlParameter> parameters);
-        List<T> ExecuteQuery<T>(string sql_query, List<SqlParameter> parameters) where T : class, new();
-        DataTable ExecuteQuerySp(string sql_query, List<SqlParameter> parameters);
-        List<T> ExecuteQuerySp<T>(string sql_query, List<SqlParameter> parameters) where T : class, new();
-        T ExecuteScalar<T>(string sql_query, List<SqlParameter> parameters);
-        T ExecuteScalarSp<T>(string sql_query, List<SqlParameter> parameters);
+        int ExecuteNonQuery(string sql_query, SqlParameter[] parameters);
+        int ExecuteNonQuerySp(string sql_query, SqlParameter[] parameters);
+        DataTable ExecuteQuery(string sql_query, SqlParameter[] parameters);
+        List<T> ExecuteQuery<T>(string sql_query, SqlParameter[] parameters) where T : class, new();
+        DataTable ExecuteQuerySp(string sql_query, SqlParameter[] parameters);
+        List<T> ExecuteQuerySp<T>(string sql_query, SqlParameter[] parameters) where T : class, new();
+        T ExecuteScalar<T>(string sql_query, SqlParameter[] parameters);
+        T ExecuteScalarSp<T>(string sql_query, SqlParameter[] parameters);
     }
 }

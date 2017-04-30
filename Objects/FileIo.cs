@@ -203,10 +203,10 @@ namespace DAL
                 throw new ArgumentException("New directory name cannot be null or empty");
 
             if (!Directory.Exists(source_directory))
-                throw new ArgumentException(string.Format("No directory named '{0}' exists", source_directory));
+                throw new ArgumentException($"No directory named '{source_directory}' exists");
 
             if (Directory.Exists(destination_directory))
-                throw new ArgumentException(string.Format("A directory named '{0}' already exists", destination_directory));
+                throw new ArgumentException($"A directory named '{destination_directory}' already exists");
 
             if (!Directory.Exists(destination_directory))
                 Directory.CreateDirectory(destination_directory);
