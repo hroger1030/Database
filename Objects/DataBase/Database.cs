@@ -25,7 +25,7 @@ using System.Text;
 
 namespace DAL
 {
-    public class Database : IDatabase
+    public partial class Database : IDatabase
     {
         #region Sample Parameter Useage
 
@@ -53,14 +53,14 @@ namespace DAL
             return ExecuteQuery(sql_query, parameters, _ConnectionString, true);
         }
 
-        public List<T> ExecuteQuery<T>(string sql_query, SqlParameter[] parameters) where T : class, new()
+        public List<T> ExecuteQuery<T>(string sql_query, SqlParameter[] parameters, Func<SqlDataReader, List<T>> processor = null) where T : class, new()
         {
-            return ExecuteQuery<T>(sql_query, parameters, _ConnectionString, false);
+            return ExecuteQuery<T>(sql_query, parameters, _ConnectionString, false, processor);
         }
 
-        public List<T> ExecuteQuerySp<T>(string sql_query, SqlParameter[] parameters) where T : class, new()
+        public List<T> ExecuteQuerySp<T>(string sql_query, SqlParameter[] parameters, Func<SqlDataReader, List<T>> processor = null) where T : class, new()
         {
-            return ExecuteQuery<T>(sql_query, parameters, _ConnectionString, true);
+            return ExecuteQuery<T>(sql_query, parameters, _ConnectionString, true, processor);
         }
 
         public int ExecuteNonQuery(string sql_query, SqlParameter[] parameters)
@@ -83,53 +83,13 @@ namespace DAL
             return ExecuteScalar<T>(sql_query, parameters, _ConnectionString, true);
         }
 
-        public static DataTable ExecuteQuery(string sql_query, SqlParameter[] parameters, string connection)
-        {
-            return ExecuteQuery(sql_query, parameters, connection, false);
-        }
-
-        public static DataTable ExecuteQuerySp(string sql_query, SqlParameter[] parameters, string connection)
-        {
-            return ExecuteQuery(sql_query, parameters, connection, true);
-        }
-
-        public static List<T> ExecuteQuery<T>(string sql_query, SqlParameter[] parameters, string connection) where T : class, new()
-        {
-            return ExecuteQuery<T>(sql_query, parameters, connection, false);
-        }
-
-        public static List<T> ExecuteQuerySp<T>(string sql_query, SqlParameter[] parameters, string connection) where T : class, new()
-        {
-            return ExecuteQuery<T>(sql_query, parameters, connection, true);
-        }
-
-        public static int ExecuteNonQuery(string sql_query, SqlParameter[] parameters, string connection)
-        {
-            return ExecuteNonQuery(sql_query, parameters, connection, false);
-        }
-
-        public static int ExecuteNonQuerySp(string sql_query, SqlParameter[] parameters, string connection)
-        {
-            return ExecuteNonQuery(sql_query, parameters, connection, true);
-        }
-
-        public static T ExecuteScalar<T>(string sql_query, SqlParameter[] parameters, string connection)
-        {
-            return ExecuteScalar<T>(sql_query, parameters, connection, false);
-        }
-
-        public static T ExecuteScalarSp<T>(string sql_query, SqlParameter[] parameters, string connection)
-        {
-            return ExecuteScalar<T>(sql_query, parameters, connection, true);
-        }
-
         private static DataTable ExecuteQuery(string sql_query, SqlParameter[] parameters, string connection, bool stored_procedure)
         {
             if (string.IsNullOrWhiteSpace(sql_query))
-                throw new ArgumentException("Query string is null or empty.");
+                throw new ArgumentNullException("Query string is null or empty.");
 
             if (string.IsNullOrWhiteSpace(connection))
-                throw new ArgumentException("Connection string is null or empty.");
+                throw new ArgumentNullException("Connection string is null or empty.");
 
             using (SqlConnection conn = new SqlConnection(connection))
             {
@@ -168,13 +128,13 @@ namespace DAL
             }
         }
 
-        private static List<T> ExecuteQuery<T>(string sql_query, SqlParameter[] parameters, string connection, bool stored_procedure) where T : class, new()
+        private static List<T> ExecuteQuery<T>(string sql_query, SqlParameter[] parameters, string connection, bool stored_procedure, Func<SqlDataReader, List<T>> processor) where T : class, new()
         {
             if (string.IsNullOrWhiteSpace(sql_query))
-                throw new ArgumentException("Query string is null or empty.");
+                throw new ArgumentNullException("Query string is null or empty.");
 
             if (string.IsNullOrWhiteSpace(connection))
-                throw new ArgumentException("Connection string is null or empty.");
+                throw new ArgumentNullException("Connection string is null or empty.");
 
             Type object_type = typeof(T);
             var output = new List<T>();
@@ -198,7 +158,11 @@ namespace DAL
                     conn.Open();
 
                     SqlDataReader data_reader = cmd.ExecuteReader();
-                    output = ParseDatareaderResult<T>(data_reader, true);
+
+                    if (processor != null)
+                        output = processor.Invoke(data_reader);
+                    else
+                        output = ParseDatareaderResult<T>(data_reader, true);
 
                     data_reader.Close();
                     conn.Close();
@@ -217,10 +181,10 @@ namespace DAL
         private static int ExecuteNonQuery(string sql_query, SqlParameter[] parameters, string connection, bool stored_procedure)
         {
             if (string.IsNullOrWhiteSpace(sql_query))
-                throw new ArgumentException("Query string is null or empty.");
+                throw new ArgumentNullException("Query string is null or empty.");
 
             if (string.IsNullOrWhiteSpace(connection))
-                throw new ArgumentException("Connection string is null or empty.");
+                throw new ArgumentNullException("Connection string is null or empty.");
 
             using (SqlConnection conn = new SqlConnection(connection))
             {
@@ -256,10 +220,10 @@ namespace DAL
         private static T ExecuteScalar<T>(string sql_query, SqlParameter[] parameters, string connection, bool stored_procedure)
         {
             if (string.IsNullOrWhiteSpace(sql_query))
-                throw new ArgumentException("Query string is null or empty.");
+                throw new ArgumentNullException("Query string is null or empty.");
 
             if (string.IsNullOrWhiteSpace(connection))
-                throw new ArgumentException("Connection string is null or empty.");
+                throw new ArgumentNullException("Connection string is null or empty.");
 
             using (SqlConnection conn = new SqlConnection(connection))
             {
@@ -283,11 +247,15 @@ namespace DAL
 
                     object buffer = cmd.ExecuteScalar();
 
-                    if (buffer != null)
+                    if (buffer == null)
                     {
-                        Type type = buffer.GetType();
-
-                        if (type != typeof(DBNull) || (type == typeof(DBNull) && results is Nullable))
+                        results = default(T);
+                    }
+                    else
+                    {
+                        if (buffer.GetType() == typeof(DBNull))
+                            results = default(T);
+                        else
                             results = (T)buffer;
                     }
 
@@ -308,7 +276,7 @@ namespace DAL
         public static DataTable GetSchema(string connection_string)
         {
             if (string.IsNullOrWhiteSpace(connection_string))
-                throw new ArgumentException("Connection string is null or empty.");
+                throw new ArgumentNullException("Connection string is null or empty.");
 
             using (SqlConnection conn = new SqlConnection(connection_string))
             {
@@ -337,7 +305,7 @@ namespace DAL
         public static string GenericListToStringList<T>(IEnumerable<T> list, string quote_character, string quote_escape_character)
         {
             if (list == null)
-                throw new ArgumentException("Cannot convert a null IEnumerable object");
+                throw new ArgumentNullException("Cannot convert a null IEnumerable object");
 
             StringBuilder sb = new StringBuilder();
             bool first_flag = true;
@@ -373,48 +341,49 @@ namespace DAL
         /// <summary>
         /// Method creates sql debugging strings with parameterized argument lists
         /// </summary>
-        private static string GenerateSqlDebugString(string query, SqlParameter[] parameter_list)
+        private static string GenerateSqlDebugString(string sql_query, SqlParameter[] parameter_list)
         {
-            if (parameter_list == null)
-                return string.Empty;
+            if (string.IsNullOrWhiteSpace(sql_query))
+                throw new ArgumentNullException("Query string is null or empty");
 
-            List<string> value_list = new List<string>();
+            var value_list = new List<string>();
 
             foreach (var item in parameter_list)
             {
-                if (item.Direction == ParameterDirection.Input || item.Direction == ParameterDirection.InputOutput)
-                {
-                    if (item.IsNullable)
-                    {
-                        value_list.Add(string.Format("{0} = null", item.ParameterName));
-                    }
-                    else
-                    {
-                        switch (item.SqlDbType)
-                        {
-                            case SqlDbType.Char:
-                            case SqlDbType.NChar:
-                            case SqlDbType.Text:
-                            case SqlDbType.NText:
-                            case SqlDbType.NVarChar:
-                            case SqlDbType.VarChar:
-                            case SqlDbType.UniqueIdentifier:
-                            case SqlDbType.DateTime:
-                            case SqlDbType.Date:
-                            case SqlDbType.Time:
-                            case SqlDbType.DateTime2:
-                                value_list.Add($"{item.ParameterName} = '{item.Value}'");
-                                break;
+                if (item.Direction == ParameterDirection.ReturnValue)
+                    continue;
 
-                            default:
-                                value_list.Add($"{item.ParameterName} = {item.Value}");
-                                break;
-                        }
+                if (item.IsNullable)
+                {
+                    value_list.Add($"{item.ParameterName} = null");
+                }
+                else
+                {
+                    switch (item.SqlDbType)
+                    {
+                        case SqlDbType.Char:
+                        case SqlDbType.NChar:
+                        case SqlDbType.Text:
+                        case SqlDbType.NText:
+                        case SqlDbType.NVarChar:
+                        case SqlDbType.VarChar:
+                        case SqlDbType.UniqueIdentifier:
+                        case SqlDbType.DateTime:
+                        case SqlDbType.Date:
+                        case SqlDbType.Time:
+                        case SqlDbType.DateTime2:
+                            value_list.Add($"{item.ParameterName} = '{item.Value}'");
+                            break;
+
+                        default:
+                            value_list.Add($"{item.ParameterName} = {item.Value}");
+                            break;
                     }
                 }
+
             }
 
-            return query + " " + GenericListToStringList(value_list, null, null);
+            return $"{sql_query} {GenericListToStringList(value_list, null, null)}";
         }
 
         //private static List<SqlParameter> AddReturnValueParameter(List<SqlParameter> parameters)

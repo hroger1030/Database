@@ -16,6 +16,7 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -27,9 +28,9 @@ namespace DAL
         int ExecuteNonQuery(string sql_query, SqlParameter[] parameters);
         int ExecuteNonQuerySp(string sql_query, SqlParameter[] parameters);
         DataTable ExecuteQuery(string sql_query, SqlParameter[] parameters);
-        List<T> ExecuteQuery<T>(string sql_query, SqlParameter[] parameters) where T : class, new();
+        List<T> ExecuteQuery<T>(string sql_query, SqlParameter[] parameters, Func<SqlDataReader, List<T>> processor = null) where T : class, new();
         DataTable ExecuteQuerySp(string sql_query, SqlParameter[] parameters);
-        List<T> ExecuteQuerySp<T>(string sql_query, SqlParameter[] parameters) where T : class, new();
+        List<T> ExecuteQuerySp<T>(string sql_query, SqlParameter[] parameters, Func<SqlDataReader, List<T>> processor = null) where T : class, new();
         T ExecuteScalar<T>(string sql_query, SqlParameter[] parameters);
         T ExecuteScalarSp<T>(string sql_query, SqlParameter[] parameters);
     }
