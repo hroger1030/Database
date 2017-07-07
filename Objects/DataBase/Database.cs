@@ -346,6 +346,9 @@ namespace DAL
             if (string.IsNullOrWhiteSpace(sql_query))
                 throw new ArgumentNullException("Query string is null or empty");
 
+            if (parameter_list == null || parameter_list.Length == 0)
+                return sql_query;
+
             var value_list = new List<string>();
 
             foreach (var item in parameter_list)
