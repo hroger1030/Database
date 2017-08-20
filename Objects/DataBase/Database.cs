@@ -18,6 +18,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
 using System.Reflection;
@@ -255,8 +256,10 @@ namespace DAL
                     {
                         if (buffer.GetType() == typeof(DBNull))
                             results = default(T);
+                        else if (buffer is T)
+                            return (T)buffer;
                         else
-                            results = (T)buffer;
+                            return (T)Convert.ChangeType(buffer, typeof(T));
                     }
 
                     conn.Close();
@@ -411,9 +414,12 @@ namespace DAL
             foreach (var property_info in output_type.GetProperties())
                 property_lookup.Add(property_info.Name, property_info);
 
+            T new_object;
+            object field_value;
+
             while (data_reader.Read())
             {
-                T new_object = new T();
+                new_object = new T();
 
                 for (int i = 0; i < data_reader.FieldCount; i++)
                 {
@@ -427,51 +433,59 @@ namespace DAL
 
                         // in the event that we are looking at a nullable type, we need to look at the underlying type.
                         if (property_type.IsGenericType && property_type.GetGenericTypeDefinition() == typeof(Nullable<>))
+                        {
                             property_name = Nullable.GetUnderlyingType(property_type).ToString();
+                            property_type = Nullable.GetUnderlyingType(property_type);
+                        }
 
-                        object output_value = new object();
+                        // enums are common, look at the underlying type
+                        if (property_type.IsEnum)
+                        {
+                            property_name = Enum.GetUnderlyingType(property_type).FullName;
+                            property_type = Enum.GetUnderlyingType(property_type);
+                        }
 
                         switch (property_name)
                         {
                             case "System.Int32":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as int? ?? null;
+                                    field_value = column_value as int? ?? null;
                                 else
-                                    output_value = (int)column_value;
+                                    field_value = (int)column_value;
                                 break;
 
                             case "System.String":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as int? ?? null;
+                                    field_value = column_value as int? ?? null;
                                 else
-                                    output_value = (string)column_value;
+                                    field_value = (string)column_value;
                                 break;
 
                             case "System.Double":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as double? ?? null;
+                                    field_value = column_value as double? ?? null;
                                 else
-                                    output_value = (double)column_value;
+                                    field_value = (double)column_value;
                                 break;
 
                             case "System.Float":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as float? ?? null;
+                                    field_value = column_value as float? ?? null;
                                 else
-                                    output_value = (float)column_value;
+                                    field_value = (float)column_value;
                                 break;
 
                             case "System.Boolean":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as bool? ?? null;
+                                    field_value = column_value as bool? ?? null;
                                 else
-                                    output_value = (bool)column_value;
+                                    field_value = (bool)column_value;
                                 break;
 
                             case "System.Boolean[]":
                                 if (data_reader[i] == DBNull.Value)
                                 {
-                                    output_value = null;
+                                    field_value = null;
                                 }
                                 else
                                 {
@@ -482,49 +496,49 @@ namespace DAL
                                     for (int index = 0; index < byte_array.Length; index++)
                                         bool_array[index] = Convert.ToBoolean(byte_array[index]);
 
-                                    output_value = bool_array;
+                                    field_value = bool_array;
                                 }
                                 break;
 
                             case "System.DateTime":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as DateTime? ?? null;
+                                    field_value = column_value as DateTime? ?? null;
                                 else
-                                    output_value = DateTime.Parse(column_value.ToString());
+                                    field_value = DateTime.Parse(column_value.ToString());
                                 break;
 
                             case "System.Guid":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as Guid? ?? null;
+                                    field_value = column_value as Guid? ?? null;
                                 else
-                                    output_value = (Guid)column_value;
+                                    field_value = (Guid)column_value;
                                 break;
 
                             case "System.Single":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as float? ?? null;
+                                    field_value = column_value as float? ?? null;
                                 else
-                                    output_value = float.Parse(column_value.ToString());
+                                    field_value = float.Parse(column_value.ToString());
                                 break;
 
                             case "System.Decimal":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as decimal? ?? null;
+                                    field_value = column_value as decimal? ?? null;
                                 else
-                                    output_value = (decimal)column_value;
+                                    field_value = (decimal)column_value;
                                 break;
 
                             case "System.Byte":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as byte? ?? null;
+                                    field_value = column_value as byte? ?? null;
                                 else
-                                    output_value = (byte)column_value;
+                                    field_value = (byte)column_value;
                                 break;
 
                             case "System.Byte[]":
                                 if (data_reader[i] == DBNull.Value)
                                 {
-                                    output_value = null;
+                                    field_value = null;
                                 }
                                 else
                                 {
@@ -532,64 +546,64 @@ namespace DAL
 
                                     byte[] bytes = new byte[byte_array.Length * sizeof(char)];
                                     Buffer.BlockCopy(byte_array.ToCharArray(), 0, bytes, 0, bytes.Length);
-                                    output_value = bytes;
+                                    field_value = bytes;
                                 }
                                 break;
 
                             case "System.SByte":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as sbyte? ?? null;
+                                    field_value = column_value as sbyte? ?? null;
                                 else
-                                    output_value = (sbyte)column_value;
+                                    field_value = (sbyte)column_value;
                                 break;
 
                             case "System.Char":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as char? ?? null;
+                                    field_value = column_value as char? ?? null;
                                 else
-                                    output_value = (char)column_value;
+                                    field_value = (char)column_value;
                                 break;
 
                             case "System.UInt32":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as uint? ?? null;
+                                    field_value = column_value as uint? ?? null;
                                 else
-                                    output_value = (uint)column_value;
+                                    field_value = (uint)column_value;
                                 break;
 
                             case "System.Int64":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as long? ?? null;
+                                    field_value = column_value as long? ?? null;
                                 else
-                                    output_value = (long)column_value;
+                                    field_value = (long)column_value;
                                 break;
 
                             case "System.UInt64":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as ulong? ?? null;
+                                    field_value = column_value as ulong? ?? null;
                                 else
-                                    output_value = (ulong)column_value;
+                                    field_value = (ulong)column_value;
                                 break;
 
                             case "System.Object":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = null;
+                                    field_value = null;
                                 else
-                                    output_value = (object)column_value;
+                                    field_value = (object)column_value;
                                 break;
 
                             case "System.Int16":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as short? ?? null;
+                                    field_value = column_value as short? ?? null;
                                 else
-                                    output_value = (short)column_value;
+                                    field_value = (short)column_value;
                                 break;
 
                             case "System.UInt16":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as ushort? ?? null;
+                                    field_value = column_value as ushort? ?? null;
                                 else
-                                    output_value = (ushort)column_value;
+                                    field_value = (ushort)column_value;
                                 break;
 
                             case "System.Udt":
@@ -598,33 +612,23 @@ namespace DAL
 
                             case "Microsoft.SqlServer.Types.SqlGeometry":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as Microsoft.SqlServer.Types.SqlGeometry ?? null;
+                                    field_value = column_value as Microsoft.SqlServer.Types.SqlGeometry ?? null;
                                 else
-                                    output_value = (Microsoft.SqlServer.Types.SqlGeometry)column_value;
+                                    field_value = (Microsoft.SqlServer.Types.SqlGeometry)column_value;
                                 break;
 
                             case "Microsoft.SqlServer.Types.SqlGeography":
                                 if (data_reader[i] == DBNull.Value)
-                                    output_value = column_value as Microsoft.SqlServer.Types.SqlGeography ?? null;
+                                    field_value = column_value as Microsoft.SqlServer.Types.SqlGeography ?? null;
                                 else
-                                    output_value = (Microsoft.SqlServer.Types.SqlGeography)column_value;
+                                    field_value = (Microsoft.SqlServer.Types.SqlGeography)column_value;
                                 break;
 
                             default:
-
-                                if (property_lookup[column_name].PropertyType.IsEnum)
-                                {
-                                    // enums are common, but don't fit into the above buckets. 
-                                    output_value = Enum.ToObject(property_lookup[column_name].PropertyType, column_value);
-                                }
-                                else
-                                {
-                                    throw new Exception($"Column '{property_lookup[column_name]}' has an unknown data type: '{property_lookup[column_name].PropertyType.FullName}'.");
-                                }
-                                break;
+                                throw new Exception($"Column '{property_lookup[column_name]}' has an unknown data type: '{property_lookup[column_name].PropertyType.FullName}'.");
                         }
 
-                        property_lookup[column_name].SetValue(new_object, output_value, null);
+                        property_lookup[column_name].SetValue(new_object, field_value, null);
                     }
                     else
                     {
