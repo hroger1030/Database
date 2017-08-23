@@ -18,7 +18,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
 using System.Reflection;
@@ -28,14 +27,10 @@ namespace DAL
 {
     public partial class Database : IDatabase
     {
-        #region Sample Parameter Useage
-
         //var parameters = new SqlParameter[]
         //{
         //    new SqlParameter() {  DbType= DbType.Int32, Value = skip, ParameterName = "Skip" }
         //};
-
-        #endregion
 
         protected string _ConnectionString;
 
@@ -405,11 +400,11 @@ namespace DAL
         //    return parameters;
         //}
 
-        private static List<T> ParseDatareaderResult<T>(SqlDataReader data_reader, bool throw_unmapped_fields_error) where T : class, new()
+        private static List<T> ParseDatareaderResult<T>(SqlDataReader reader, bool throwUnmappedFieldsError) where T : class, new()
         {
-            Type output_type = typeof(T);
-            List<T> results = new List<T>();
-            Dictionary<string, PropertyInfo> property_lookup = new Dictionary<string, PropertyInfo>();
+            var output_type = typeof(T);
+            var results = new List<T>();
+            var property_lookup = new Dictionary<string, PropertyInfo>();
 
             foreach (var property_info in output_type.GetProperties())
                 property_lookup.Add(property_info.Name, property_info);
@@ -417,19 +412,19 @@ namespace DAL
             T new_object;
             object field_value;
 
-            while (data_reader.Read())
+            while (reader.Read())
             {
                 new_object = new T();
 
-                for (int i = 0; i < data_reader.FieldCount; i++)
+                for (int i = 0; i < reader.FieldCount; i++)
                 {
-                    string column_name = data_reader.GetName(i);
+                    string column_name = reader.GetName(i);
 
-                    if (property_lookup.ContainsKey(column_name))
+                    PropertyInfo property_info;
+                    if (property_lookup.TryGetValue(column_name, out property_info))
                     {
-                        Type property_type = property_lookup[column_name].PropertyType;
-                        string property_name = property_lookup[column_name].PropertyType.FullName;
-                        var column_value = data_reader[column_name];
+                        Type property_type = property_info.PropertyType;
+                        string property_name = property_info.PropertyType.FullName;
 
                         // in the event that we are looking at a nullable type, we need to look at the underlying type.
                         if (property_type.IsGenericType && property_type.GetGenericTypeDefinition() == typeof(Nullable<>))
@@ -438,59 +433,52 @@ namespace DAL
                             property_type = Nullable.GetUnderlyingType(property_type);
                         }
 
-                        // enums are common, look at the underlying type
-                        if (property_type.IsEnum)
-                        {
-                            property_name = Enum.GetUnderlyingType(property_type).FullName;
-                            property_type = Enum.GetUnderlyingType(property_type);
-                        }
-
                         switch (property_name)
                         {
                             case "System.Int32":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as int? ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = reader[column_name] as int? ?? null;
                                 else
-                                    field_value = (int)column_value;
+                                    field_value = (int)reader[column_name];
                                 break;
 
                             case "System.String":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as int? ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = null;
                                 else
-                                    field_value = (string)column_value;
+                                    field_value = (string)reader[column_name];
                                 break;
 
                             case "System.Double":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as double? ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = reader[column_name] as double? ?? null;
                                 else
-                                    field_value = (double)column_value;
+                                    field_value = (double)reader[column_name];
                                 break;
 
                             case "System.Float":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as float? ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = reader[column_name] as float? ?? null;
                                 else
-                                    field_value = (float)column_value;
+                                    field_value = (float)reader[column_name];
                                 break;
 
                             case "System.Boolean":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as bool? ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = reader[column_name] as bool? ?? null;
                                 else
-                                    field_value = (bool)column_value;
+                                    field_value = (bool)reader[column_name];
                                 break;
 
                             case "System.Boolean[]":
-                                if (data_reader[i] == DBNull.Value)
+                                if (reader[i] == DBNull.Value)
                                 {
                                     field_value = null;
                                 }
                                 else
                                 {
                                     // inline conversion, blech. improve later.
-                                    var byte_array = (byte[])data_reader[i];
+                                    var byte_array = (byte[])reader[i];
                                     var bool_array = new bool[byte_array.Length];
 
                                     for (int index = 0; index < byte_array.Length; index++)
@@ -501,48 +489,48 @@ namespace DAL
                                 break;
 
                             case "System.DateTime":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as DateTime? ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = reader[column_name] as DateTime? ?? null;
                                 else
-                                    field_value = DateTime.Parse(column_value.ToString());
+                                    field_value = DateTime.Parse(reader[column_name].ToString());
                                 break;
 
                             case "System.Guid":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as Guid? ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = reader[column_name] as Guid? ?? null;
                                 else
-                                    field_value = (Guid)column_value;
+                                    field_value = (Guid)reader[column_name];
                                 break;
 
                             case "System.Single":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as float? ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = reader[column_name] as float? ?? null;
                                 else
-                                    field_value = float.Parse(column_value.ToString());
+                                    field_value = float.Parse(reader[column_name].ToString());
                                 break;
 
                             case "System.Decimal":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as decimal? ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = reader[column_name] as decimal? ?? null;
                                 else
-                                    field_value = (decimal)column_value;
+                                    field_value = (decimal)reader[column_name];
                                 break;
 
                             case "System.Byte":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as byte? ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = null;
                                 else
-                                    field_value = (byte)column_value;
+                                    field_value = (byte)reader[column_name];
                                 break;
 
                             case "System.Byte[]":
-                                if (data_reader[i] == DBNull.Value)
+                                if (reader[i] == DBNull.Value)
                                 {
                                     field_value = null;
                                 }
                                 else
                                 {
-                                    string byte_array = column_value.ToString();
+                                    string byte_array = reader[column_name].ToString();
 
                                     byte[] bytes = new byte[byte_array.Length * sizeof(char)];
                                     Buffer.BlockCopy(byte_array.ToCharArray(), 0, bytes, 0, bytes.Length);
@@ -551,59 +539,59 @@ namespace DAL
                                 break;
 
                             case "System.SByte":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as sbyte? ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = reader[column_name] as sbyte? ?? null;
                                 else
-                                    field_value = (sbyte)column_value;
+                                    field_value = (sbyte)reader[column_name];
                                 break;
 
                             case "System.Char":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as char? ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = reader[column_name] as char? ?? null;
                                 else
-                                    field_value = (char)column_value;
+                                    field_value = (char)reader[column_name];
                                 break;
 
                             case "System.UInt32":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as uint? ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = reader[column_name] as uint? ?? null;
                                 else
-                                    field_value = (uint)column_value;
+                                    field_value = (uint)reader[column_name];
                                 break;
 
                             case "System.Int64":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as long? ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = reader[column_name] as long? ?? null;
                                 else
-                                    field_value = (long)column_value;
+                                    field_value = (long)reader[column_name];
                                 break;
 
                             case "System.UInt64":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as ulong? ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = reader[column_name] as ulong? ?? null;
                                 else
-                                    field_value = (ulong)column_value;
+                                    field_value = (ulong)reader[column_name];
                                 break;
 
                             case "System.Object":
-                                if (data_reader[i] == DBNull.Value)
+                                if (reader[i] == DBNull.Value)
                                     field_value = null;
                                 else
-                                    field_value = (object)column_value;
+                                    field_value = reader[column_name];
                                 break;
 
                             case "System.Int16":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as short? ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = reader[column_name] as short? ?? null;
                                 else
-                                    field_value = (short)column_value;
+                                    field_value = (short)reader[column_name];
                                 break;
 
                             case "System.UInt16":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as ushort? ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = reader[column_name] as ushort? ?? null;
                                 else
-                                    field_value = (ushort)column_value;
+                                    field_value = (ushort)reader[column_name];
                                 break;
 
                             case "System.Udt":
@@ -611,21 +599,31 @@ namespace DAL
                                 throw new Exception("System.Udt is an unsupported datatype");
 
                             case "Microsoft.SqlServer.Types.SqlGeometry":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as Microsoft.SqlServer.Types.SqlGeometry ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = reader[column_name] as Microsoft.SqlServer.Types.SqlGeometry ?? null;
                                 else
-                                    field_value = (Microsoft.SqlServer.Types.SqlGeometry)column_value;
+                                    field_value = (Microsoft.SqlServer.Types.SqlGeometry)reader[column_name];
                                 break;
 
                             case "Microsoft.SqlServer.Types.SqlGeography":
-                                if (data_reader[i] == DBNull.Value)
-                                    field_value = column_value as Microsoft.SqlServer.Types.SqlGeography ?? null;
+                                if (reader[i] == DBNull.Value)
+                                    field_value = reader[column_name] as Microsoft.SqlServer.Types.SqlGeography ?? null;
                                 else
-                                    field_value = (Microsoft.SqlServer.Types.SqlGeography)column_value;
+                                    field_value = (Microsoft.SqlServer.Types.SqlGeography)reader[column_name];
                                 break;
 
                             default:
-                                throw new Exception($"Column '{property_lookup[column_name]}' has an unknown data type: '{property_lookup[column_name].PropertyType.FullName}'.");
+                                if (property_type.IsEnum)
+                                {
+                                    // enums are common, but don't fit into the above buckets. 
+                                    if (reader[i] == DBNull.Value)
+                                        field_value = null;
+                                    else
+                                        field_value = Enum.ToObject(property_type, reader[column_name]);
+                                    break;
+                                }
+                                else
+                                    throw new Exception($"Column '{property_lookup[column_name]}' has an unknown data type: '{property_lookup[column_name].PropertyType.FullName}'.");
                         }
 
                         property_lookup[column_name].SetValue(new_object, field_value, null);
@@ -634,7 +632,7 @@ namespace DAL
                     {
                         // found a row in data reader that cannot be mapped to a property in object.
                         // might be an error, but it is dependent on the specific use case.
-                        if (throw_unmapped_fields_error)
+                        if (throwUnmappedFieldsError)
                         {
                             throw new Exception($"Cannot map datareader field '{column_name}' to object property on object '{output_type}'");
                         }
