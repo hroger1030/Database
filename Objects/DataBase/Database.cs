@@ -29,7 +29,7 @@ namespace DAL
     {
         //var parameters = new SqlParameter[]
         //{
-        //    new SqlParameter() {  DbType= DbType.Int32, Value = skip, ParameterName = "Skip" }
+        //    new SqlParameter() {  SqlDbType= SqlDbType.Int, Value = skip, ParameterName = "Skip" }
         //};
 
         protected string _ConnectionString;
