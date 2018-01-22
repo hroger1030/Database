@@ -36,12 +36,12 @@ namespace DAL
 
         internal static List<T> ExecuteQuery<T>(string sql_query, SqlParameter[] parameters, string connection) where T : class, new()
         {
-            return ExecuteQuery<T>(sql_query, parameters, connection, false, null);
+            return ExecuteQuery<T>(sql_query, parameters, connection, false);
         }
 
         internal static List<T> ExecuteQuerySp<T>(string sql_query, SqlParameter[] parameters, string connection) where T : class, new()
         {
-            return ExecuteQuery<T>(sql_query, parameters, connection, true, null);
+            return ExecuteQuery<T>(sql_query, parameters, connection, true);
         }
 
         internal static int ExecuteNonQuery(string sql_query, SqlParameter[] parameters, string connection)

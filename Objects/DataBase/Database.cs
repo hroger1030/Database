@@ -49,12 +49,22 @@ namespace DAL
             return ExecuteQuery(sql_query, parameters, _ConnectionString, true);
         }
 
-        public List<T> ExecuteQuery<T>(string sql_query, SqlParameter[] parameters, Func<SqlDataReader, List<T>> processor = null) where T : class, new()
+        public List<T> ExecuteQuery<T>(string sql_query, SqlParameter[] parameters) where T : class, new()
+        {
+            return ExecuteQuery<T>(sql_query, parameters, _ConnectionString, false);
+        }
+
+        public T ExecuteQuery<T>(string sql_query, SqlParameter[] parameters, Func<SqlDataReader, T> processor)
         {
             return ExecuteQuery<T>(sql_query, parameters, _ConnectionString, false, processor);
         }
 
-        public List<T> ExecuteQuerySp<T>(string sql_query, SqlParameter[] parameters, Func<SqlDataReader, List<T>> processor = null) where T : class, new()
+        public List<T> ExecuteQuerySp<T>(string sql_query, SqlParameter[] parameters) where T : class, new()
+        {
+            return ExecuteQuery<T>(sql_query, parameters, _ConnectionString, true);
+        }
+
+        public T ExecuteQuerySp<T>(string sql_query, SqlParameter[] parameters, Func<SqlDataReader, T> processor)
         {
             return ExecuteQuery<T>(sql_query, parameters, _ConnectionString, true, processor);
         }
@@ -82,10 +92,10 @@ namespace DAL
         private static DataTable ExecuteQuery(string sql_query, SqlParameter[] parameters, string connection, bool stored_procedure)
         {
             if (string.IsNullOrWhiteSpace(sql_query))
-                throw new ArgumentNullException("Query string is null or empty.");
+                throw new ArgumentNullException("Query string is null or empty");
 
             if (string.IsNullOrWhiteSpace(connection))
-                throw new ArgumentNullException("Connection string is null or empty.");
+                throw new ArgumentNullException("Connection string is null or empty");
 
             using (SqlConnection conn = new SqlConnection(connection))
             {
@@ -124,16 +134,13 @@ namespace DAL
             }
         }
 
-        private static List<T> ExecuteQuery<T>(string sql_query, SqlParameter[] parameters, string connection, bool stored_procedure, Func<SqlDataReader, List<T>> processor) where T : class, new()
+        private static List<T> ExecuteQuery<T>(string sql_query, SqlParameter[] parameters, string connection, bool stored_procedure) where T : class, new()
         {
             if (string.IsNullOrWhiteSpace(sql_query))
-                throw new ArgumentNullException("Query string is null or empty.");
+                throw new ArgumentNullException("Query string is null or empty");
 
             if (string.IsNullOrWhiteSpace(connection))
-                throw new ArgumentNullException("Connection string is null or empty.");
-
-            Type object_type = typeof(T);
-            var output = new List<T>();
+                throw new ArgumentNullException("Connection string is null or empty");
 
             using (SqlConnection conn = new SqlConnection(connection))
             {
@@ -153,23 +160,69 @@ namespace DAL
 
                     conn.Open();
 
-                    SqlDataReader data_reader = cmd.ExecuteReader();
+                    using (SqlDataReader data_reader = cmd.ExecuteReader())
+                    {
+                        var output = ParseDatareaderResult<T>(data_reader, true);
 
-                    if (processor != null)
-                        output = processor.Invoke(data_reader);
-                    else
-                        output = ParseDatareaderResult<T>(data_reader, true);
+                        if (parameters != null)
+                        {
+                            for (int i = 0; i < cmd.Parameters.Count; i++)
+                                parameters[i].Value = cmd.Parameters[i].Value;
+                        }
 
-                    data_reader.Close();
-                    conn.Close();
+                        data_reader.Close();
+                        conn.Close();
+
+                        return output;
+                    }
+                }
+            }
+        }
+
+        private static T ExecuteQuery<T>(string sql_query, SqlParameter[] parameters, string connection, bool stored_procedure, Func<SqlDataReader, T> processor)
+        {
+            if (string.IsNullOrWhiteSpace(sql_query))
+                throw new ArgumentNullException("Query string is null or empty");
+
+            if (string.IsNullOrWhiteSpace(connection))
+                throw new ArgumentNullException("Connection string is null or empty");
+
+            if (processor == null)
+                throw new ArgumentNullException("Processor method is null");
+
+            using (SqlConnection conn = new SqlConnection(connection))
+            {
+                using (SqlCommand cmd = new SqlCommand(sql_query, conn))
+                {
+                    cmd.CommandType = (stored_procedure) ? CommandType.StoredProcedure : CommandType.Text;
 
                     if (parameters != null)
                     {
-                        for (int i = 0; i < cmd.Parameters.Count; i++)
-                            parameters[i].Value = cmd.Parameters[i].Value;
+                        foreach (SqlParameter parameter in parameters)
+                            cmd.Parameters.Add(parameter);
                     }
 
-                    return output;
+#if (DEBUG)
+                    string SQL_debug_string = GenerateSqlDebugString(sql_query, parameters);
+#endif
+
+                    conn.Open();
+
+                    using (SqlDataReader data_reader = cmd.ExecuteReader())
+                    {
+                        var output = processor.Invoke(data_reader);
+
+                        if (parameters != null)
+                        {
+                            for (int i = 0; i < cmd.Parameters.Count; i++)
+                                parameters[i].Value = cmd.Parameters[i].Value;
+                        }
+
+                        data_reader.Close();
+                        conn.Close();
+
+                        return output;
+                    }
                 }
             }
         }
@@ -177,10 +230,10 @@ namespace DAL
         private static int ExecuteNonQuery(string sql_query, SqlParameter[] parameters, string connection, bool stored_procedure)
         {
             if (string.IsNullOrWhiteSpace(sql_query))
-                throw new ArgumentNullException("Query string is null or empty.");
+                throw new ArgumentNullException("Query string is null or empty");
 
             if (string.IsNullOrWhiteSpace(connection))
-                throw new ArgumentNullException("Connection string is null or empty.");
+                throw new ArgumentNullException("Connection string is null or empty");
 
             using (SqlConnection conn = new SqlConnection(connection))
             {
@@ -216,10 +269,10 @@ namespace DAL
         private static T ExecuteScalar<T>(string sql_query, SqlParameter[] parameters, string connection, bool stored_procedure)
         {
             if (string.IsNullOrWhiteSpace(sql_query))
-                throw new ArgumentNullException("Query string is null or empty.");
+                throw new ArgumentNullException("Query string is null or empty");
 
             if (string.IsNullOrWhiteSpace(connection))
-                throw new ArgumentNullException("Connection string is null or empty.");
+                throw new ArgumentNullException("Connection string is null or empty");
 
             using (SqlConnection conn = new SqlConnection(connection))
             {
@@ -274,7 +327,7 @@ namespace DAL
         public static DataTable GetSchema(string connection_string)
         {
             if (string.IsNullOrWhiteSpace(connection_string))
-                throw new ArgumentNullException("Connection string is null or empty.");
+                throw new ArgumentNullException("Connection string is null or empty");
 
             using (SqlConnection conn = new SqlConnection(connection_string))
             {
@@ -400,7 +453,7 @@ namespace DAL
         //    return parameters;
         //}
 
-        private static List<T> ParseDatareaderResult<T>(SqlDataReader reader, bool throwUnmappedFieldsError) where T : class, new()
+        private static List<T> ParseDatareaderResult<T>(SqlDataReader reader, bool throwUnmappedFieldsError = false) where T : class, new()
         {
             var output_type = typeof(T);
             var results = new List<T>();
