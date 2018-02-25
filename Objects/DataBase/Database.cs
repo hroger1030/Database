@@ -32,6 +32,21 @@ namespace DAL
         //    new SqlParameter() {  SqlDbType= SqlDbType.Int, Value = skip, ParameterName = "Skip" }
         //};
 
+        //Func<SqlDataReader, Dictionary<int, string>> processer = delegate (SqlDataReader reader)
+        //{
+        //    var output = new Dictionary<int, string>();
+
+        //    while (reader.Read())
+        //    {
+        //        int id = (int)reader["Id"];
+        //        string name = (string)reader["Name"];
+
+        //        output.Add(id, name);
+        //    }
+
+        //    return output;
+        //};
+
         protected string _ConnectionString;
 
         public Database(string connection_string)
