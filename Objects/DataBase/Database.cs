@@ -336,7 +336,6 @@ namespace DAL
                     return results;
                 }
             }
-
         }
 
         public static DataTable GetSchema(string connection_string)
@@ -441,11 +440,11 @@ namespace DAL
                         case SqlDbType.Date:
                         case SqlDbType.Time:
                         case SqlDbType.DateTime2:
-                            value_list.Add($"{item.ParameterName} = '{item.Value}'");
+                            value_list.Add($"@{item.ParameterName} = '{item.Value}'");
                             break;
 
                         default:
-                            value_list.Add($"{item.ParameterName} = {item.Value}");
+                            value_list.Add($"@{item.ParameterName} = {item.Value}");
                             break;
                     }
                 }
