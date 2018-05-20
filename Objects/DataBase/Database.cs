@@ -487,8 +487,7 @@ namespace DAL
                 {
                     string column_name = reader.GetName(i);
 
-                    PropertyInfo property_info;
-                    if (property_lookup.TryGetValue(column_name, out property_info))
+                    if (property_lookup.TryGetValue(column_name, out PropertyInfo property_info))
                     {
                         Type property_type = property_info.PropertyType;
                         string property_name = property_info.PropertyType.FullName;
@@ -746,9 +745,11 @@ namespace DAL
         {
             DataTable dt = ConvertObjectToDataTable(input);
 
-            SqlParameter sql_parameter = new SqlParameter(parameter_name, dt);
-            sql_parameter.SqlDbType = SqlDbType.Structured;
-            sql_parameter.TypeName = sql_type_name;
+            SqlParameter sql_parameter = new SqlParameter(parameter_name, dt)
+            {
+                SqlDbType = SqlDbType.Structured,
+                TypeName = sql_type_name
+            };
 
             return sql_parameter;
         }
