@@ -19,6 +19,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 namespace DAL.SqlMetadata
 {
@@ -50,18 +51,15 @@ namespace DAL.SqlMetadata
         }
         public List<SqlColumn> PkList
         {
-            get
-            {
-                List<SqlColumn> output = new List<SqlColumn>();
-
-                foreach (SqlColumn sql_column in Columns.Values)
-                {
-                    if (sql_column.IsPk)
-                        output.Add(sql_column);
-                }
-
-                return output;
-            }
+            get { return Columns.Values.Where(c => c.IsPk).ToList(); }
+        }
+        public string[] PkNames
+        {
+            get { return Columns.Values.Where(c => c.IsPk).Select(c => c.Name).ToArray(); }
+        }
+        public string[] ColumnNames
+        {
+            get { return PkList.Select(c => c.Name).ToArray(); }
         }
 
         public SqlTable()

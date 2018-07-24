@@ -27,23 +27,25 @@ namespace DAL
 {
     public partial class Database : IDatabase
     {
+        // Sample input / output call
+
         //var parameters = new SqlParameter[]
         //{
         //    new SqlParameter() {  SqlDbType= SqlDbType.Int, Value = skip, ParameterName = "Skip" }
         //};
-
+        //
         //Func<SqlDataReader, Dictionary<int, string>> processer = delegate (SqlDataReader reader)
         //{
         //    var output = new Dictionary<int, string>();
-
+        //
         //    while (reader.Read())
         //    {
         //        int id = (int)reader["Id"];
         //        string name = (string)reader["Name"];
-
+        //
         //        output.Add(id, name);
         //    }
-
+        //
         //    return output;
         //};
 
@@ -372,7 +374,7 @@ namespace DAL
             if (list == null)
                 throw new ArgumentNullException("Cannot convert a null IEnumerable object");
 
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             bool first_flag = true;
 
             foreach (T item in list)

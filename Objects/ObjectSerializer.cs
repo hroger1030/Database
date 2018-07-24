@@ -3,7 +3,6 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
-using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 
 namespace DAL
@@ -91,7 +90,7 @@ namespace DAL
 
                 return Encoding.Default.GetString(stream.ToArray());
             }
-        }        
+        }
 
         /// <summary>
         /// Deserializes object from a XML string using XML formatter. Note
@@ -111,30 +110,6 @@ namespace DAL
         }
 
         /// <summary>
-        /// Converts an object into a Json string.
-        /// </summary>
-        public static string SerializeToJsonString(object input)
-        {
-            if (input == null)
-                throw new ArgumentException("Cannot serialize a null object");
-
-            JavaScriptSerializer serializer = new JavaScriptSerializer();
-            return serializer.Serialize(input);
-        }        
-
-        /// <summary>
-        /// Deserializes object from a JSON string.
-        /// </summary>
-        public static T DeserializeJsonString<T>(string input) where T : class
-        {
-            if (input == null)
-                throw new ArgumentException("Cannot serialize a null object");
-
-            JavaScriptSerializer serializer = new JavaScriptSerializer();
-            return serializer.Deserialize<T>(input);
-        }
-
-        /// <summary>
         /// Encodes a string in base64. 
         /// </summary>
         public static string Base64Encode(string input)
@@ -143,7 +118,7 @@ namespace DAL
                 throw new ArgumentException("Cannot serialize a null object");
 
             byte[] byte_string = new byte[input.Length];
-            byte_string = Encoding.Default.GetBytes(input);  
+            byte_string = Encoding.Default.GetBytes(input);
             return Convert.ToBase64String(byte_string);
         }
 
@@ -168,7 +143,7 @@ namespace DAL
                 throw new ArgumentException("Cannot serialize a null object");
 
             return Encoding.Default.GetBytes(input);
-        } 
+        }
 
         /// <summary>
         /// Converts a UTF8 byte array into a string.

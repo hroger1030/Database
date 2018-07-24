@@ -48,7 +48,7 @@ namespace DAL.SqlMetadata
 
         public string GenerateSQLScript()
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             sb.AppendLine(" ALTER TABLE " + FKTable);
             sb.AppendLine(" ADD CONSTRAINT " + ConstraintName);

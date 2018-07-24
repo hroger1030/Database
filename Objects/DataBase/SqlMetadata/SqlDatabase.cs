@@ -264,7 +264,7 @@ namespace DAL.SqlMetadata
             ORDER	BY sys.Objects.name,sys.columns.column_id
             */
 
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             sb.AppendLine(" USE [" + Name + "]");
             sb.AppendLine(" SELECT sys.Objects.[Name] AS [TableName],");
@@ -311,7 +311,7 @@ namespace DAL.SqlMetadata
             ORDER	BY sys.objects.name
              */
 
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             sb.Append(" USE [" + Name + "]");
             sb.Append(" SELECT sys.objects.name	AS [Name],");
@@ -339,7 +339,7 @@ namespace DAL.SqlMetadata
             ORDER	BY sys.objects.name
             */
 
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             sb.Append(" USE [" + Name + "]");
             sb.Append(" SELECT sys.objects.name AS [Name],");
@@ -381,7 +381,7 @@ namespace DAL.SqlMetadata
             C.CONSTRAINT_NAME
             */
 
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             sb.Append(" USE [" + Name + "]");
             sb.Append(" SELECT C.CONSTRAINT_NAME AS [ConstraintName],");
@@ -423,7 +423,7 @@ namespace DAL.SqlMetadata
             ORDER	BY sys.objects.[name],syscolumns.colorder
             */
 
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             sb.Append(" USE [" + Name + "]");
             sb.Append(" SELECT sys.Objects.[Name] AS [TableName],");
