@@ -24,44 +24,44 @@ namespace DAL
 {
     public partial class Database : IDatabase
     {
-        internal static DataTable ExecuteQuery(string sql_query, SqlParameter[] parameters, string connection)
+        internal static DataTable ExecuteQuery(string sqlQuery, SqlParameter[] parameters, string connection)
         {
-            return ExecuteQuery(sql_query, parameters, connection, false);
+            return ExecuteQuery(sqlQuery, parameters, connection, false);
         }
 
-        internal static DataTable ExecuteQuerySp(string sql_query, SqlParameter[] parameters, string connection)
+        internal static DataTable ExecuteQuerySp(string sqlQuery, SqlParameter[] parameters, string connection)
         {
-            return ExecuteQuery(sql_query, parameters, connection, true);
+            return ExecuteQuery(sqlQuery, parameters, connection, true);
         }
 
-        internal static List<T> ExecuteQuery<T>(string sql_query, SqlParameter[] parameters, string connection) where T : class, new()
+        internal static List<T> ExecuteQuery<T>(string sqlQuery, SqlParameter[] parameters, string connection) where T : class, new()
         {
-            return ExecuteQuery<T>(sql_query, parameters, connection, false);
+            return ExecuteQuery<T>(sqlQuery, parameters, connection, false);
         }
 
-        internal static List<T> ExecuteQuerySp<T>(string sql_query, SqlParameter[] parameters, string connection) where T : class, new()
+        internal static List<T> ExecuteQuerySp<T>(string sqlQuery, SqlParameter[] parameters, string connection) where T : class, new()
         {
-            return ExecuteQuery<T>(sql_query, parameters, connection, true);
+            return ExecuteQuery<T>(sqlQuery, parameters, connection, true);
         }
 
-        internal static int ExecuteNonQuery(string sql_query, SqlParameter[] parameters, string connection)
+        internal static int ExecuteNonQuery(string sqlQuery, SqlParameter[] parameters, string connection)
         {
-            return ExecuteNonQuery(sql_query, parameters, connection, false);
+            return ExecuteNonQuery(sqlQuery, parameters, connection, false);
         }
 
-        internal static int ExecuteNonQuerySp(string sql_query, SqlParameter[] parameters, string connection)
+        internal static int ExecuteNonQuerySp(string sqlQuery, SqlParameter[] parameters, string connection)
         {
-            return ExecuteNonQuery(sql_query, parameters, connection, true);
+            return ExecuteNonQuery(sqlQuery, parameters, connection, true);
         }
 
-        internal static T ExecuteScalar<T>(string sql_query, SqlParameter[] parameters, string connection)
+        internal static T ExecuteScalar<T>(string sqlQuery, SqlParameter[] parameters, string connection)
         {
-            return ExecuteScalar<T>(sql_query, parameters, connection, false);
+            return ExecuteScalar<T>(sqlQuery, parameters, connection, false);
         }
 
-        internal static T ExecuteScalarSp<T>(string sql_query, SqlParameter[] parameters, string connection)
+        internal static T ExecuteScalarSp<T>(string sqlQuery, SqlParameter[] parameters, string connection)
         {
-            return ExecuteScalar<T>(sql_query, parameters, connection, true);
+            return ExecuteScalar<T>(sqlQuery, parameters, connection, true);
         }
     }
 }

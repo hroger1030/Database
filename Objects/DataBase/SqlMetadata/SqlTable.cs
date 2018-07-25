@@ -26,6 +26,7 @@ namespace DAL.SqlMetadata
     public class SqlTable
     {
         public SqlDatabase Database { get; set; }
+        public string Schema { get; set; }
         public string Name { get; set; }
         public Dictionary<string, SqlColumn> Columns { get; set; }
         public Dictionary<string, SqlConstraint> TableConsraints
@@ -62,17 +63,13 @@ namespace DAL.SqlMetadata
             get { return PkList.Select(c => c.Name).ToArray(); }
         }
 
-        public SqlTable()
-        {
-            Database = null;
-            Name = string.Empty;
-            Columns = new Dictionary<string, SqlColumn>();
-        }
+        public SqlTable() { }
 
-        public SqlTable(SqlDatabase sql_database, string table_name)
+        public SqlTable(SqlDatabase sqlDatabase, string schemaName, string tableName)
         {
-            Database = sql_database;
-            Name = table_name;
+            Database = sqlDatabase;
+            Schema = schemaName;
+            Name = tableName;
             Columns = new Dictionary<string, SqlColumn>();
         }
 

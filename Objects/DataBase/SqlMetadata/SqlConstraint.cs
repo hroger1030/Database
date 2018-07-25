@@ -37,13 +37,13 @@ namespace DAL.SqlMetadata
             PKColumn = string.Empty;
         }
 
-        public SqlConstraint(string constraint_name, string fk_table, string fk_column, string pk_table, string pk_column)
+        public SqlConstraint(string constraintName, string fkTable, string fkColumn, string pkTable, string pkColumn)
         {
-            ConstraintName = constraint_name;
-            FKTable = fk_table;
-            FKColumn = fk_column;
-            PKTable = pk_table;
-            PKColumn = pk_column;
+            ConstraintName = constraintName;
+            FKTable = fkTable;
+            FKColumn = fkColumn;
+            PKTable = pkTable;
+            PKColumn = pkColumn;
         }
 
         public string GenerateSQLScript()
@@ -68,7 +68,7 @@ namespace DAL.SqlMetadata
             if (obj == null)
                 return false;
 
-            if (this.GetType() != obj.GetType())
+            if (GetType() != obj.GetType())
                 return false;
 
             SqlConstraint other = (SqlConstraint)obj;
@@ -92,7 +92,7 @@ namespace DAL.SqlMetadata
         {
             unchecked
             {
-                return (FKTable.GetHashCode() * 1709) ^ (FKColumn.GetHashCode() * 1997) ^ (PKTable.GetHashCode() * 83) ^ (PKColumn.GetHashCode() * 389);
+                return FKTable.GetHashCode() ^ (FKColumn.GetHashCode() * 1997) ^ (PKTable.GetHashCode() * 83) ^ (PKColumn.GetHashCode() * 389);
             }
         }
 

@@ -56,15 +56,15 @@ namespace DAL.SqlMetadata
             ErrorList = new List<Exception>();
         }
 
-        public bool LoadDatabaseMetadata(string database_name, string connection_string)
+        public bool LoadDatabaseMetadata(string databaseName, string connectionString)
         {
-            if (string.IsNullOrEmpty(database_name))
+            if (string.IsNullOrEmpty(databaseName))
                 throw new ArgumentException("Database name is null or empty");
 
             Reset();
 
-            Name = database_name;
-            ConnectionString = connection_string;
+            Name = databaseName;
+            ConnectionString = connectionString;
 
             // load and parse out table data
             try
@@ -79,15 +79,17 @@ namespace DAL.SqlMetadata
                     {
                         string table_name = (string)dr["TableName"];
                         string column_name = (string)dr["ColumnName"];
+                        string schema_name = (string)dr["SchemaName"];
 
                         if (!Tables.ContainsKey(table_name))
                         {
-                            SqlTable sql_table = new SqlTable(this, table_name);
+                            SqlTable sql_table = new SqlTable(this, schema_name, table_name);
                             Tables.Add(table_name, sql_table);
                         }
 
-                        SqlColumn sql_column = new SqlColumn();
+                        var sql_column = new SqlColumn();
 
+                        sql_column.Schema = (string)dr["SchemaName"];
                         sql_column.Table = Tables[table_name];
                         sql_column.Name = (string)dr["ColumnName"];
                         sql_column.DataType = (string)dr["DataType"];
@@ -232,7 +234,8 @@ namespace DAL.SqlMetadata
             /*
             USE [<db>] 
 
-            SELECT	sys.Objects.[Name]				            AS [TableName],
+            SELECT	sys.schemas.[Name]							AS [SchemaName],
+		            sys.objects.[Name]				            AS [TableName],
                     sys.columns.[Name]				            AS [ColumnName],
                     sys.types.[name]				            AS [DataType],
                     sys.columns.[max_length]		            AS [Length],
@@ -246,6 +249,7 @@ namespace DAL.SqlMetadata
             FROM	sys.objects 
                     INNER JOIN sys.columns ON sys.objects.object_id = sys.columns.object_id
                     INNER JOIN sys.types ON sys.columns.system_type_id = sys.types.system_type_id
+		            INNER JOIN sys.schemas on sys.objects.schema_id = sys.schemas.schema_id
                     LEFT JOIN
                     ( 
                         SELECT 	DISTINCT C.[TABLE_NAME]		AS [TableName],
@@ -255,19 +259,20 @@ namespace DAL.SqlMetadata
                         FROM 	INFORMATION_SCHEMA.KEY_COLUMN_USAGE K
                                 INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS C ON K.TABLE_NAME = C.TABLE_NAME
                         WHERE	C.CONSTRAINT_TYPE = 'PRIMARY KEY'
-                    ) PrimaryKeys ON PrimaryKeys.[TableName] = sys.Objects.[Name] AND PrimaryKeys.[ColumnName] = sys.columns.[Name]
+                    ) PrimaryKeys ON PrimaryKeys.[TableName] = sys.objects.[Name] AND PrimaryKeys.[ColumnName] = sys.columns.[Name]
 
             WHERE	sys.objects.type = 'U'
             AND     sys.types.[name] NOT IN ('sysname','timestamp','hierarchyid','geometry','geography')
             AND     sys.types.is_user_defined = 0
 
-            ORDER	BY sys.Objects.name,sys.columns.column_id
+            ORDER	BY sys.schemas.[Name], sys.objects.[name], sys.columns.[column_id]
             */
 
             var sb = new StringBuilder();
 
             sb.AppendLine(" USE [" + Name + "]");
-            sb.AppendLine(" SELECT sys.Objects.[Name] AS [TableName],");
+            sb.AppendLine(" SELECT sys.schemas.[Name] AS [SchemaName],");
+            sb.AppendLine(" sys.Objects.[Name] AS [TableName],");
             sb.AppendLine(" sys.columns.[Name] AS [ColumnName],");
             sb.AppendLine(" sys.types.[name] AS [DataType],");
             sb.AppendLine(" sys.columns.[max_length] AS [Length],");
@@ -280,6 +285,7 @@ namespace DAL.SqlMetadata
             sb.AppendLine(" FROM sys.objects ");
             sb.AppendLine(" INNER JOIN sys.columns ON sys.objects.object_id = sys.columns.object_id");
             sb.AppendLine(" INNER JOIN sys.types ON sys.columns.system_type_id = sys.types.system_type_id");
+            sb.AppendLine(" INNER JOIN sys.schemas on sys.objects.schema_id = sys.schemas.schema_id");
             sb.AppendLine(" LEFT JOIN");
             sb.AppendLine(" ( ");
             sb.AppendLine(" SELECT DISTINCT C.[TABLE_NAME] AS [TableName],");
@@ -292,7 +298,7 @@ namespace DAL.SqlMetadata
             sb.AppendLine(" WHERE sys.objects.type = 'U'");
             sb.AppendLine(" AND sys.types.[name] NOT IN ('sysname','timestamp','hierarchyid','geometry','geography')");
             sb.AppendLine(" AND sys.types.is_user_defined = 0");
-            sb.AppendLine(" ORDER BY sys.Objects.name,sys.columns.column_id");
+            sb.AppendLine(" ORDER BY sys.schemas.[Name], sys.objects.[name], sys.columns.[column_id]");
 
             return sb.ToString();
         }

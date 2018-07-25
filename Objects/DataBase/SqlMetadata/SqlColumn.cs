@@ -24,6 +24,7 @@ namespace DAL.SqlMetadata
     public class SqlColumn
     {
         public SqlTable Table { get; set; }
+        public string Schema { get; set; }
         public string Name { get; set; }
         public string DataType { get; set; }
         public int Length { get; set; }
@@ -55,37 +56,24 @@ namespace DAL.SqlMetadata
             get { return MapBaseType(); }
         }
 
-        public SqlColumn()
+        public SqlColumn() { }
+
+        public SqlColumn(SqlTable sqlTable, string columnName) : this(sqlTable, columnName, string.Empty, 0, 0, 0, false, false, false, 0, string.Empty) { }
+
+        public SqlColumn(SqlTable sqlTable, string columnName, string datatype, int length, int precision, int scale, bool isNullable, bool isPk, bool isIdentity, int columnOrdinal, string defaultValue)
         {
-            Table = null;
+            Table = sqlTable;
 
-            DataType = string.Empty;
-            Length = 0;
-            Precision = 0;
-            Scale = 0;
-            IsNullable = false;
-            IsPk = false;
-            IsIdentity = false;
-            ColumnOrdinal = 0;
-            DefaultValue = string.Empty;
-        }
-
-        public SqlColumn(SqlTable sql_table, string column_name) : this(sql_table, column_name, string.Empty, 0, 0, 0, false, false, false, 0, string.Empty) { }
-
-        public SqlColumn(SqlTable sql_table, string column_name, string datatype, int length, int precision, int scale, bool is_nullable, bool is_pk, bool is_identity, int column_ordinal, string default_value)
-        {
-            Table = sql_table;
-
-            Name = column_name;
+            Name = columnName;
             DataType = datatype;
             Length = length;
             Precision = precision;
             Scale = scale;
-            IsNullable = is_nullable;
-            IsPk = is_pk;
-            IsIdentity = is_identity;
-            ColumnOrdinal = column_ordinal;
-            DefaultValue = default_value;
+            IsNullable = isNullable;
+            IsPk = isPk;
+            IsIdentity = isIdentity;
+            ColumnOrdinal = columnOrdinal;
+            DefaultValue = defaultValue;
         }
 
         protected eSqlBaseType MapBaseType()

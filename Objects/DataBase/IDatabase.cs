@@ -25,15 +25,15 @@ namespace DAL
 {
     public interface IDatabase
     {
-        int ExecuteNonQuery(string sql_query, SqlParameter[] parameters);
-        int ExecuteNonQuerySp(string sql_query, SqlParameter[] parameters);
-        DataTable ExecuteQuery(string sql_query, SqlParameter[] parameters);
-        T ExecuteQuery<T>(string sql_query, SqlParameter[] parameters, Func<SqlDataReader, T> processor);
-        List<T> ExecuteQuery<T>(string sql_query, SqlParameter[] parameters) where T : class, new();
-        DataTable ExecuteQuerySp(string sql_query, SqlParameter[] parameters);
-        T ExecuteQuerySp<T>(string sql_query, SqlParameter[] parameters, Func<SqlDataReader, T> processor);
-        List<T> ExecuteQuerySp<T>(string sql_query, SqlParameter[] parameters) where T : class, new();
-        T ExecuteScalar<T>(string sql_query, SqlParameter[] parameters);
-        T ExecuteScalarSp<T>(string sql_query, SqlParameter[] parameters);
+        int ExecuteNonQuery(string sqlQuery, SqlParameter[] parameters);
+        int ExecuteNonQuerySp(string sqlQuery, SqlParameter[] parameters);
+        DataTable ExecuteQuery(string sqlQuery, SqlParameter[] parameters);
+        T ExecuteQuery<T>(string sqlQuery, SqlParameter[] parameters, Func<SqlDataReader, T> processor);
+        List<T> ExecuteQuery<T>(string sqlQuery, SqlParameter[] parameters) where T : class, new();
+        DataTable ExecuteQuerySp(string sqlQuery, SqlParameter[] parameters);
+        T ExecuteQuerySp<T>(string sqlQuery, SqlParameter[] parameters, Func<SqlDataReader, T> processor);
+        List<T> ExecuteQuerySp<T>(string sqlQuery, SqlParameter[] parameters) where T : class, new();
+        T ExecuteScalar<T>(string sqlQuery, SqlParameter[] parameters);
+        T ExecuteScalarSp<T>(string sqlQuery, SqlParameter[] parameters);
     }
 }
