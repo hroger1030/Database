@@ -92,17 +92,17 @@ namespace DAL.SqlMetadata
 
                     obj = new SqlColumn
                     (
-                            this,
-                            (string)dr["ColumnName"],
-                            (string)dr["DataType"],
-                            (int)dr["Length"],
-                            (int)dr["Precision"],
-                            (int)dr["Scale"],
-                            (bool)dr["IsNullable"],
-                            (bool)dr["IsPK"],
-                            (bool)dr["IsIdentity"],
-                            (int)dr["ColumnOrdinal"],
-                            (string)dr["DefaultValue"]
+                        this,
+                        (string)dr["ColumnName"],
+                        (string)dr["DataType"],
+                        (int)dr["Length"],
+                        (int)dr["Precision"],
+                        (int)dr["Scale"],
+                        (bool)dr["IsNullable"],
+                        (bool)dr["IsPK"],
+                        (bool)dr["IsIdentity"],
+                        (int)dr["ColumnOrdinal"],
+                        (string)dr["DefaultValue"]
                     );
 
                     Columns.Add(obj.Name, obj);
@@ -112,6 +112,28 @@ namespace DAL.SqlMetadata
             {
                 throw new Exception("Cannot retrieve metadata for table " + Name + ".");
             }
+        }
+
+        /// <summary>
+        /// There are a number of cases where we need to get some sort of single Id column
+        /// for searches or hash collections. Uses identity first if avaialble, otherwise first pk.
+        /// This will return null if there are no pks or identity columns set, or if there is a 
+        /// composite key on th table
+        /// </summary>
+        public SqlColumn GetIdColumn()
+        {
+            foreach (var column in Columns)
+            {
+                if (column.Value.IsIdentity)
+                    return column.Value;
+            }
+
+            var pk_list = PkList;
+
+            if (pk_list.Count == 0 || pk_list.Count > 1)
+                return null;
+            else
+                return PkList.FirstOrDefault();
         }
     }
 }
