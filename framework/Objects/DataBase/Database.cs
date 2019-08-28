@@ -23,7 +23,7 @@ using System.Data.SqlClient;
 using System.Reflection;
 using System.Text;
 
-namespace DAL
+namespace DALFramework
 {
     public partial class Database : IDatabase
     {

@@ -20,9 +20,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace DAL
+namespace DALFramework
 {
-    public static partial class FileIo
+    public static class FileIo
     {
         /// <summary>
         /// This method writes a string to disk. Overwrites any files with same name an path that already exist.
@@ -292,7 +292,7 @@ namespace DAL
             string temp_name = string.Empty;
 
             while (File.Exists(temp_name))
-                temp_name = Path.Combine(filePath,Path.GetRandomFileName());
+                temp_name = Path.Combine(filePath, Path.GetRandomFileName());
 
             return temp_name;
         }

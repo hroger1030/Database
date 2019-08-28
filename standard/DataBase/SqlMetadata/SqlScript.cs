@@ -1,4 +1,4 @@
-/*
+﻿/*
 The MIT License (MIT)
 
 Copyright (c) 2007 Roger Hill
@@ -16,23 +16,19 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-namespace DAL.SqlMetadata
+namespace DALStandard.SqlMetadata
 {
-    /// <summary>
-    /// Allows all the various types of sql data to be mapped into basic categories.
-    /// </summary>
-    public enum eSqlBaseType
+    public class SqlScript
     {
-        Unknown,
+        public string Name { get; set; }
+        public string Body { get; set; }
 
-        String,
-        Integer,
-        Float,
-        Time,
-        Bool,
-        Guid,
-        BinaryData,
+        public SqlScript() : this(string.Empty, string.Empty) { }
 
-        Other,
+        public SqlScript(string name, string body)
+        {
+            Name = name;
+            Body = body;
+        }
     }
 }

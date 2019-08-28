@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="DataBase\SqlMetadata\Sql.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="DataBase\SqlMetadata\Sql.txt" />
+  </ItemGroup>
+
+</Project>

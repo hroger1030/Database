@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 
-namespace DAL
+namespace DALStandard
 {
     public partial class Database : IDatabase
     {

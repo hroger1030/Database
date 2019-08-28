@@ -8,8 +8,8 @@
     <ProjectGuid>{E2EFDCD8-DD5A-4416-8B44-0F780431E98E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DAL</RootNamespace>
-    <AssemblyName>DAL</AssemblyName>
+    <RootNamespace>DALFramework</RootNamespace>
+    <AssemblyName>DALFramework</AssemblyName>
     <SccProjectName>
     </SccProjectName>
     <SccLocalPath>

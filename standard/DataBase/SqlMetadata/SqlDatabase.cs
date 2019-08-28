@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
-namespace DAL.SqlMetadata
+namespace DALStandard.SqlMetadata
 {
     public class SqlDatabase
     {

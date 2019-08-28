@@ -18,7 +18,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using System.Text;
 
-namespace DAL.SqlMetadata
+namespace DALFramework.SqlMetadata
 {
     public class SqlConstraint
     {
