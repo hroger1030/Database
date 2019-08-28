@@ -19,7 +19,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 using System;
 using System.Data;
 
-namespace DALFramework.SqlMetadata
+namespace DAL.Framework.SqlMetadata
 {
     public class SqlColumn
     {

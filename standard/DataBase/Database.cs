@@ -19,10 +19,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.Reflection;
 using System.Text;
 
-namespace DALStandard
+namespace DAL.Standard
 {
     public partial class Database : IDatabase
     {
@@ -131,7 +132,7 @@ namespace DALStandard
                         string SQL_debug_string = GenerateSqlDebugString(sqlQuery, parameters);
 #endif
 
-                        DataTable dt = new DataTable();
+                        var dt = new DataTable();
 
                         conn.Open();
                         adapter.SelectCommand = cmd;
@@ -663,7 +664,7 @@ namespace DALStandard
 
                             case "System.Udt":
                                 // no idea how to handle a custom type
-                                throw new Exception("System.Udt is an unsupported datatype");
+                                throw new NotImplementedException("System.Udt is an unsupported datatype");
 
                             case "Microsoft.SqlServer.Types.SqlGeometry":
                                 if (reader[i] == DBNull.Value)
@@ -714,11 +715,9 @@ namespace DALStandard
 
         private DataTable ConvertObjectToDataTable<T>(IEnumerable<T> input)
         {
-            DataTable dt = new DataTable();
-
-            Type output_type = typeof(T);
-            Dictionary<string, PropertyInfo> property_lookup = new Dictionary<string, PropertyInfo>();
-
+            var dt = new DataTable();
+            var output_type = typeof(T);
+            var property_lookup = new Dictionary<string, PropertyInfo>();
             var object_properties = output_type.GetProperties();
 
             foreach (var property_info in object_properties)
@@ -746,7 +745,7 @@ namespace DALStandard
         {
             DataTable dt = ConvertObjectToDataTable(input);
 
-            SqlParameter sql_parameter = new SqlParameter(parameterName, dt)
+            var sql_parameter = new SqlParameter(parameterName, dt)
             {
                 SqlDbType = SqlDbType.Structured,
                 TypeName = sqlTypeName

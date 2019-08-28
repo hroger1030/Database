@@ -16,7 +16,7 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-namespace DALStandard.SqlMetadata
+namespace DAL.Standard.SqlMetadata
 {
     /// <summary>
     /// Allows all the various types of sql data to be mapped into basic categories.

@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 
-namespace DALFramework
+namespace DAL.Framework
 {
     public interface IDatabase
     {

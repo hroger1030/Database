@@ -16,24 +16,19 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
-
-namespace DAL.Standard
+namespace DAL.Core.SqlMetadata
 {
-    public interface IDatabase
+    public class SqlScript
     {
-        int ExecuteNonQuery(string sqlQuery, SqlParameter[] parameters);
-        int ExecuteNonQuerySp(string sqlQuery, SqlParameter[] parameters);
-        DataTable ExecuteQuery(string sqlQuery, SqlParameter[] parameters);
-        T ExecuteQuery<T>(string sqlQuery, SqlParameter[] parameters, Func<SqlDataReader, T> processor);
-        List<T> ExecuteQuery<T>(string sqlQuery, SqlParameter[] parameters) where T : class, new();
-        DataTable ExecuteQuerySp(string sqlQuery, SqlParameter[] parameters);
-        T ExecuteQuerySp<T>(string sqlQuery, SqlParameter[] parameters, Func<SqlDataReader, T> processor);
-        List<T> ExecuteQuerySp<T>(string sqlQuery, SqlParameter[] parameters) where T : class, new();
-        T ExecuteScalar<T>(string sqlQuery, SqlParameter[] parameters);
-        T ExecuteScalarSp<T>(string sqlQuery, SqlParameter[] parameters);
+        public string Name { get; set; }
+        public string Body { get; set; }
+
+        public SqlScript() : this(string.Empty, string.Empty) { }
+
+        public SqlScript(string name, string body)
+        {
+            Name = name;
+            Body = body;
+        }
     }
 }

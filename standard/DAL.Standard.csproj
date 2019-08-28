@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageProjectUrl>https://github.com/hroger1030/Database</PackageProjectUrl>
+    <PackageLicenseUrl>https://en.wikipedia.org/wiki/MIT_License</PackageLicenseUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -15,6 +17,11 @@
 
   <ItemGroup>
     <Content Include="DataBase\SqlMetadata\Sql.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="dotMorten.Microsoft.SqlServer.Types" Version="1.1.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.6.1" />
   </ItemGroup>
 
 </Project>

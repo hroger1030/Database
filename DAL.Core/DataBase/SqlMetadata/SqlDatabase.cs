@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
-namespace DAL.Framework.SqlMetadata
+namespace DAL.Core.SqlMetadata
 {
     public class SqlDatabase
     {
@@ -124,7 +124,7 @@ namespace DAL.Framework.SqlMetadata
                 {
                     foreach (DataRow dr in dt.Rows)
                     {
-                        SqlScript sql_script = new SqlScript
+                        var sql_script = new SqlScript
                         {
                             Name = (string)dr["Name"],
                             Body = (string)dr["Body"]
@@ -153,7 +153,7 @@ namespace DAL.Framework.SqlMetadata
                 {
                     foreach (DataRow dr in dt.Rows)
                     {
-                        SqlScript sql_script = new SqlScript
+                        var sql_script = new SqlScript
                         {
                             Name = (string)dr["Name"],
                             Body = (string)dr["Body"]
@@ -182,7 +182,7 @@ namespace DAL.Framework.SqlMetadata
                 {
                     foreach (DataRow dr in dt.Rows)
                     {
-                        SqlConstraint sql_constraint = new SqlConstraint
+                        var sql_constraint = new SqlConstraint
                         {
                             ConstraintName = (string)dr["ConstraintName"],
                             FKTable = (string)dr["FKTable"],

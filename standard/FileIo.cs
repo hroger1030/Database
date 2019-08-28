@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace DALStandard
+namespace DAL.Standard
 {
     public partial class FileIo
     {

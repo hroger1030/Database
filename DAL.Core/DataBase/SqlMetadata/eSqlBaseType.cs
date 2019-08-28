@@ -1,4 +1,4 @@
-﻿/*
+/*
 The MIT License (MIT)
 
 Copyright (c) 2007 Roger Hill
@@ -16,24 +16,23 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
-
-namespace DAL.Standard
+namespace DAL.Core.SqlMetadata
 {
-    public interface IDatabase
+    /// <summary>
+    /// Allows all the various types of sql data to be mapped into basic categories.
+    /// </summary>
+    public enum eSqlBaseType
     {
-        int ExecuteNonQuery(string sqlQuery, SqlParameter[] parameters);
-        int ExecuteNonQuerySp(string sqlQuery, SqlParameter[] parameters);
-        DataTable ExecuteQuery(string sqlQuery, SqlParameter[] parameters);
-        T ExecuteQuery<T>(string sqlQuery, SqlParameter[] parameters, Func<SqlDataReader, T> processor);
-        List<T> ExecuteQuery<T>(string sqlQuery, SqlParameter[] parameters) where T : class, new();
-        DataTable ExecuteQuerySp(string sqlQuery, SqlParameter[] parameters);
-        T ExecuteQuerySp<T>(string sqlQuery, SqlParameter[] parameters, Func<SqlDataReader, T> processor);
-        List<T> ExecuteQuerySp<T>(string sqlQuery, SqlParameter[] parameters) where T : class, new();
-        T ExecuteScalar<T>(string sqlQuery, SqlParameter[] parameters);
-        T ExecuteScalarSp<T>(string sqlQuery, SqlParameter[] parameters);
+        Unknown,
+
+        String,
+        Integer,
+        Float,
+        Time,
+        Bool,
+        Guid,
+        BinaryData,
+
+        Other,
     }
 }

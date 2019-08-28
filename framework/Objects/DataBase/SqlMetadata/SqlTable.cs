@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
-namespace DALFramework.SqlMetadata
+namespace DAL.Framework.SqlMetadata
 {
     public class SqlTable
     {
@@ -33,7 +33,7 @@ namespace DALFramework.SqlMetadata
         {
             get
             {
-                Dictionary<string, SqlConstraint> output = new Dictionary<string, SqlConstraint>();
+                var output = new Dictionary<string, SqlConstraint>();
 
                 if (Database != null)
                 {

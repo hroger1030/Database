@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace DAL.Framework
+namespace DAL.Core
 {
     public static class FileIo
     {
