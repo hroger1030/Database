@@ -2,8 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <PackageProjectUrl>https://github.com/hroger1030/Database</PackageProjectUrl>
+    <PackageProjectUrl></PackageProjectUrl>
     <PackageLicenseUrl>https://en.wikipedia.org/wiki/MIT_License</PackageLicenseUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Roger Hill</Authors>
+    <Company>GlobalConquestGames</Company>
+    <Product />
+    <RepositoryUrl>https://github.com/hroger1030/Database</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Copyright>Roger Hill, 2007</Copyright>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

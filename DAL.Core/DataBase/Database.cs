@@ -49,7 +49,7 @@ namespace DAL.Core
         //    return output;
         //};
 
-        protected string _ConnectionString;
+        protected readonly string _ConnectionString;
 
         public Database(string connectionString)
         {

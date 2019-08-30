@@ -6,6 +6,11 @@
     <PackageLicenseUrl>https://en.wikipedia.org/wiki/MIT_License</PackageLicenseUrl>
     <PackageProjectUrl></PackageProjectUrl>
     <RepositoryUrl>https://github.com/hroger1030/Database</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Roger Hill</Authors>
+    <Company>GlobalConquestGames</Company>
+    <Copyright>Roger Hill, 2007</Copyright>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

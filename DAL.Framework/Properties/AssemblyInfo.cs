@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Global Conquest Games")]
 [assembly: AssemblyProduct("DAL")]
-[assembly: AssemblyCopyright("Copyright © Global Conquest Games 2007")]
+[assembly: AssemblyCopyright("Copyright © Roger Hill 2007")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
