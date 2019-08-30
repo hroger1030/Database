@@ -27,13 +27,19 @@ namespace DAL.Core
     {
         int ExecuteNonQuery(string sqlQuery, SqlParameter[] parameters);
         int ExecuteNonQuerySp(string sqlQuery, SqlParameter[] parameters);
+
         DataTable ExecuteQuery(string sqlQuery, SqlParameter[] parameters);
-        T ExecuteQuery<T>(string sqlQuery, SqlParameter[] parameters, Func<SqlDataReader, T> processor);
-        List<T> ExecuteQuery<T>(string sqlQuery, SqlParameter[] parameters) where T : class, new();
         DataTable ExecuteQuerySp(string sqlQuery, SqlParameter[] parameters);
+
+        T ExecuteQuery<T>(string sqlQuery, SqlParameter[] parameters, Func<SqlDataReader, T> processor);
         T ExecuteQuerySp<T>(string sqlQuery, SqlParameter[] parameters, Func<SqlDataReader, T> processor);
+
+        List<T> ExecuteQuery<T>(string sqlQuery, SqlParameter[] parameters) where T : class, new();
         List<T> ExecuteQuerySp<T>(string sqlQuery, SqlParameter[] parameters) where T : class, new();
+
         T ExecuteScalar<T>(string sqlQuery, SqlParameter[] parameters);
         T ExecuteScalarSp<T>(string sqlQuery, SqlParameter[] parameters);
+
+        DataTable GetSchema();
     }
 }

@@ -20,15 +20,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="License.txt" Pack="true" Visible="false" PackagePath=""/>
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="DataBase\SqlMetadata\Sql.txt" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="DataBase\SqlMetadata\Sql.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="License.txt" Pack="true" Visible="false" PackagePath="" />
   </ItemGroup>
 
   <ItemGroup>

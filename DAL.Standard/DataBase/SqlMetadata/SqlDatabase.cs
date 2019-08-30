@@ -25,7 +25,7 @@ namespace DAL.Standard.SqlMetadata
 {
     public class SqlDatabase
     {
-        protected static string DEFAULT_CONNECTION_STRING = "Data Source=Localhost;Initial Catalog=Master;Integrated Security=SSPI;Connect Timeout=1;";
+        private const string DEFAULT_CONNECTION_STRING = "Data Source=Localhost;Initial Catalog=Master;Integrated Security=SSPI;Connect Timeout=1;";
 
         public string Name { get; set; }
         public Dictionary<string, SqlTable> Tables { get; set; }
@@ -71,7 +71,8 @@ namespace DAL.Standard.SqlMetadata
             {
                 string sql_query = GetTableData();
 
-                DataTable dt = Database.ExecuteQuery(sql_query, null, ConnectionString);
+                var db = new Database(ConnectionString);
+                DataTable dt = db.ExecuteQuery(sql_query, null);
 
                 if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
                 {
@@ -87,18 +88,19 @@ namespace DAL.Standard.SqlMetadata
                             Tables.Add(table_name, sql_table);
                         }
 
-                        var sql_column = new SqlColumn();
-
-                        sql_column.Schema = (string)dr["SchemaName"];
-                        sql_column.Table = Tables[table_name];
-                        sql_column.Name = (string)dr["ColumnName"];
-                        sql_column.DataType = (string)dr["DataType"];
-                        sql_column.Length = Convert.ToInt32(dr["Length"]);
-                        sql_column.Precision = Convert.ToInt32(dr["Precision"]);
-                        sql_column.IsNullable = Convert.ToBoolean(dr["IsNullable"]);
-                        sql_column.IsPk = Convert.ToBoolean(dr["IsPK"]);
-                        sql_column.IsIdentity = Convert.ToBoolean(dr["IsIdentity"]);
-                        sql_column.ColumnOrdinal = Convert.ToInt32(dr["ColumnOrdinal"]);
+                        var sql_column = new SqlColumn
+                        {
+                            Schema = (string)dr["SchemaName"],
+                            Table = Tables[table_name],
+                            Name = (string)dr["ColumnName"],
+                            DataType = (string)dr["DataType"],
+                            Length = Convert.ToInt32(dr["Length"]),
+                            Precision = Convert.ToInt32(dr["Precision"]),
+                            IsNullable = Convert.ToBoolean(dr["IsNullable"]),
+                            IsPk = Convert.ToBoolean(dr["IsPK"]),
+                            IsIdentity = Convert.ToBoolean(dr["IsIdentity"]),
+                            ColumnOrdinal = Convert.ToInt32(dr["ColumnOrdinal"])
+                        };
 
                         if (Tables[table_name].Columns.ContainsKey(column_name))
                             throw new Exception($"Column {column_name} already exists in table {Tables[table_name]}");
@@ -116,17 +118,18 @@ namespace DAL.Standard.SqlMetadata
             try
             {
                 string sql_query = GetStoredProcedures();
-
-                DataTable dt = Database.ExecuteQuery(sql_query, null, ConnectionString);
+                var db = new Database(ConnectionString);
+                DataTable dt = db.ExecuteQuery(sql_query, null);
 
                 if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
                 {
                     foreach (DataRow dr in dt.Rows)
                     {
-                        SqlScript sql_script = new SqlScript();
-
-                        sql_script.Name = (string)dr["Name"];
-                        sql_script.Body = (string)dr["Body"];
+                        SqlScript sql_script = new SqlScript
+                        {
+                            Name = (string)dr["Name"],
+                            Body = (string)dr["Body"]
+                        };
 
                         if (StoredProcedures.ContainsKey(sql_script.Name))
                             StoredProcedures[sql_script.Name].Body += sql_script.Body;
@@ -144,17 +147,18 @@ namespace DAL.Standard.SqlMetadata
             try
             {
                 string sql_query = GetFunctions();
-
-                DataTable dt = Database.ExecuteQuery(sql_query, null, ConnectionString);
+                var db = new Database(ConnectionString);
+                DataTable dt = db.ExecuteQuery(sql_query, null);
 
                 if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
                 {
                     foreach (DataRow dr in dt.Rows)
                     {
-                        SqlScript sql_script = new SqlScript();
-
-                        sql_script.Name = (string)dr["Name"];
-                        sql_script.Body = (string)dr["Body"];
+                        SqlScript sql_script = new SqlScript
+                        {
+                            Name = (string)dr["Name"],
+                            Body = (string)dr["Body"]
+                        };
 
                         if (Functions.ContainsKey(sql_script.Name))
                             Functions[sql_script.Name].Body += sql_script.Body;
@@ -172,20 +176,21 @@ namespace DAL.Standard.SqlMetadata
             try
             {
                 string sql_query = GetConstraints();
-
-                DataTable dt = Database.ExecuteQuery(sql_query, null, ConnectionString);
+                var db = new Database(ConnectionString);
+                DataTable dt = db.ExecuteQuery(sql_query, null);
 
                 if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
                 {
                     foreach (DataRow dr in dt.Rows)
                     {
-                        SqlConstraint sql_constraint = new SqlConstraint();
-
-                        sql_constraint.ConstraintName = (string)dr["ConstraintName"];
-                        sql_constraint.FKTable = (string)dr["FKTable"];
-                        sql_constraint.FKColumn = (string)dr["FKColumn"];
-                        sql_constraint.PKTable = (string)dr["PKTable"];
-                        sql_constraint.PKColumn = (string)dr["PKColumn"];
+                        SqlConstraint sql_constraint = new SqlConstraint
+                        {
+                            ConstraintName = (string)dr["ConstraintName"],
+                            FKTable = (string)dr["FKTable"],
+                            FKColumn = (string)dr["FKColumn"],
+                            PKTable = (string)dr["PKTable"],
+                            PKColumn = (string)dr["PKColumn"]
+                        };
 
                         if (Constraints.ContainsKey(sql_constraint.ConstraintName))
                             throw new Exception(string.Format("Constraint {0} already exists.", sql_constraint.ConstraintName));
@@ -203,8 +208,8 @@ namespace DAL.Standard.SqlMetadata
             try
             {
                 string sql_query = GetDefaultValues();
-
-                DataTable dt = Database.ExecuteQuery(sql_query, null, ConnectionString);
+                var db = new Database(ConnectionString);
+                DataTable dt = db.ExecuteQuery(sql_query, null);
 
                 if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
                 {

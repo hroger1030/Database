@@ -25,7 +25,7 @@ namespace DAL.Framework.SqlMetadata
 {
     public class SqlDatabase
     {
-        protected static string DEFAULT_CONNECTION_STRING = "Data Source=Localhost;Initial Catalog=Master;Integrated Security=SSPI;Connect Timeout=1;";
+        private const string DEFAULT_CONNECTION_STRING = "Data Source=Localhost;Initial Catalog=Master;Integrated Security=SSPI;Connect Timeout=1;";
 
         public string Name { get; set; }
         public Dictionary<string, SqlTable> Tables { get; set; }
@@ -71,7 +71,8 @@ namespace DAL.Framework.SqlMetadata
             {
                 string sql_query = GetTableData();
 
-                DataTable dt = Database.ExecuteQuery(sql_query, null, ConnectionString);
+                var db = new Database(ConnectionString);
+                DataTable dt = db.ExecuteQuery(sql_query, null);
 
                 if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
                 {
@@ -117,8 +118,8 @@ namespace DAL.Framework.SqlMetadata
             try
             {
                 string sql_query = GetStoredProcedures();
-
-                DataTable dt = Database.ExecuteQuery(sql_query, null, ConnectionString);
+                var db = new Database(ConnectionString);
+                DataTable dt = db.ExecuteQuery(sql_query, null);
 
                 if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
                 {
@@ -146,8 +147,8 @@ namespace DAL.Framework.SqlMetadata
             try
             {
                 string sql_query = GetFunctions();
-
-                DataTable dt = Database.ExecuteQuery(sql_query, null, ConnectionString);
+                var db = new Database(ConnectionString);
+                DataTable dt = db.ExecuteQuery(sql_query, null);
 
                 if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
                 {
@@ -175,8 +176,8 @@ namespace DAL.Framework.SqlMetadata
             try
             {
                 string sql_query = GetConstraints();
-
-                DataTable dt = Database.ExecuteQuery(sql_query, null, ConnectionString);
+                var db = new Database(ConnectionString);
+                DataTable dt = db.ExecuteQuery(sql_query, null);
 
                 if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
                 {
@@ -207,8 +208,8 @@ namespace DAL.Framework.SqlMetadata
             try
             {
                 string sql_query = GetDefaultValues();
-
-                DataTable dt = Database.ExecuteQuery(sql_query, null, ConnectionString);
+                var db = new Database(ConnectionString);
+                DataTable dt = db.ExecuteQuery(sql_query, null);
 
                 if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
                 {

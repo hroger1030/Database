@@ -1,4 +1,4 @@
-﻿/*
+/*
 The MIT License (MIT)
 
 Copyright (c) 2007 Roger Hill
@@ -22,7 +22,7 @@ using System.IO;
 
 namespace DAL.Standard
 {
-    public partial class FileIo
+    public static class FileIo
     {
         /// <summary>
         /// This method writes a string to disk. Overwrites any files with same name an path that already exist.
