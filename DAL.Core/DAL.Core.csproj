@@ -24,10 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="DataBase\SqlMetadata\Sql.txt" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="License.txt" Pack="true" Visible="false" PackagePath="" />
   </ItemGroup>
 

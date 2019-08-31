@@ -84,11 +84,7 @@
     <Compile Include="Objects\DataBase\SqlMetadata\SqlDatabase.cs" />
     <Compile Include="Objects\DataBase\SqlMetadata\SqlColumn.cs" />
     <Compile Include="Objects\DataBase\SqlMetadata\SqlTable.cs" />
-    <Compile Include="Objects\FileIo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Objects\DataBase\SqlMetadata\Sql.txt" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
