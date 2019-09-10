@@ -285,7 +285,7 @@ namespace DAL.Framework
             {
                 using (var cmd = new SqlCommand(sqlQuery, conn))
                 {
-                    T results = default(T);
+                    T results = default;
 
                     cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
 
@@ -305,12 +305,12 @@ namespace DAL.Framework
 
                     if (buffer == null)
                     {
-                        results = default(T);
+                        results = default;
                     }
                     else
                     {
                         if (buffer.GetType() == typeof(DBNull))
-                            results = default(T);
+                            results = default;
                         else if (buffer is T)
                             return (T)buffer;
                         else
@@ -668,7 +668,6 @@ namespace DAL.Framework
         {
             var dt = new DataTable();
             var output_type = typeof(T);
-            var property_lookup = new Dictionary<string, PropertyInfo>();
             var object_properties = output_type.GetProperties();
 
             foreach (var property_info in object_properties)
