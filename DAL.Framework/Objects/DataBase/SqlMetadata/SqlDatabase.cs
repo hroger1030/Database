@@ -69,29 +69,29 @@ namespace DAL.Framework.SqlMetadata
             // load and parse out table data
             try
             {
-                string sql_query = GetTableData();
+                string sqlQuery = GetTableData();
 
                 var db = new Database(ConnectionString);
-                DataTable dt = db.ExecuteQuery(sql_query, null);
+                DataTable dt = db.ExecuteQuery(sqlQuery, null);
 
                 if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
                 {
                     foreach (DataRow dr in dt.Rows)
                     {
-                        string table_name = (string)dr["TableName"];
-                        string column_name = (string)dr["ColumnName"];
-                        string schema_name = (string)dr["SchemaName"];
+                        string tableName = (string)dr["TableName"];
+                        string columnName = (string)dr["ColumnName"];
+                        string schemaName = (string)dr["SchemaName"];
 
-                        if (!Tables.ContainsKey(table_name))
+                        if (!Tables.ContainsKey(tableName))
                         {
-                            SqlTable sql_table = new SqlTable(this, schema_name, table_name);
-                            Tables.Add(table_name, sql_table);
+                            SqlTable sqlTable = new SqlTable(this, schemaName, tableName);
+                            Tables.Add(tableName, sqlTable);
                         }
 
                         var sql_column = new SqlColumn
                         {
                             Schema = (string)dr["SchemaName"],
-                            Table = Tables[table_name],
+                            Table = Tables[tableName],
                             Name = (string)dr["ColumnName"],
                             DataType = (string)dr["DataType"],
                             Length = Convert.ToInt32(dr["Length"]),
@@ -102,10 +102,10 @@ namespace DAL.Framework.SqlMetadata
                             ColumnOrdinal = Convert.ToInt32(dr["ColumnOrdinal"])
                         };
 
-                        if (Tables[table_name].Columns.ContainsKey(column_name))
-                            throw new Exception($"Column {column_name} already exists in table {Tables[table_name]}");
+                        if (Tables[tableName].Columns.ContainsKey(columnName))
+                            throw new Exception($"Column {columnName} already exists in table {Tables[tableName]}");
                         else
-                            Tables[table_name].Columns.Add(column_name, sql_column);
+                            Tables[tableName].Columns.Add(columnName, sql_column);
                     }
                 }
             }
@@ -117,9 +117,9 @@ namespace DAL.Framework.SqlMetadata
             // get SP
             try
             {
-                string sql_query = GetStoredProcedures();
+                string sqlQuery = GetStoredProcedures();
                 var db = new Database(ConnectionString);
-                DataTable dt = db.ExecuteQuery(sql_query, null);
+                DataTable dt = db.ExecuteQuery(sqlQuery, null);
 
                 if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
                 {
@@ -146,9 +146,9 @@ namespace DAL.Framework.SqlMetadata
             // get functions
             try
             {
-                string sql_query = GetFunctions();
+                string sqlQuery = GetFunctions();
                 var db = new Database(ConnectionString);
-                DataTable dt = db.ExecuteQuery(sql_query, null);
+                DataTable dt = db.ExecuteQuery(sqlQuery, null);
 
                 if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
                 {
@@ -175,9 +175,9 @@ namespace DAL.Framework.SqlMetadata
             // get constraints
             try
             {
-                string sql_query = GetConstraints();
+                string sqlQuery = GetConstraints();
                 var db = new Database(ConnectionString);
-                DataTable dt = db.ExecuteQuery(sql_query, null);
+                DataTable dt = db.ExecuteQuery(sqlQuery, null);
 
                 if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
                 {
@@ -207,9 +207,9 @@ namespace DAL.Framework.SqlMetadata
             // load default values
             try
             {
-                string sql_query = GetDefaultValues();
+                string sqlQuery = GetDefaultValues();
                 var db = new Database(ConnectionString);
-                DataTable dt = db.ExecuteQuery(sql_query, null);
+                DataTable dt = db.ExecuteQuery(sqlQuery, null);
 
                 if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
                 {
@@ -257,12 +257,12 @@ namespace DAL.Framework.SqlMetadata
 		            INNER JOIN sys.schemas on sys.objects.schema_id = sys.schemas.schema_id
                     LEFT JOIN
                     ( 
-                        SELECT 	DISTINCT C.[TABLE_NAME]		AS [TableName],
-                                K.[COLUMN_NAME]				AS [ColumnName],
+                        SELECT 	DISTINCT C.[tableName]		AS [TableName],
+                                K.[columnName]				AS [ColumnName],
                                 1							AS [IsPK]				
 
                         FROM 	INFORMATION_SCHEMA.KEY_COLUMN_USAGE K
-                                INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS C ON K.TABLE_NAME = C.TABLE_NAME
+                                INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS C ON K.tableName = C.tableName
                         WHERE	C.CONSTRAINT_TYPE = 'PRIMARY KEY'
                     ) PrimaryKeys ON PrimaryKeys.[TableName] = sys.objects.[Name] AND PrimaryKeys.[ColumnName] = sys.columns.[Name]
 
@@ -293,11 +293,11 @@ namespace DAL.Framework.SqlMetadata
             sb.AppendLine(" INNER JOIN sys.schemas on sys.objects.schema_id = sys.schemas.schema_id");
             sb.AppendLine(" LEFT JOIN");
             sb.AppendLine(" ( ");
-            sb.AppendLine(" SELECT DISTINCT C.[TABLE_NAME] AS [TableName],");
-            sb.AppendLine(" K.[COLUMN_NAME] AS [ColumnName],");
+            sb.AppendLine(" SELECT DISTINCT C.[tableName] AS [TableName],");
+            sb.AppendLine(" K.[columnName] AS [ColumnName],");
             sb.AppendLine(" 1 AS [IsPK] ");
             sb.AppendLine(" FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE K");
-            sb.AppendLine(" INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS C ON K.TABLE_NAME = C.TABLE_NAME");
+            sb.AppendLine(" INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS C ON K.tableName = C.tableName");
             sb.AppendLine(" WHERE C.CONSTRAINT_TYPE = 'PRIMARY KEY'");
             sb.AppendLine(" ) PrimaryKeys ON PrimaryKeys.[TableName] = sys.Objects.[Name] AND PrimaryKeys.[ColumnName] = sys.columns.[Name]");
             sb.AppendLine(" WHERE sys.objects.type = 'U'");
@@ -370,10 +370,10 @@ namespace DAL.Framework.SqlMetadata
             USE [<db>] 
 
             SELECT	C.CONSTRAINT_NAME	AS [ConstraintName],
-                    FK.TABLE_NAME		AS FKTable,
-                    CU.COLUMN_NAME		AS FKColumn,
-                    PK.TABLE_NAME		AS PKTable,
-                    PT.COLUMN_NAME		AS PKColumn
+                    FK.tableName		AS FKTable,
+                    CU.columnName		AS FKColumn,
+                    PK.tableName		AS PKTable,
+                    PT.columnName		AS PKColumn
 
             FROM	INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS C
                     INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS FK ON C.CONSTRAINT_NAME = FK.CONSTRAINT_NAME
@@ -381,12 +381,12 @@ namespace DAL.Framework.SqlMetadata
                     INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE CU ON C.CONSTRAINT_NAME = CU.CONSTRAINT_NAME
                     INNER JOIN 
                     (
-                        SELECT	i1.TABLE_NAME, 
-                                i2.COLUMN_NAME
+                        SELECT	i1.tableName, 
+                                i2.columnName
                         FROM	INFORMATION_SCHEMA.TABLE_CONSTRAINTS i1
                                 INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE i2 ON i1.CONSTRAINT_NAME = i2.CONSTRAINT_NAME
                         WHERE	i1.CONSTRAINT_TYPE = 'PRIMARY KEY'
-                    ) PT ON PT.TABLE_NAME = PK.TABLE_NAME
+                    ) PT ON PT.tableName = PK.tableName
 
             ORDER BY
             C.CONSTRAINT_NAME
@@ -396,22 +396,22 @@ namespace DAL.Framework.SqlMetadata
 
             sb.Append(" USE [" + Name + "]");
             sb.Append(" SELECT C.CONSTRAINT_NAME AS [ConstraintName],");
-            sb.Append(" FK.TABLE_NAME AS FKTable,");
-            sb.Append(" CU.COLUMN_NAME AS FKColumn,");
-            sb.Append(" PK.TABLE_NAME AS PKTable,");
-            sb.Append(" PT.COLUMN_NAME AS PKColumn");
+            sb.Append(" FK.tableName AS FKTable,");
+            sb.Append(" CU.columnName AS FKColumn,");
+            sb.Append(" PK.tableName AS PKTable,");
+            sb.Append(" PT.columnName AS PKColumn");
 
             sb.Append(" FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS C");
             sb.Append(" INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS FK ON C.CONSTRAINT_NAME = FK.CONSTRAINT_NAME");
             sb.Append(" INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS PK ON C.UNIQUE_CONSTRAINT_NAME = PK.CONSTRAINT_NAME");
             sb.Append(" INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE CU ON C.CONSTRAINT_NAME = CU.CONSTRAINT_NAME");
             sb.Append(" INNER JOIN (");
-            sb.Append(" SELECT i1.TABLE_NAME,");
-            sb.Append(" i2.COLUMN_NAME");
+            sb.Append(" SELECT i1.tableName,");
+            sb.Append(" i2.columnName");
             sb.Append(" FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS i1");
             sb.Append(" INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE i2 ON i1.CONSTRAINT_NAME = i2.CONSTRAINT_NAME");
             sb.Append(" WHERE i1.CONSTRAINT_TYPE = 'PRIMARY KEY'");
-            sb.Append(" ) PT ON PT.TABLE_NAME = PK.TABLE_NAME");
+            sb.Append(" ) PT ON PT.tableName = PK.tableName");
             sb.Append(" ORDER BY");
             sb.Append(" C.CONSTRAINT_NAME");
 

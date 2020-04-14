@@ -32,64 +32,78 @@ namespace DAL.Standard
         private const string NULL_PROCESSOR_METHOD = "Processor method is null";
         private const string DEFAULT_CONNECTION_STRING = "Data Source=Localhost;Initial Catalog=Master;Integrated Security=SSPI;Connect Timeout=1;";
 
+        private const string EXCEPTION_SQL_PREFIX = "Sql.Parameter";
+        private const string EXCEPTION_KEY_QUERY = "Sql.Query";
+        private const string EXCEPTION_KEY_CONNECTION = "Sql.ConnectionString";
+
         private readonly string _Connection;
+        private readonly bool _LogConnection;
+        private readonly bool _LogParameters;
 
         public Database() : this(DEFAULT_CONNECTION_STRING) { }
 
-        public Database(string connection)
+        /// <summary>
+        /// CTOR for Database object
+        /// </summary>
+        /// <param name="connection">A sql connection string.</param>
+        /// <param name="logConnection">Allow connection string to be included in thrown exceptions. Defaults to false.</param>
+        /// <param name="logParameters">Allow query parameters to be included in thrown exceptions. Defaults to false.</param>
+        public Database(string connection, bool logConnection = false, bool logParameters = false)
         {
             if (string.IsNullOrWhiteSpace(connection))
                 throw new ArgumentNullException(EMPTY_CONNECTION_STRING);
 
             _Connection = connection;
+            _LogConnection = logConnection;
+            _LogParameters = logParameters;
         }
 
-        public DataTable ExecuteQuery(string sqlQuery, SqlParameter[] parameters)
+        public DataTable ExecuteQuery(string sqlQuery, IList<SqlParameter> parameters)
         {
             return ExecuteQuery(sqlQuery, parameters, _Connection, false);
         }
 
-        public DataTable ExecuteQuerySp(string sqlQuery, SqlParameter[] parameters)
+        public DataTable ExecuteQuerySp(string sqlQuery, IList<SqlParameter> parameters)
         {
             return ExecuteQuery(sqlQuery, parameters, _Connection, true);
         }
 
-        public List<T> ExecuteQuery<T>(string sqlQuery, SqlParameter[] parameters) where T : class, new()
+        public List<T> ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()
         {
             return ExecuteQuery<T>(sqlQuery, parameters, _Connection, false);
         }
 
-        public T ExecuteQuery<T>(string sqlQuery, SqlParameter[] parameters, Func<SqlDataReader, T> processor)
+        public T ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor)
         {
             return ExecuteQuery<T>(sqlQuery, parameters, _Connection, false, processor);
         }
 
-        public List<T> ExecuteQuerySp<T>(string sqlQuery, SqlParameter[] parameters) where T : class, new()
+        public List<T> ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()
         {
             return ExecuteQuery<T>(sqlQuery, parameters, _Connection, true);
         }
 
-        public T ExecuteQuerySp<T>(string sqlQuery, SqlParameter[] parameters, Func<SqlDataReader, T> processor)
+        public T ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor)
         {
             return ExecuteQuery<T>(sqlQuery, parameters, _Connection, true, processor);
         }
 
-        public int ExecuteNonQuery(string sqlQuery, SqlParameter[] parameters)
+        public int ExecuteNonQuery(string sqlQuery, IList<SqlParameter> parameters)
         {
             return ExecuteNonQuery(sqlQuery, parameters, _Connection, false);
         }
 
-        public int ExecuteNonQuerySp(string sqlQuery, SqlParameter[] parameters)
+        public int ExecuteNonQuerySp(string sqlQuery, IList<SqlParameter> parameters)
         {
             return ExecuteNonQuery(sqlQuery, parameters, _Connection, true);
         }
 
-        public T ExecuteScalar<T>(string sqlQuery, SqlParameter[] parameters)
+        public T ExecuteScalar<T>(string sqlQuery, IList<SqlParameter> parameters)
         {
             return ExecuteScalar<T>(sqlQuery, parameters, _Connection, false);
         }
 
-        public T ExecuteScalarSp<T>(string sqlQuery, SqlParameter[] parameters)
+        public T ExecuteScalarSp<T>(string sqlQuery, IList<SqlParameter> parameters)
         {
             return ExecuteScalar<T>(sqlQuery, parameters, _Connection, true);
         }
@@ -108,16 +122,76 @@ namespace DAL.Standard
             }
         }
 
-        private DataTable ExecuteQuery(string sqlQuery, SqlParameter[] parameters, string connection, bool storedProcedure)
+        private DataTable ExecuteQuery(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
                 throw new ArgumentNullException(EMPTY_QUERY_STRING);
 
-            using (var conn = new SqlConnection(connection))
+            try
             {
-                using (var cmd = new SqlCommand(sqlQuery, conn))
+                using (var conn = new SqlConnection(connection))
                 {
-                    using (SqlDataAdapter adapter = new SqlDataAdapter())
+                    using (var cmd = new SqlCommand(sqlQuery, conn))
+                    {
+                        using (SqlDataAdapter adapter = new SqlDataAdapter())
+                        {
+                            cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
+
+                            if (parameters != null)
+                            {
+                                foreach (SqlParameter parameter in parameters)
+                                    cmd.Parameters.Add(parameter);
+                            }
+
+#if (DEBUG)
+                            string SqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
+#endif
+
+                            var dt = new DataTable();
+
+                            conn.Open();
+                            adapter.SelectCommand = cmd;
+                            adapter.Fill(dt);
+                            conn.Close();
+
+                            if (parameters != null)
+                            {
+                                for (int i = 0; i < cmd.Parameters.Count; i++)
+                                    parameters[i].Value = cmd.Parameters[i].Value;
+                            }
+
+                            return dt;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.Data.Add(EXCEPTION_KEY_QUERY, sqlQuery);
+
+                if (_LogConnection)
+                    ex.Data.Add(EXCEPTION_KEY_CONNECTION, connection);
+
+                if (_LogParameters && parameters != null)
+                {
+                    for (int i = 0; i < parameters.Count; i++)
+                        ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
+                }
+
+                throw ex;
+            }
+        }
+
+        private List<T> ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure) where T : class, new()
+        {
+            if (string.IsNullOrWhiteSpace(sqlQuery))
+                throw new ArgumentNullException(EMPTY_QUERY_STRING);
+
+            try
+            {
+                using (var conn = new SqlConnection(connection))
+                {
+                    using (var cmd = new SqlCommand(sqlQuery, conn))
                     {
                         cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
 
@@ -128,71 +202,47 @@ namespace DAL.Standard
                         }
 
 #if (DEBUG)
-                        string SQL_debug_string = GenerateSqlDebugString(sqlQuery, parameters);
+                        string SqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
 #endif
-
-                        var dt = new DataTable();
 
                         conn.Open();
-                        adapter.SelectCommand = cmd;
-                        adapter.Fill(dt);
-                        conn.Close();
 
-                        if (parameters != null)
+                        using (SqlDataReader data_reader = cmd.ExecuteReader())
                         {
-                            for (int i = 0; i < cmd.Parameters.Count; i++)
-                                parameters[i].Value = cmd.Parameters[i].Value;
-                        }
+                            var output = ParseDatareaderResult<T>(data_reader, true);
 
-                        return dt;
+                            if (parameters != null)
+                            {
+                                for (int i = 0; i < cmd.Parameters.Count; i++)
+                                    parameters[i].Value = cmd.Parameters[i].Value;
+                            }
+
+                            data_reader.Close();
+                            conn.Close();
+
+                            return output;
+                        }
                     }
                 }
             }
-        }
-
-        private List<T> ExecuteQuery<T>(string sqlQuery, SqlParameter[] parameters, string connection, bool storedProcedure) where T : class, new()
-        {
-            if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentNullException(EMPTY_QUERY_STRING);
-
-            using (var conn = new SqlConnection(connection))
+            catch (Exception ex)
             {
-                using (var cmd = new SqlCommand(sqlQuery, conn))
+                ex.Data.Add(EXCEPTION_KEY_QUERY, sqlQuery);
+
+                if (_LogConnection)
+                    ex.Data.Add(EXCEPTION_KEY_CONNECTION, connection);
+
+                if (_LogParameters && parameters != null)
                 {
-                    cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
-
-                    if (parameters != null)
-                    {
-                        foreach (SqlParameter parameter in parameters)
-                            cmd.Parameters.Add(parameter);
-                    }
-
-#if (DEBUG)
-                    string SQL_debug_string = GenerateSqlDebugString(sqlQuery, parameters);
-#endif
-
-                    conn.Open();
-
-                    using (SqlDataReader data_reader = cmd.ExecuteReader())
-                    {
-                        var output = ParseDatareaderResult<T>(data_reader, true);
-
-                        if (parameters != null)
-                        {
-                            for (int i = 0; i < cmd.Parameters.Count; i++)
-                                parameters[i].Value = cmd.Parameters[i].Value;
-                        }
-
-                        data_reader.Close();
-                        conn.Close();
-
-                        return output;
-                    }
+                    for (int i = 0; i < parameters.Count; i++)
+                        ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
                 }
+
+                throw ex;
             }
         }
 
-        private T ExecuteQuery<T>(string sqlQuery, SqlParameter[] parameters, string connection, bool storedProcedure, Func<SqlDataReader, T> processor)
+        private T ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure, Func<SqlDataReader, T> processor)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
                 throw new ArgumentNullException(EMPTY_QUERY_STRING);
@@ -200,44 +250,62 @@ namespace DAL.Standard
             if (processor == null)
                 throw new ArgumentNullException(NULL_PROCESSOR_METHOD);
 
-            using (var conn = new SqlConnection(connection))
+            try
             {
-                using (var cmd = new SqlCommand(sqlQuery, conn))
+                using (var conn = new SqlConnection(connection))
                 {
-                    cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
-
-                    if (parameters != null)
+                    using (var cmd = new SqlCommand(sqlQuery, conn))
                     {
-                        foreach (SqlParameter parameter in parameters)
-                            cmd.Parameters.Add(parameter);
-                    }
-
-#if (DEBUG)
-                    string SQL_debug_string = GenerateSqlDebugString(sqlQuery, parameters);
-#endif
-
-                    conn.Open();
-
-                    using (SqlDataReader data_reader = cmd.ExecuteReader())
-                    {
-                        var output = processor.Invoke(data_reader);
+                        cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
 
                         if (parameters != null)
                         {
-                            for (int i = 0; i < cmd.Parameters.Count; i++)
-                                parameters[i].Value = cmd.Parameters[i].Value;
+                            foreach (SqlParameter parameter in parameters)
+                                cmd.Parameters.Add(parameter);
                         }
 
-                        data_reader.Close();
-                        conn.Close();
+#if (DEBUG)
+                        string SqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
+#endif
 
-                        return output;
+                        conn.Open();
+
+                        using (SqlDataReader data_reader = cmd.ExecuteReader())
+                        {
+                            var output = processor.Invoke(data_reader);
+
+                            if (parameters != null)
+                            {
+                                for (int i = 0; i < cmd.Parameters.Count; i++)
+                                    parameters[i].Value = cmd.Parameters[i].Value;
+                            }
+
+                            data_reader.Close();
+                            conn.Close();
+
+                            return output;
+                        }
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                ex.Data.Add(EXCEPTION_KEY_QUERY, sqlQuery);
+
+                if (_LogConnection)
+                    ex.Data.Add(EXCEPTION_KEY_CONNECTION, connection);
+
+                if (_LogParameters && parameters != null)
+                {
+                    for (int i = 0; i < parameters.Count; i++)
+                        ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
+                }
+
+                throw ex;
+            }
         }
 
-        private int ExecuteNonQuery(string sqlQuery, SqlParameter[] parameters, string connection, bool storedProcedure)
+        private int ExecuteNonQuery(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
                 throw new ArgumentNullException(EMPTY_QUERY_STRING);
@@ -245,88 +313,124 @@ namespace DAL.Standard
             if (string.IsNullOrWhiteSpace(connection))
                 throw new ArgumentNullException(EMPTY_CONNECTION_STRING);
 
-            using (var conn = new SqlConnection(connection))
+            try
             {
-                using (var cmd = new SqlCommand(sqlQuery, conn))
+                using (var conn = new SqlConnection(connection))
                 {
-                    cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
-
-                    if (parameters != null)
+                    using (var cmd = new SqlCommand(sqlQuery, conn))
                     {
-                        foreach (SqlParameter parameter in parameters)
-                            cmd.Parameters.Add(parameter);
-                    }
+                        cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
+
+                        if (parameters != null)
+                        {
+                            foreach (SqlParameter parameter in parameters)
+                                cmd.Parameters.Add(parameter);
+                        }
 
 #if (DEBUG)
-                    string SQL_debug_string = GenerateSqlDebugString(sqlQuery, parameters);
+                        string SqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
 #endif
 
-                    conn.Open();
-                    int results = cmd.ExecuteNonQuery();
-                    conn.Close();
+                        conn.Open();
+                        int results = cmd.ExecuteNonQuery();
+                        conn.Close();
 
-                    if (parameters != null)
-                    {
-                        for (int i = 0; i < cmd.Parameters.Count; i++)
-                            parameters[i].Value = cmd.Parameters[i].Value;
+                        if (parameters != null)
+                        {
+                            for (int i = 0; i < cmd.Parameters.Count; i++)
+                                parameters[i].Value = cmd.Parameters[i].Value;
+                        }
+
+                        return results;
                     }
-
-                    return results;
                 }
+            }
+            catch (Exception ex)
+            {
+                ex.Data.Add(EXCEPTION_KEY_QUERY, sqlQuery);
+
+                if (_LogConnection)
+                    ex.Data.Add(EXCEPTION_KEY_CONNECTION, connection);
+
+                if (_LogParameters && parameters != null)
+                {
+                    for (int i = 0; i < parameters.Count; i++)
+                        ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
+                }
+
+                throw ex;
             }
         }
 
-        private T ExecuteScalar<T>(string sqlQuery, SqlParameter[] parameters, string connection, bool storedProcedure)
+        private T ExecuteScalar<T>(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
                 throw new ArgumentNullException(EMPTY_QUERY_STRING);
 
-            using (var conn = new SqlConnection(connection))
+            try
             {
-                using (var cmd = new SqlCommand(sqlQuery, conn))
+                using (var conn = new SqlConnection(connection))
                 {
-                    T results = default(T);
-
-                    cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
-
-                    if (parameters != null)
+                    using (var cmd = new SqlCommand(sqlQuery, conn))
                     {
-                        foreach (SqlParameter parameter in parameters)
-                            cmd.Parameters.Add(parameter);
-                    }
+                        T results = default(T);
+
+                        cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
+
+                        if (parameters != null)
+                        {
+                            foreach (SqlParameter parameter in parameters)
+                                cmd.Parameters.Add(parameter);
+                        }
 
 #if (DEBUG)
-                    string SQL_debug_string = GenerateSqlDebugString(sqlQuery, parameters);
+                        string SqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
 #endif
 
-                    conn.Open();
+                        conn.Open();
 
-                    object buffer = cmd.ExecuteScalar();
+                        object buffer = cmd.ExecuteScalar();
 
-                    if (buffer == null)
-                    {
-                        results = default(T);
-                    }
-                    else
-                    {
-                        if (buffer.GetType() == typeof(DBNull))
+                        if (buffer == null)
+                        {
                             results = default(T);
-                        else if (buffer is T)
-                            return (T)buffer;
+                        }
                         else
-                            return (T)Convert.ChangeType(buffer, typeof(T));
+                        {
+                            if (buffer.GetType() == typeof(DBNull))
+                                results = default(T);
+                            else if (buffer is T)
+                                return (T)buffer;
+                            else
+                                return (T)Convert.ChangeType(buffer, typeof(T));
+                        }
+
+                        conn.Close();
+
+                        if (parameters != null)
+                        {
+                            for (int i = 0; i < cmd.Parameters.Count; i++)
+                                parameters[i].Value = cmd.Parameters[i].Value;
+                        }
+
+                        return results;
                     }
-
-                    conn.Close();
-
-                    if (parameters != null)
-                    {
-                        for (int i = 0; i < cmd.Parameters.Count; i++)
-                            parameters[i].Value = cmd.Parameters[i].Value;
-                    }
-
-                    return results;
                 }
+            }
+            catch (Exception ex)
+            {
+                ex.Data.Add(EXCEPTION_KEY_QUERY, sqlQuery);
+
+                if (_LogConnection)
+                    ex.Data.Add(EXCEPTION_KEY_CONNECTION, connection);
+
+                if (_LogParameters && parameters != null)
+                {
+                    for (int i = 0; i < parameters.Count; i++)
+                        ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
+                }
+
+                throw ex;
             }
         }
 
@@ -340,12 +444,12 @@ namespace DAL.Standard
                 throw new ArgumentNullException("Cannot convert a null IEnumerable object");
 
             var sb = new StringBuilder();
-            bool first_flag = true;
+            bool firstFlag = true;
 
             foreach (T item in list)
             {
-                if (first_flag)
-                    first_flag = false;
+                if (firstFlag)
+                    firstFlag = false;
                 else
                     sb.Append(",");
 
@@ -373,12 +477,12 @@ namespace DAL.Standard
         /// <summary>
         /// Method creates sql debugging strings with parameterized argument lists
         /// </summary>
-        private string GenerateSqlDebugString(string sqlQuery, SqlParameter[] parameterList)
+        private string GenerateSqlDebugString(string sqlQuery, IList<SqlParameter> parameterList)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
                 throw new ArgumentNullException(EMPTY_QUERY_STRING);
 
-            if (parameterList == null || parameterList.Length == 0)
+            if (parameterList == null || parameterList.Count == 0)
                 return sqlQuery;
 
             var value_list = new List<string>();
@@ -422,15 +526,15 @@ namespace DAL.Standard
 
         private List<T> ParseDatareaderResult<T>(SqlDataReader reader, bool throwUnmappedFieldsError = false) where T : class, new()
         {
-            var output_type = typeof(T);
+            var outputType = typeof(T);
             var results = new List<T>();
-            var property_lookup = new Dictionary<string, PropertyInfo>();
+            var propertyLookup = new Dictionary<string, PropertyInfo>();
 
-            foreach (var property_info in output_type.GetProperties())
-                property_lookup.Add(property_info.Name, property_info);
+            foreach (var propertyInfo in outputType.GetProperties())
+                propertyLookup.Add(propertyInfo.Name, propertyInfo);
 
             T new_object;
-            object field_value;
+            object fieldValue;
 
             while (reader.Read())
             {
@@ -438,179 +542,179 @@ namespace DAL.Standard
 
                 for (int i = 0; i < reader.FieldCount; i++)
                 {
-                    string column_name = reader.GetName(i);
+                    string columnName = reader.GetName(i);
 
-                    if (property_lookup.TryGetValue(column_name, out PropertyInfo property_info))
+                    if (propertyLookup.TryGetValue(columnName, out PropertyInfo propertyInfo))
                     {
-                        Type property_type = property_info.PropertyType;
-                        string property_name = property_info.PropertyType.FullName;
+                        Type propertyType = propertyInfo.PropertyType;
+                        string propertyName = propertyInfo.PropertyType.FullName;
 
                         // in the event that we are looking at a nullable type, we need to look at the underlying type.
-                        if (property_type.IsGenericType && property_type.GetGenericTypeDefinition() == typeof(Nullable<>))
+                        if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
                         {
-                            property_name = Nullable.GetUnderlyingType(property_type).ToString();
-                            property_type = Nullable.GetUnderlyingType(property_type);
+                            propertyName = Nullable.GetUnderlyingType(propertyType).ToString();
+                            propertyType = Nullable.GetUnderlyingType(propertyType);
                         }
 
-                        switch (property_name)
+                        switch (propertyName)
                         {
                             case "System.Int32":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = reader[column_name] as int? ?? null;
+                                    fieldValue = reader[columnName] as int? ?? null;
                                 else
-                                    field_value = (int)reader[column_name];
+                                    fieldValue = (int)reader[columnName];
                                 break;
 
                             case "System.String":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = null;
+                                    fieldValue = null;
                                 else
-                                    field_value = (string)reader[column_name];
+                                    fieldValue = (string)reader[columnName];
                                 break;
 
                             case "System.Double":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = reader[column_name] as double? ?? null;
+                                    fieldValue = reader[columnName] as double? ?? null;
                                 else
-                                    field_value = (double)reader[column_name];
+                                    fieldValue = (double)reader[columnName];
                                 break;
 
                             case "System.Float":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = reader[column_name] as float? ?? null;
+                                    fieldValue = reader[columnName] as float? ?? null;
                                 else
-                                    field_value = (float)reader[column_name];
+                                    fieldValue = (float)reader[columnName];
                                 break;
 
                             case "System.Boolean":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = reader[column_name] as bool? ?? null;
+                                    fieldValue = reader[columnName] as bool? ?? null;
                                 else
-                                    field_value = (bool)reader[column_name];
+                                    fieldValue = (bool)reader[columnName];
                                 break;
 
                             case "System.Boolean[]":
                                 if (reader[i] == DBNull.Value)
                                 {
-                                    field_value = null;
+                                    fieldValue = null;
                                 }
                                 else
                                 {
                                     // inline conversion, blech. improve later.
-                                    var byte_array = (byte[])reader[i];
-                                    var bool_array = new bool[byte_array.Length];
+                                    var byteArray = (byte[])reader[i];
+                                    var boolArray = new bool[byteArray.Length];
 
-                                    for (int index = 0; index < byte_array.Length; index++)
-                                        bool_array[index] = Convert.ToBoolean(byte_array[index]);
+                                    for (int index = 0; index < byteArray.Length; index++)
+                                        boolArray[index] = Convert.ToBoolean(byteArray[index]);
 
-                                    field_value = bool_array;
+                                    fieldValue = boolArray;
                                 }
                                 break;
 
                             case "System.DateTime":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = reader[column_name] as DateTime? ?? null;
+                                    fieldValue = reader[columnName] as DateTime? ?? null;
                                 else
-                                    field_value = DateTime.Parse(reader[column_name].ToString());
+                                    fieldValue = DateTime.Parse(reader[columnName].ToString());
                                 break;
 
                             case "System.Guid":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = reader[column_name] as Guid? ?? null;
+                                    fieldValue = reader[columnName] as Guid? ?? null;
                                 else
-                                    field_value = (Guid)reader[column_name];
+                                    fieldValue = (Guid)reader[columnName];
                                 break;
 
                             case "System.Single":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = reader[column_name] as float? ?? null;
+                                    fieldValue = reader[columnName] as float? ?? null;
                                 else
-                                    field_value = float.Parse(reader[column_name].ToString());
+                                    fieldValue = float.Parse(reader[columnName].ToString());
                                 break;
 
                             case "System.Decimal":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = reader[column_name] as decimal? ?? null;
+                                    fieldValue = reader[columnName] as decimal? ?? null;
                                 else
-                                    field_value = (decimal)reader[column_name];
+                                    fieldValue = (decimal)reader[columnName];
                                 break;
 
                             case "System.Byte":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = null;
+                                    fieldValue = null;
                                 else
-                                    field_value = (byte)reader[column_name];
+                                    fieldValue = (byte)reader[columnName];
                                 break;
 
                             case "System.Byte[]":
                                 if (reader[i] == DBNull.Value)
                                 {
-                                    field_value = null;
+                                    fieldValue = null;
                                 }
                                 else
                                 {
-                                    string byte_array = reader[column_name].ToString();
+                                    string byteArray = reader[columnName].ToString();
 
-                                    byte[] bytes = new byte[byte_array.Length * sizeof(char)];
-                                    Buffer.BlockCopy(byte_array.ToCharArray(), 0, bytes, 0, bytes.Length);
-                                    field_value = bytes;
+                                    byte[] bytes = new byte[byteArray.Length * sizeof(char)];
+                                    Buffer.BlockCopy(byteArray.ToCharArray(), 0, bytes, 0, bytes.Length);
+                                    fieldValue = bytes;
                                 }
                                 break;
 
                             case "System.SByte":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = reader[column_name] as sbyte? ?? null;
+                                    fieldValue = reader[columnName] as sbyte? ?? null;
                                 else
-                                    field_value = (sbyte)reader[column_name];
+                                    fieldValue = (sbyte)reader[columnName];
                                 break;
 
                             case "System.Char":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = reader[column_name] as char? ?? null;
+                                    fieldValue = reader[columnName] as char? ?? null;
                                 else
-                                    field_value = (char)reader[column_name];
+                                    fieldValue = (char)reader[columnName];
                                 break;
 
                             case "System.UInt32":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = reader[column_name] as uint? ?? null;
+                                    fieldValue = reader[columnName] as uint? ?? null;
                                 else
-                                    field_value = (uint)reader[column_name];
+                                    fieldValue = (uint)reader[columnName];
                                 break;
 
                             case "System.Int64":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = reader[column_name] as long? ?? null;
+                                    fieldValue = reader[columnName] as long? ?? null;
                                 else
-                                    field_value = (long)reader[column_name];
+                                    fieldValue = (long)reader[columnName];
                                 break;
 
                             case "System.UInt64":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = reader[column_name] as ulong? ?? null;
+                                    fieldValue = reader[columnName] as ulong? ?? null;
                                 else
-                                    field_value = (ulong)reader[column_name];
+                                    fieldValue = (ulong)reader[columnName];
                                 break;
 
                             case "System.Object":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = null;
+                                    fieldValue = null;
                                 else
-                                    field_value = reader[column_name];
+                                    fieldValue = reader[columnName];
                                 break;
 
                             case "System.Int16":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = reader[column_name] as short? ?? null;
+                                    fieldValue = reader[columnName] as short? ?? null;
                                 else
-                                    field_value = (short)reader[column_name];
+                                    fieldValue = (short)reader[columnName];
                                 break;
 
                             case "System.UInt16":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = reader[column_name] as ushort? ?? null;
+                                    fieldValue = reader[columnName] as ushort? ?? null;
                                 else
-                                    field_value = (ushort)reader[column_name];
+                                    fieldValue = (ushort)reader[columnName];
                                 break;
 
                             case "System.Udt":
@@ -619,33 +723,33 @@ namespace DAL.Standard
 
                             case "Microsoft.SqlServer.Types.SqlGeometry":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = reader[column_name] as Microsoft.SqlServer.Types.SqlGeometry ?? null;
+                                    fieldValue = reader[columnName] as Microsoft.SqlServer.Types.SqlGeometry ?? null;
                                 else
-                                    field_value = (Microsoft.SqlServer.Types.SqlGeometry)reader[column_name];
+                                    fieldValue = (Microsoft.SqlServer.Types.SqlGeometry)reader[columnName];
                                 break;
 
                             case "Microsoft.SqlServer.Types.SqlGeography":
                                 if (reader[i] == DBNull.Value)
-                                    field_value = reader[column_name] as Microsoft.SqlServer.Types.SqlGeography ?? null;
+                                    fieldValue = reader[columnName] as Microsoft.SqlServer.Types.SqlGeography ?? null;
                                 else
-                                    field_value = (Microsoft.SqlServer.Types.SqlGeography)reader[column_name];
+                                    fieldValue = (Microsoft.SqlServer.Types.SqlGeography)reader[columnName];
                                 break;
 
                             default:
-                                if (property_type.IsEnum)
+                                if (propertyType.IsEnum)
                                 {
                                     // enums are common, but don't fit into the above buckets. 
                                     if (reader[i] == DBNull.Value)
-                                        field_value = null;
+                                        fieldValue = null;
                                     else
-                                        field_value = Enum.ToObject(property_type, reader[column_name]);
+                                        fieldValue = Enum.ToObject(propertyType, reader[columnName]);
                                     break;
                                 }
                                 else
-                                    throw new Exception($"Column '{property_lookup[column_name]}' has an unknown data type: '{property_lookup[column_name].PropertyType.FullName}'.");
+                                    throw new Exception($"Column '{propertyLookup[columnName]}' has an unknown data type: '{propertyLookup[columnName].PropertyType.FullName}'.");
                         }
 
-                        property_lookup[column_name].SetValue(new_object, field_value, null);
+                        propertyLookup[columnName].SetValue(new_object, fieldValue, null);
                     }
                     else
                     {
@@ -653,7 +757,7 @@ namespace DAL.Standard
                         // might be an error, but it is dependent on the specific use case.
                         if (throwUnmappedFieldsError)
                         {
-                            throw new Exception($"Cannot map datareader field '{column_name}' to object property on object '{output_type}'");
+                            throw new Exception($"Cannot map datareader field '{columnName}' to object property on object '{outputType}'");
                         }
                     }
                 }
@@ -667,19 +771,19 @@ namespace DAL.Standard
         private DataTable ConvertObjectToDataTable<T>(IEnumerable<T> input)
         {
             var dt = new DataTable();
-            var output_type = typeof(T);
-            var property_lookup = new Dictionary<string, PropertyInfo>();
-            var object_properties = output_type.GetProperties();
+            var outputType = typeof(T);
+            var propertyLookup = new Dictionary<string, PropertyInfo>();
+            var object_properties = outputType.GetProperties();
 
-            foreach (var property_info in object_properties)
-                dt.Columns.Add(property_info.Name);
+            foreach (var propertyInfo in object_properties)
+                dt.Columns.Add(propertyInfo.Name);
 
             foreach (var item in input)
             {
                 var dr = dt.NewRow();
 
                 foreach (var property in object_properties)
-                    dr[property.Name] = output_type.GetProperty(property.Name).GetValue(item, null);
+                    dr[property.Name] = outputType.GetProperty(property.Name).GetValue(item, null);
 
                 dt.Rows.Add(dr);
             }

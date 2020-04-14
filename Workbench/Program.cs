@@ -1,19 +1,36 @@
 ﻿using System;
+using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
+
+using DAL.Standard;
+using Newtonsoft.Json;
 
 namespace Workbench
 {
     public class Program
     {
+        private const string LOCAL_SQL = "Data Source=Localhost;Initial Catalog=Master;Integrated Security=SSPI;Connect Timeout=1;";
+
         public static void Main(string[] args)
         {
             AppDomain.CurrentDomain.UnhandledException += Application_Error;
             var sw = Stopwatch.StartNew();
 
             // do stuff here
-            DAL.Standard.IDatabase test = new DAL.Standard.DatabaseFake("connection string");
-            test.ExecuteQuerySp("TestProc", new SqlParameter[0]);
+
+            IDatabase test = new DatabaseFake();
+            var parameters = new SqlParameter[0];
+
+            //IDatabase test = new Database(LOCAL_SQL, true, true);
+
+            //var parameters = new SqlParameter[]
+            //{
+            //    new SqlParameter() { Value = 3.4f, ParameterName = "@Fooo", DbType = DbType.Single },
+            //    new SqlParameter() { Value = "blork", ParameterName = "@Snorrg", DbType = DbType.String, Size = 50 }
+            //};
+
+            test.ExecuteQuerySp("AccountData.Account_CheckEmail", parameters);
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"Total run time: {sw.Elapsed}");
@@ -29,9 +46,13 @@ namespace Workbench
                 Exception ex = (Exception)e.ExceptionObject;
 
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Fatal error encountered '{ex.Message}', cannot continue");
+                Console.WriteLine($"Fatal error encountered, cannot continue: {ex}");
                 Console.ResetColor();
 
+                // test output format
+                //string output = JsonConvert.SerializeObject(ex);
+
+                Console.WriteLine();
                 Console.WriteLine("Press any key to exit...");
                 Console.ReadKey();
 
@@ -39,7 +60,7 @@ namespace Workbench
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Unhandled application error: {ex.Message}, stacktrace: {ex.StackTrace}");
+                Debug.WriteLine($"Unhandled application error: {ex}");
             }
         }
     }

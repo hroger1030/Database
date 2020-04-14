@@ -30,7 +30,7 @@ namespace DAL.Framework
         private const string NULL_PROCESSOR_METHOD = "Processor method is null";
         private const string DEFAULT_CONNECTION_STRING = "local host connection string";
 
-        private void WriteArguments(string sqlQuery, SqlParameter[] parameters)
+        private void WriteArguments(string sqlQuery, IList<SqlParameter> parameters)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
                 throw new ArgumentException(EMPTY_QUERY_STRING);
@@ -46,14 +46,12 @@ namespace DAL.Framework
             Debug.WriteLine(string.Empty);
         }
 
-        public DatabaseFake() : this(DEFAULT_CONNECTION_STRING) { }
-
-        public DatabaseFake(string connection)
+        public DatabaseFake()
         {
             Debug.WriteLine("DatabaseFake Initialized");
         }
 
-        public DataTable ExecuteQuery(string sqlQuery, SqlParameter[] parameters)
+        public DataTable ExecuteQuery(string sqlQuery, IList<SqlParameter> parameters)
         {
             Debug.WriteLine("Called ExecuteQuery()");
             WriteArguments(sqlQuery, parameters);
@@ -61,7 +59,7 @@ namespace DAL.Framework
             return new DataTable();
         }
 
-        public DataTable ExecuteQuerySp(string sqlQuery, SqlParameter[] parameters)
+        public DataTable ExecuteQuerySp(string sqlQuery, IList<SqlParameter> parameters)
         {
             Debug.WriteLine("Called ExecuteQuerySp()");
             WriteArguments(sqlQuery, parameters);
@@ -69,7 +67,7 @@ namespace DAL.Framework
             return new DataTable();
         }
 
-        public List<T> ExecuteQuery<T>(string sqlQuery, SqlParameter[] parameters) where T : class, new()
+        public List<T> ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()
         {
             Debug.WriteLine("Called ExecuteQuery<T>()");
             WriteArguments(sqlQuery, parameters);
@@ -77,7 +75,7 @@ namespace DAL.Framework
             return new List<T>();
         }
 
-        public T ExecuteQuery<T>(string sqlQuery, SqlParameter[] parameters, Func<SqlDataReader, T> processor)
+        public T ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor)
         {
             if (processor == null)
                 throw new ArgumentException(NULL_PROCESSOR_METHOD);
@@ -89,7 +87,7 @@ namespace DAL.Framework
             return default(T);
         }
 
-        public List<T> ExecuteQuerySp<T>(string sqlQuery, SqlParameter[] parameters) where T : class, new()
+        public List<T> ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()
         {
             Debug.WriteLine("Called ExecuteQuerySp<T>()");
             WriteArguments(sqlQuery, parameters);
@@ -97,7 +95,7 @@ namespace DAL.Framework
             return new List<T>();
         }
 
-        public T ExecuteQuerySp<T>(string sqlQuery, SqlParameter[] parameters, Func<SqlDataReader, T> processor)
+        public T ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor)
         {
             if (processor == null)
                 throw new ArgumentException(NULL_PROCESSOR_METHOD);
@@ -109,7 +107,7 @@ namespace DAL.Framework
             return default(T);
         }
 
-        public int ExecuteNonQuery(string sqlQuery, SqlParameter[] parameters)
+        public int ExecuteNonQuery(string sqlQuery, IList<SqlParameter> parameters)
         {
             Debug.WriteLine("Called ExecuteNonQuery()");
             WriteArguments(sqlQuery, parameters);
@@ -117,7 +115,7 @@ namespace DAL.Framework
             return 0;
         }
 
-        public int ExecuteNonQuerySp(string sqlQuery, SqlParameter[] parameters)
+        public int ExecuteNonQuerySp(string sqlQuery, IList<SqlParameter> parameters)
         {
             Debug.WriteLine("Called ExecuteNonQuerySp()");
             WriteArguments(sqlQuery, parameters);
@@ -125,7 +123,7 @@ namespace DAL.Framework
             return 0;
         }
 
-        public T ExecuteScalar<T>(string sqlQuery, SqlParameter[] parameters)
+        public T ExecuteScalar<T>(string sqlQuery, IList<SqlParameter> parameters)
         {
             Debug.WriteLine("Called ExecuteScalar()");
             WriteArguments(sqlQuery, parameters);
@@ -133,7 +131,7 @@ namespace DAL.Framework
             return default(T);
         }
 
-        public T ExecuteScalarSp<T>(string sqlQuery, SqlParameter[] parameters)
+        public T ExecuteScalarSp<T>(string sqlQuery, IList<SqlParameter> parameters)
         {
             Debug.WriteLine("Called ExecuteScalarSp()");
             WriteArguments(sqlQuery, parameters);
