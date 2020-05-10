@@ -16,6 +16,10 @@
     <AssemblyVersion>1.0.2.0</AssemblyVersion>
     <FileVersion>1.0.2.0</FileVersion>
     <Version>1.0.2</Version>
+    <Description>DAL.Standard is a light weight wrapper around ADO.NET objects to make working with sql dbs simple and easy.</Description>
+    <PackageTags>ADO, SQL, Database, C#</PackageTags>
+    <PackageReleaseNotes>Converted all parameter arrays to IList objects, added in improved exception data options.</PackageReleaseNotes>
+    <NeutralLanguage />
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
