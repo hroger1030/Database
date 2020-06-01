@@ -75,15 +75,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="Objects\DataBase\DatabaseFake.cs" />
-    <Compile Include="Objects\DataBase\Database.cs" />
-    <Compile Include="Objects\DataBase\IDatabase.cs" />
-    <Compile Include="Objects\DataBase\SqlMetadata\eSqlBaseType.cs" />
-    <Compile Include="Objects\DataBase\SqlMetadata\SqlConstraint.cs" />
-    <Compile Include="Objects\DataBase\SqlMetadata\SqlScript.cs" />
-    <Compile Include="Objects\DataBase\SqlMetadata\SqlDatabase.cs" />
-    <Compile Include="Objects\DataBase\SqlMetadata\SqlColumn.cs" />
-    <Compile Include="Objects\DataBase\SqlMetadata\SqlTable.cs" />
+    <Compile Include="DataBase\DatabaseFake.cs" />
+    <Compile Include="DataBase\Database.cs" />
+    <Compile Include="DataBase\IDatabase.cs" />
+    <Compile Include="DataBase\SqlMetadata\eSqlBaseType.cs" />
+    <Compile Include="DataBase\SqlMetadata\SqlConstraint.cs" />
+    <Compile Include="DataBase\SqlMetadata\SqlScript.cs" />
+    <Compile Include="DataBase\SqlMetadata\SqlDatabase.cs" />
+    <Compile Include="DataBase\SqlMetadata\SqlColumn.cs" />
+    <Compile Include="DataBase\SqlMetadata\SqlTable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

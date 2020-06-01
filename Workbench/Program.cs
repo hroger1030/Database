@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 
 using DAL.Standard;
-using Newtonsoft.Json;
 
 namespace Workbench
 {
     public class Program
     {
-        private const string LOCAL_SQL = "Data Source=Localhost;Initial Catalog=Master;Integrated Security=SSPI;Connect Timeout=1;";
-
         public static void Main(string[] args)
         {
             AppDomain.CurrentDomain.UnhandledException += Application_Error;

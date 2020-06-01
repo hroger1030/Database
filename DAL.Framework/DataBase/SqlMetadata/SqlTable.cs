@@ -62,6 +62,10 @@ namespace DAL.Framework.SqlMetadata
         {
             get { return PkList.Select(c => c.Name).ToArray(); }
         }
+        public string FullName
+        {
+            get { return $"{Schema}.{Name}"; }
+        }
 
         public SqlTable() { }
 

@@ -25,7 +25,7 @@ namespace DAL.Standard.SqlMetadata
 {
     public class SqlDatabase
     {
-        private const string DEFAULT_CONNECTION_STRING = "Data Source=Localhost;Initial Catalog=Master;Integrated Security=SSPI;Connect Timeout=1;";
+        public const string DEFAULT_CONNECTION_STRING = "Data Source=Localhost;Initial Catalog=Master;Integrated Security=SSPI;Connect Timeout=1;";
 
         public string Name { get; set; }
         public Dictionary<string, SqlTable> Tables { get; set; }
@@ -33,7 +33,6 @@ namespace DAL.Standard.SqlMetadata
         public Dictionary<string, SqlScript> Functions { get; set; }
         public Dictionary<string, SqlConstraint> Constraints { get; set; }
         public string ConnectionString { get; set; }
-        public List<Exception> ErrorList { get; set; }
 
         public string FormattedDatabaseName
         {
@@ -53,13 +52,15 @@ namespace DAL.Standard.SqlMetadata
             Functions = new Dictionary<string, SqlScript>();
             Constraints = new Dictionary<string, SqlConstraint>();
             ConnectionString = string.Empty;
-            ErrorList = new List<Exception>();
         }
 
-        public bool LoadDatabaseMetadata(string databaseName, string connectionString)
+        public void LoadDatabaseMetadata(string databaseName, string connectionString)
         {
             if (string.IsNullOrEmpty(databaseName))
                 throw new ArgumentException("Database name is null or empty");
+
+            if (string.IsNullOrEmpty(connectionString))
+                throw new ArgumentException("Connection string name is null or empty");
 
             Reset();
 
@@ -67,166 +68,120 @@ namespace DAL.Standard.SqlMetadata
             ConnectionString = connectionString;
 
             // load and parse out table data
-            try
+            string sqlQuery = GetTableData();
+
+            var db = new Database(ConnectionString);
+            DataTable dt = db.ExecuteQuery(sqlQuery, null);
+
+            if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
             {
-                string sqlQuery = GetTableData();
-
-                var db = new Database(ConnectionString);
-                DataTable dt = db.ExecuteQuery(sqlQuery, null);
-
-                if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
+                foreach (DataRow dr in dt.Rows)
                 {
-                    foreach (DataRow dr in dt.Rows)
+                    string tableName = (string)dr["TableName"];
+                    string columnName = (string)dr["ColumnName"];
+                    string schemaName = (string)dr["SchemaName"];
+
+                    // because tables are tied to the schema they are in, we need to make sure that
+                    // the schema is included with the table name.
+                    string fullTableName = $"{schemaName}.{tableName}";
+
+                    if (!Tables.ContainsKey(fullTableName))
                     {
-                        string tableName = (string)dr["TableName"];
-                        string columnName = (string)dr["ColumnName"];
-                        string schemaName = (string)dr["SchemaName"];
-
-                        if (!Tables.ContainsKey(tableName))
-                        {
-                            SqlTable sqlTable = new SqlTable(this, schemaName, tableName);
-                            Tables.Add(tableName, sqlTable);
-                        }
-
-                        var sql_column = new SqlColumn
-                        {
-                            Schema = (string)dr["SchemaName"],
-                            Table = Tables[tableName],
-                            Name = (string)dr["ColumnName"],
-                            DataType = (string)dr["DataType"],
-                            Length = Convert.ToInt32(dr["Length"]),
-                            Precision = Convert.ToInt32(dr["Precision"]),
-                            IsNullable = Convert.ToBoolean(dr["IsNullable"]),
-                            IsPk = Convert.ToBoolean(dr["IsPK"]),
-                            IsIdentity = Convert.ToBoolean(dr["IsIdentity"]),
-                            ColumnOrdinal = Convert.ToInt32(dr["ColumnOrdinal"])
-                        };
-
-                        if (Tables[tableName].Columns.ContainsKey(columnName))
-                            throw new Exception($"Column {columnName} already exists in table {Tables[tableName]}");
-                        else
-                            Tables[tableName].Columns.Add(columnName, sql_column);
+                        SqlTable sqlTable = new SqlTable(this, schemaName, tableName);
+                        Tables.Add(fullTableName, sqlTable);
                     }
+
+                    var sql_column = new SqlColumn
+                    {
+                        Schema = (string)dr["SchemaName"],
+                        Table = Tables[fullTableName],
+                        Name = (string)dr["ColumnName"],
+                        DataType = (string)dr["DataType"],
+                        Length = Convert.ToInt32(dr["Length"]),
+                        Precision = Convert.ToInt32(dr["Precision"]),
+                        IsNullable = Convert.ToBoolean(dr["IsNullable"]),
+                        IsPk = Convert.ToBoolean(dr["IsPK"]),
+                        IsIdentity = Convert.ToBoolean(dr["IsIdentity"]),
+                        ColumnOrdinal = Convert.ToInt32(dr["ColumnOrdinal"]),
+                        DefaultValue = (dr["DefaultValue"] == DBNull.Value) ? string.Empty : RemoveWrappingCharacters((string)dr["DefaultValue"])
+                    };
+
+                    if (Tables[fullTableName].Columns.ContainsKey(columnName))
+                        throw new Exception($"Column {columnName} already exists in table {Tables[tableName]}");
+                    else
+                        Tables[fullTableName].Columns.Add(columnName, sql_column);
                 }
-            }
-            catch (Exception ex)
-            {
-                ErrorList.Add(ex);
             }
 
             // get SP
-            try
-            {
-                string sqlQuery = GetStoredProcedures();
-                var db = new Database(ConnectionString);
-                DataTable dt = db.ExecuteQuery(sqlQuery, null);
+            sqlQuery = GetStoredProcedures();
+            db = new Database(ConnectionString);
+            dt = db.ExecuteQuery(sqlQuery, null);
 
-                if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
+            if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
+            {
+                foreach (DataRow dr in dt.Rows)
                 {
-                    foreach (DataRow dr in dt.Rows)
+                    SqlScript sql_script = new SqlScript
                     {
-                        SqlScript sql_script = new SqlScript
-                        {
-                            Name = (string)dr["Name"],
-                            Body = (string)dr["Body"]
-                        };
+                        Name = (string)dr["Name"],
+                        Body = (string)dr["Body"]
+                    };
 
-                        if (StoredProcedures.ContainsKey(sql_script.Name))
-                            StoredProcedures[sql_script.Name].Body += sql_script.Body;
-                        else
-                            StoredProcedures.Add(sql_script.Name, sql_script);
-                    }
+                    if (StoredProcedures.ContainsKey(sql_script.Name))
+                        StoredProcedures[sql_script.Name].Body += sql_script.Body;
+                    else
+                        StoredProcedures.Add(sql_script.Name, sql_script);
                 }
-            }
-            catch (Exception ex)
-            {
-                ErrorList.Add(ex);
             }
 
             // get functions
-            try
-            {
-                string sqlQuery = GetFunctions();
-                var db = new Database(ConnectionString);
-                DataTable dt = db.ExecuteQuery(sqlQuery, null);
+            sqlQuery = GetFunctions();
+            db = new Database(ConnectionString);
+            dt = db.ExecuteQuery(sqlQuery, null);
 
-                if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
+            if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
+            {
+                foreach (DataRow dr in dt.Rows)
                 {
-                    foreach (DataRow dr in dt.Rows)
+                    SqlScript sql_script = new SqlScript
                     {
-                        SqlScript sql_script = new SqlScript
-                        {
-                            Name = (string)dr["Name"],
-                            Body = (string)dr["Body"]
-                        };
+                        Name = (string)dr["Name"],
+                        Body = (string)dr["Body"]
+                    };
 
-                        if (Functions.ContainsKey(sql_script.Name))
-                            Functions[sql_script.Name].Body += sql_script.Body;
-                        else
-                            Functions.Add(sql_script.Name, sql_script);
-                    }
+                    if (Functions.ContainsKey(sql_script.Name))
+                        Functions[sql_script.Name].Body += sql_script.Body;
+                    else
+                        Functions.Add(sql_script.Name, sql_script);
                 }
-            }
-            catch (Exception ex)
-            {
-                ErrorList.Add(ex);
             }
 
             // get constraints
-            try
+            sqlQuery = GetConstraints();
+            db = new Database(ConnectionString);
+            dt = db.ExecuteQuery(sqlQuery, null);
+
+            if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
             {
-                string sqlQuery = GetConstraints();
-                var db = new Database(ConnectionString);
-                DataTable dt = db.ExecuteQuery(sqlQuery, null);
-
-                if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
+                foreach (DataRow dr in dt.Rows)
                 {
-                    foreach (DataRow dr in dt.Rows)
+                    SqlConstraint sql_constraint = new SqlConstraint
                     {
-                        SqlConstraint sql_constraint = new SqlConstraint
-                        {
-                            ConstraintName = (string)dr["ConstraintName"],
-                            FKTable = (string)dr["FKTable"],
-                            FKColumn = (string)dr["FKColumn"],
-                            PKTable = (string)dr["PKTable"],
-                            PKColumn = (string)dr["PKColumn"]
-                        };
+                        ConstraintName = (string)dr["ConstraintName"],
+                        FKTable = (string)dr["FKTable"],
+                        FKColumn = (string)dr["FKColumn"],
+                        PKTable = (string)dr["PKTable"],
+                        PKColumn = (string)dr["PKColumn"]
+                    };
 
-                        if (Constraints.ContainsKey(sql_constraint.ConstraintName))
-                            throw new Exception(string.Format("Constraint {0} already exists.", sql_constraint.ConstraintName));
-                        else
-                            Constraints.Add(sql_constraint.ConstraintName, sql_constraint);
-                    }
+                    if (Constraints.ContainsKey(sql_constraint.ConstraintName))
+                        throw new Exception($"Constraint {sql_constraint.ConstraintName} already exists");
+                    else
+                        Constraints.Add(sql_constraint.ConstraintName, sql_constraint);
                 }
             }
-            catch (Exception ex)
-            {
-                ErrorList.Add(ex);
-            }
-
-            // load default values
-            try
-            {
-                string sqlQuery = GetDefaultValues();
-                var db = new Database(ConnectionString);
-                DataTable dt = db.ExecuteQuery(sqlQuery, null);
-
-                if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
-                {
-                    foreach (DataRow dr in dt.Rows)
-                    {
-                        if (Tables.ContainsKey((string)dr["TableName"]))
-                            if (Tables[(string)dr["TableName"]].Columns.ContainsKey((string)dr["ColumnName"]))
-                                Tables[(string)dr["TableName"]].Columns[(string)dr["ColumnName"]].DefaultValue = RemoveWrappingCharacters((string)dr["DefaultValue"]);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ErrorList.Add(ex);
-            }
-
-            return ErrorList.Count == 0;
+            return;
         }
 
         /// <summary>
@@ -239,71 +194,60 @@ namespace DAL.Standard.SqlMetadata
             /*
             USE [<db>] 
 
-            SELECT	sys.schemas.[Name]							AS [SchemaName],
-		            sys.objects.[Name]				            AS [TableName],
-                    sys.columns.[Name]				            AS [ColumnName],
-                    sys.types.[name]				            AS [DataType],
-                    sys.columns.[max_length]		            AS [Length],
-                    sys.columns.[precision]			            AS [Precision],
-                    sys.columns.[scale]				            AS [Scale],	 
-                    sys.columns.[is_nullable]		            AS [IsNullable],
-                    CAST(ISNULL(PrimaryKeys.IsPK,0) AS BIT)     AS [IsPK],
-                    sys.columns.[is_identity]		            AS [IsIdentity],
-                    sys.columns.column_id			            AS [ColumnOrdinal]
+            SELECT	ss.[Name]							AS [SchemaName],
+		            so.[Name]							AS [TableName],
+                    sc.[Name]				            AS [ColumnName],
+                    st.[name]							AS [DataType],
+                    sc.[max_length]						AS [Length],
+                    sc.[precision]			            AS [Precision],
+                    sc.[scale]				            AS [Scale],	 
+                    sc.[is_nullable]		            AS [IsNullable],
+					ISNULL(si.[is_primary_key],0)		AS [IsPK],
+					sc.[is_identity]		            AS [IsIdentity],
+                    sc.[column_id]			            AS [ColumnOrdinal],
+					OBJECT_DEFINITION(sc.default_object_id) AS [Default Value]
 
-            FROM	sys.objects 
-                    INNER JOIN sys.columns ON sys.objects.object_id = sys.columns.object_id
-                    INNER JOIN sys.types ON sys.columns.system_type_id = sys.types.system_type_id
-		            INNER JOIN sys.schemas on sys.objects.schema_id = sys.schemas.schema_id
-                    LEFT JOIN
-                    ( 
-                        SELECT 	DISTINCT C.[tableName]		AS [TableName],
-                                K.[columnName]				AS [ColumnName],
-                                1							AS [IsPK]				
+            FROM	sys.objects so
+                    INNER JOIN sys.columns sc ON so.object_id = sc.object_id
+                    INNER JOIN sys.types st ON sc.system_type_id = st.system_type_id
+		            INNER JOIN sys.schemas ss on so.schema_id = ss.schema_id
+					LEFT JOIN sys.index_columns sic  ON sic.object_id = sc.object_id AND sic.column_id = sc.column_id
+					LEFT JOIN sys.indexes si ON so.object_id = si.object_id AND sic.index_id = si.index_id
 
-                        FROM 	INFORMATION_SCHEMA.KEY_COLUMN_USAGE K
-                                INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS C ON K.tableName = C.tableName
-                        WHERE	C.CONSTRAINT_TYPE = 'PRIMARY KEY'
-                    ) PrimaryKeys ON PrimaryKeys.[TableName] = sys.objects.[Name] AND PrimaryKeys.[ColumnName] = sys.columns.[Name]
+            WHERE	so.type = 'U'
+            AND     st.[name] NOT IN ('sysname','timestamp','hierarchyid','geometry','geography')
+            AND     st.is_user_defined = 0
 
-            WHERE	sys.objects.type = 'U'
-            AND     sys.types.[name] NOT IN ('sysname','timestamp','hierarchyid','geometry','geography')
-            AND     sys.types.is_user_defined = 0
-
-            ORDER	BY sys.schemas.[Name], sys.objects.[name], sys.columns.[column_id]
+            ORDER	BY ss.[Name], so.[name], sc.[column_id]
             */
 
             var sb = new StringBuilder();
 
-            sb.AppendLine(" USE [" + Name + "]");
-            sb.AppendLine(" SELECT sys.schemas.[Name] AS [SchemaName],");
-            sb.AppendLine(" sys.Objects.[Name] AS [TableName],");
-            sb.AppendLine(" sys.columns.[Name] AS [ColumnName],");
-            sb.AppendLine(" sys.types.[name] AS [DataType],");
-            sb.AppendLine(" sys.columns.[max_length] AS [Length],");
-            sb.AppendLine(" sys.columns.[precision] AS [Precision],");
-            sb.AppendLine(" sys.columns.[scale] AS [Scale],");
-            sb.AppendLine(" sys.columns.[is_nullable] AS [IsNullable],");
-            sb.AppendLine(" CAST(ISNULL(PrimaryKeys.IsPK,0) AS BIT) AS [IsPK],");
-            sb.AppendLine(" sys.columns.[is_identity] AS [IsIdentity],");
-            sb.AppendLine(" sys.columns.column_id AS [ColumnOrdinal]");
-            sb.AppendLine(" FROM sys.objects ");
-            sb.AppendLine(" INNER JOIN sys.columns ON sys.objects.object_id = sys.columns.object_id");
-            sb.AppendLine(" INNER JOIN sys.types ON sys.columns.system_type_id = sys.types.system_type_id");
-            sb.AppendLine(" INNER JOIN sys.schemas on sys.objects.schema_id = sys.schemas.schema_id");
-            sb.AppendLine(" LEFT JOIN");
-            sb.AppendLine(" ( ");
-            sb.AppendLine(" SELECT DISTINCT C.[tableName] AS [TableName],");
-            sb.AppendLine(" K.[columnName] AS [ColumnName],");
-            sb.AppendLine(" 1 AS [IsPK] ");
-            sb.AppendLine(" FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE K");
-            sb.AppendLine(" INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS C ON K.tableName = C.tableName");
-            sb.AppendLine(" WHERE C.CONSTRAINT_TYPE = 'PRIMARY KEY'");
-            sb.AppendLine(" ) PrimaryKeys ON PrimaryKeys.[TableName] = sys.Objects.[Name] AND PrimaryKeys.[ColumnName] = sys.columns.[Name]");
-            sb.AppendLine(" WHERE sys.objects.type = 'U'");
-            sb.AppendLine(" AND sys.types.[name] NOT IN ('sysname','timestamp','hierarchyid','geometry','geography')");
-            sb.AppendLine(" AND sys.types.is_user_defined = 0");
-            sb.AppendLine(" ORDER BY sys.schemas.[Name], sys.objects.[name], sys.columns.[column_id]");
+            sb.AppendLine("USE [" + Name + "]");
+            sb.AppendLine("SELECT ss.[Name] AS [SchemaName],");
+            sb.AppendLine("so.[Name] AS [TableName],");
+            sb.AppendLine("sc.[Name] AS [ColumnName],");
+            sb.AppendLine("st.[name] AS [DataType],");
+            sb.AppendLine("sc.[max_length] AS [Length],");
+            sb.AppendLine("sc.[precision] AS [Precision],");
+            sb.AppendLine("sc.[scale] AS [Scale],");
+            sb.AppendLine("sc.[is_nullable] AS [IsNullable],");
+            sb.AppendLine("ISNULL(si.[is_primary_key],0) AS [IsPK],");
+            sb.AppendLine("sc.[is_identity] AS [IsIdentity],");
+            sb.AppendLine("sc.[column_id] AS [ColumnOrdinal],");
+            sb.AppendLine("OBJECT_DEFINITION(sc.default_object_id) AS [DefaultValue]");
+
+            sb.AppendLine("FROM sys.objects so");
+            sb.AppendLine("INNER JOIN sys.columns sc ON so.object_id = sc.object_id");
+            sb.AppendLine("INNER JOIN sys.types st ON sc.system_type_id = st.system_type_id");
+            sb.AppendLine("INNER JOIN sys.schemas ss on so.schema_id = ss.schema_id");
+            sb.AppendLine("LEFT JOIN sys.index_columns sic  ON sic.object_id = sc.object_id AND sic.column_id = sc.column_id");
+            sb.AppendLine("LEFT JOIN sys.indexes si ON so.object_id = si.object_id AND sic.index_id = si.index_id");
+
+            sb.AppendLine("WHERE so.type = 'U'");
+            sb.AppendLine("AND st.[name] NOT IN ('sysname','timestamp','hierarchyid','geometry','geography')");
+            sb.AppendLine("AND st.is_user_defined = 0");
+            sb.AppendLine("ORDER BY ss.[Name], so.[name], sc.[column_id]");
 
             return sb.ToString();
         }
@@ -324,14 +268,14 @@ namespace DAL.Standard.SqlMetadata
 
             var sb = new StringBuilder();
 
-            sb.Append(" USE [" + Name + "]");
-            sb.Append(" SELECT sys.objects.name	AS [Name],");
-            sb.Append(" syscomments.text AS [Body]");
-            sb.Append(" FROM sys.objects");
-            sb.Append(" INNER JOIN syscomments ON sys.objects.object_id = syscomments.id");
-            sb.Append(" WHERE sys.objects.type = 'p'");
-            sb.Append(" AND sys.objects.is_ms_shipped = 0");
-            sb.Append(" ORDER BY sys.objects.name, syscomments.colid");
+            sb.AppendLine(" USE [" + Name + "]");
+            sb.AppendLine(" SELECT sys.objects.name	AS [Name],");
+            sb.AppendLine(" syscomments.text AS [Body]");
+            sb.AppendLine(" FROM sys.objects");
+            sb.AppendLine(" INNER JOIN syscomments ON sys.objects.object_id = syscomments.id");
+            sb.AppendLine(" WHERE sys.objects.type = 'p'");
+            sb.AppendLine(" AND sys.objects.is_ms_shipped = 0");
+            sb.AppendLine(" ORDER BY sys.objects.name, syscomments.colid");
 
             return sb.ToString();
         }
@@ -352,14 +296,14 @@ namespace DAL.Standard.SqlMetadata
 
             var sb = new StringBuilder();
 
-            sb.Append(" USE [" + Name + "]");
-            sb.Append(" SELECT sys.objects.name AS [Name],");
-            sb.Append(" syscomments.text AS [Body]");
-            sb.Append(" FROM sys.objects");
-            sb.Append(" INNER JOIN syscomments ON sys.objects.object_id = syscomments.id");
-            sb.Append(" WHERE sys.objects.type = 'fn'");
-            sb.Append(" AND sys.objects.is_ms_shipped = 0");
-            sb.Append(" ORDER BY sys.objects.name, syscomments.colid");
+            sb.AppendLine(" USE [" + Name + "]");
+            sb.AppendLine(" SELECT sys.objects.name AS [Name],");
+            sb.AppendLine(" syscomments.text AS [Body]");
+            sb.AppendLine(" FROM sys.objects");
+            sb.AppendLine(" INNER JOIN syscomments ON sys.objects.object_id = syscomments.id");
+            sb.AppendLine(" WHERE sys.objects.type = 'fn'");
+            sb.AppendLine(" AND sys.objects.is_ms_shipped = 0");
+            sb.AppendLine(" ORDER BY sys.objects.name, syscomments.colid");
 
             return sb.ToString();
         }
@@ -370,10 +314,10 @@ namespace DAL.Standard.SqlMetadata
             USE [<db>] 
 
             SELECT	C.CONSTRAINT_NAME	AS [ConstraintName],
-                    FK.tableName		AS FKTable,
-                    CU.columnName		AS FKColumn,
-                    PK.tableName		AS PKTable,
-                    PT.columnName		AS PKColumn
+                    FK.TABLE_NAME		AS FKTable,
+                    CU.COLUMN_NAME		AS FKColumn,
+                    PK.TABLE_NAME		AS PKTable,
+                    PT.COLUMN_NAME		AS PKColumn
 
             FROM	INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS C
                     INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS FK ON C.CONSTRAINT_NAME = FK.CONSTRAINT_NAME
@@ -381,12 +325,12 @@ namespace DAL.Standard.SqlMetadata
                     INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE CU ON C.CONSTRAINT_NAME = CU.CONSTRAINT_NAME
                     INNER JOIN 
                     (
-                        SELECT	i1.tableName, 
-                                i2.columnName
+                        SELECT	i1.TABLE_NAME, 
+                                i2.COLUMN_NAME
                         FROM	INFORMATION_SCHEMA.TABLE_CONSTRAINTS i1
                                 INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE i2 ON i1.CONSTRAINT_NAME = i2.CONSTRAINT_NAME
                         WHERE	i1.CONSTRAINT_TYPE = 'PRIMARY KEY'
-                    ) PT ON PT.tableName = PK.tableName
+                    ) PT ON PT.TABLE_NAME = PK.TABLE_NAME
 
             ORDER BY
             C.CONSTRAINT_NAME
@@ -394,58 +338,26 @@ namespace DAL.Standard.SqlMetadata
 
             var sb = new StringBuilder();
 
-            sb.Append(" USE [" + Name + "]");
-            sb.Append(" SELECT C.CONSTRAINT_NAME AS [ConstraintName],");
-            sb.Append(" FK.tableName AS FKTable,");
-            sb.Append(" CU.columnName AS FKColumn,");
-            sb.Append(" PK.tableName AS PKTable,");
-            sb.Append(" PT.columnName AS PKColumn");
+            sb.AppendLine(" USE [" + Name + "]");
+            sb.AppendLine(" SELECT C.CONSTRAINT_NAME AS [ConstraintName],");
+            sb.AppendLine(" FK.TABLE_NAME AS FKTable,");
+            sb.AppendLine(" CU.COLUMN_NAME AS FKColumn,");
+            sb.AppendLine(" PK.TABLE_NAME AS PKTable,");
+            sb.AppendLine(" PT.COLUMN_NAME AS PKColumn");
 
-            sb.Append(" FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS C");
-            sb.Append(" INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS FK ON C.CONSTRAINT_NAME = FK.CONSTRAINT_NAME");
-            sb.Append(" INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS PK ON C.UNIQUE_CONSTRAINT_NAME = PK.CONSTRAINT_NAME");
-            sb.Append(" INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE CU ON C.CONSTRAINT_NAME = CU.CONSTRAINT_NAME");
-            sb.Append(" INNER JOIN (");
-            sb.Append(" SELECT i1.tableName,");
-            sb.Append(" i2.columnName");
-            sb.Append(" FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS i1");
-            sb.Append(" INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE i2 ON i1.CONSTRAINT_NAME = i2.CONSTRAINT_NAME");
-            sb.Append(" WHERE i1.CONSTRAINT_TYPE = 'PRIMARY KEY'");
-            sb.Append(" ) PT ON PT.tableName = PK.tableName");
-            sb.Append(" ORDER BY");
-            sb.Append(" C.CONSTRAINT_NAME");
-
-            return sb.ToString();
-        }
-
-        protected string GetDefaultValues()
-        {
-            /*
-            USE [<db>] 
-
-            SELECT	sys.Objects.[Name]  AS [TableName],
-                    syscolumns.name     AS [ColumnName],
-                    syscomments.text    AS [DefaultValue],
-            FROM	sys.objects 
-                    INNER JOIN syscolumns ON sys.objects.[object_id] = syscolumns.[id]
-                    INNER JOIN syscomments ON syscomments.id = syscolumns.cdefault
-            WHERE	syscolumns.cdefault > 0
-            AND	    is_ms_shipped = 0 
-            ORDER	BY sys.objects.[name],syscolumns.colorder
-            */
-
-            var sb = new StringBuilder();
-
-            sb.Append(" USE [" + Name + "]");
-            sb.Append(" SELECT sys.Objects.[Name] AS [TableName],");
-            sb.Append(" syscolumns.[Name] AS [ColumnName],");
-            sb.Append(" syscomments.text AS [DefaultValue]");
-            sb.Append(" FROM sys.objects");
-            sb.Append(" INNER JOIN syscolumns ON sys.objects.[object_id] = syscolumns.[id]");
-            sb.Append(" INNER JOIN syscomments ON syscomments.id = syscolumns.cdefault");
-            sb.Append(" WHERE syscolumns.cdefault > 0");
-            sb.Append(" AND	is_ms_shipped = 0");
-            sb.Append(" ORDER BY sys.objects.[name],syscolumns.colorder");
+            sb.AppendLine(" FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS C");
+            sb.AppendLine(" INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS FK ON C.CONSTRAINT_NAME = FK.CONSTRAINT_NAME");
+            sb.AppendLine(" INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS PK ON C.UNIQUE_CONSTRAINT_NAME = PK.CONSTRAINT_NAME");
+            sb.AppendLine(" INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE CU ON C.CONSTRAINT_NAME = CU.CONSTRAINT_NAME");
+            sb.AppendLine(" INNER JOIN (");
+            sb.AppendLine(" SELECT i1.TABLE_NAME,");
+            sb.AppendLine(" i2.COLUMN_NAME");
+            sb.AppendLine(" FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS i1");
+            sb.AppendLine(" INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE i2 ON i1.CONSTRAINT_NAME = i2.CONSTRAINT_NAME");
+            sb.AppendLine(" WHERE i1.CONSTRAINT_TYPE = 'PRIMARY KEY'");
+            sb.AppendLine(" ) PT ON PT.TABLE_NAME = PK.TABLE_NAME");
+            sb.AppendLine(" ORDER BY");
+            sb.AppendLine(" C.CONSTRAINT_NAME");
 
             return sb.ToString();
         }
