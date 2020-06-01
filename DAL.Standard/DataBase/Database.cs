@@ -39,6 +39,7 @@ namespace DAL.Standard
         private readonly string _Connection;
         private readonly bool _LogConnection;
         private readonly bool _LogParameters;
+        private readonly bool _ThrowUnmappedFieldsError;
 
         public Database() : this(DEFAULT_CONNECTION_STRING) { }
 
@@ -48,7 +49,7 @@ namespace DAL.Standard
         /// <param name="connection">A sql connection string.</param>
         /// <param name="logConnection">Allow connection string to be included in thrown exceptions. Defaults to false.</param>
         /// <param name="logParameters">Allow query parameters to be included in thrown exceptions. Defaults to false.</param>
-        public Database(string connection, bool logConnection = false, bool logParameters = false)
+        public Database(string connection, bool logConnection = false, bool logParameters = false, bool throwUnmappedFieldsError = true)
         {
             if (string.IsNullOrWhiteSpace(connection))
                 throw new ArgumentNullException(EMPTY_CONNECTION_STRING);
@@ -56,6 +57,7 @@ namespace DAL.Standard
             _Connection = connection;
             _LogConnection = logConnection;
             _LogParameters = logParameters;
+            _ThrowUnmappedFieldsError = throwUnmappedFieldsError;
         }
 
         public DataTable ExecuteQuery(string sqlQuery, IList<SqlParameter> parameters)
@@ -209,7 +211,7 @@ namespace DAL.Standard
 
                         using (SqlDataReader data_reader = cmd.ExecuteReader())
                         {
-                            var output = ParseDatareaderResult<T>(data_reader, true);
+                            var output = ParseDatareaderResult<T>(data_reader, _ThrowUnmappedFieldsError);
 
                             if (parameters != null)
                             {
@@ -373,7 +375,7 @@ namespace DAL.Standard
                 {
                     using (var cmd = new SqlCommand(sqlQuery, conn))
                     {
-                        T results = default(T);
+                        T results = default;
 
                         cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
 
@@ -393,12 +395,12 @@ namespace DAL.Standard
 
                         if (buffer == null)
                         {
-                            results = default(T);
+                            results = default;
                         }
                         else
                         {
                             if (buffer.GetType() == typeof(DBNull))
-                                results = default(T);
+                                results = default;
                             else if (buffer is T)
                                 return (T)buffer;
                             else
@@ -524,7 +526,12 @@ namespace DAL.Standard
             return $"{sqlQuery} {GenericListToStringList(value_list, null, null)}";
         }
 
-        private List<T> ParseDatareaderResult<T>(SqlDataReader reader, bool throwUnmappedFieldsError = false) where T : class, new()
+        /// <summary>
+        /// This method performs automatic mapping between a data reader and a POCO object, mapping any values that 
+        /// have properties names that match column names. It can be configured to throw exceptions if there isn't a 1:1 mapping.
+        /// </summary>
+        /// <returns></returns>
+        private List<T> ParseDatareaderResult<T>(SqlDataReader reader, bool throwUnmappedFieldsError) where T : class, new()
         {
             var outputType = typeof(T);
             var results = new List<T>();
@@ -746,7 +753,9 @@ namespace DAL.Standard
                                     break;
                                 }
                                 else
+                                {
                                     throw new Exception($"Column '{propertyLookup[columnName]}' has an unknown data type: '{propertyLookup[columnName].PropertyType.FullName}'.");
+                                }
                         }
 
                         propertyLookup[columnName].SetValue(new_object, fieldValue, null);
@@ -772,7 +781,6 @@ namespace DAL.Standard
         {
             var dt = new DataTable();
             var outputType = typeof(T);
-            var propertyLookup = new Dictionary<string, PropertyInfo>();
             var object_properties = outputType.GetProperties();
 
             foreach (var propertyInfo in object_properties)
