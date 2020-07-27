@@ -401,8 +401,8 @@ namespace DAL.Standard
                         {
                             if (buffer.GetType() == typeof(DBNull))
                                 results = default;
-                            else if (buffer is T)
-                                return (T)buffer;
+                            else if (buffer is T t)
+                                return t;
                             else
                                 return (T)Convert.ChangeType(buffer, typeof(T));
                         }
