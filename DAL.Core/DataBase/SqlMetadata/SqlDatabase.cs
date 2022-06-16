@@ -57,10 +57,10 @@ namespace DAL.Core.SqlMetadata
         public void LoadDatabaseMetadata(string databaseName, string connectionString)
         {
             if (string.IsNullOrEmpty(databaseName))
-                throw new ArgumentException("Database name is null or empty");
+                throw new ArgumentException(nameof(databaseName));
 
             if (string.IsNullOrEmpty(connectionString))
-                throw new ArgumentException("Connection string name is null or empty");
+                throw new ArgumentException(nameof(connectionString));
 
             Reset();
 
@@ -369,10 +369,10 @@ namespace DAL.Core.SqlMetadata
         protected string RemoveWrappingCharacters(string input)
         {
             if (input.Length > 1 && (input[0] == '(' || input[0] == '\''))
-                input = input.Substring(1, input.Length - 2);
+                input = input[1..^2];
 
             if (input.Length > 1 && (input[0] == '(' || input[0] == '\''))
-                input = input.Substring(1, input.Length - 2);
+                input = input[1..^2];
 
             return input;
         }

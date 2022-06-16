@@ -52,7 +52,7 @@ namespace DAL.Standard
         public Database(string connection, bool logConnection = false, bool logParameters = false, bool throwUnmappedFieldsError = true)
         {
             if (string.IsNullOrWhiteSpace(connection))
-                throw new ArgumentNullException(EMPTY_CONNECTION_STRING);
+                throw new ArgumentNullException(nameof(connection));
 
             _Connection = connection;
             _LogConnection = logConnection;
@@ -112,60 +112,51 @@ namespace DAL.Standard
 
         public DataTable GetSchema()
         {
-            using (SqlConnection conn = new SqlConnection(_Connection))
-            {
-                DataTable dt = null;
+            using var conn = new SqlConnection(_Connection);
 
-                conn.Open();
-                dt = conn.GetSchema("Databases");
-                conn.Close();
+            conn.Open();
+            var dt = conn.GetSchema("Databases");
+            conn.Close();
 
-                return dt;
-            }
+            return dt;
         }
 
         private DataTable ExecuteQuery(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentNullException(EMPTY_QUERY_STRING);
+                throw new ArgumentNullException(nameof(sqlQuery));
 
             try
             {
-                using (var conn = new SqlConnection(connection))
-                {
-                    using (var cmd = new SqlCommand(sqlQuery, conn))
-                    {
-                        using (SqlDataAdapter adapter = new SqlDataAdapter())
-                        {
-                            cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
+                using var conn = new SqlConnection(connection);
+                using var cmd = new SqlCommand(sqlQuery, conn);
+                using SqlDataAdapter adapter = new SqlDataAdapter();
+                cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
 
-                            if (parameters != null)
-                            {
-                                foreach (SqlParameter parameter in parameters)
-                                    cmd.Parameters.Add(parameter);
-                            }
+                if (parameters != null)
+                {
+                    foreach (SqlParameter parameter in parameters)
+                        cmd.Parameters.Add(parameter);
+                }
 
 #if (DEBUG)
-                            string SqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
+                string sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
 #endif
 
-                            var dt = new DataTable();
+                var dt = new DataTable();
 
-                            conn.Open();
-                            adapter.SelectCommand = cmd;
-                            adapter.Fill(dt);
-                            conn.Close();
+                conn.Open();
+                adapter.SelectCommand = cmd;
+                adapter.Fill(dt);
+                conn.Close();
 
-                            if (parameters != null)
-                            {
-                                for (int i = 0; i < cmd.Parameters.Count; i++)
-                                    parameters[i].Value = cmd.Parameters[i].Value;
-                            }
-
-                            return dt;
-                        }
-                    }
+                if (parameters != null)
+                {
+                    for (int i = 0; i < cmd.Parameters.Count; i++)
+                        parameters[i].Value = cmd.Parameters[i].Value;
                 }
+
+                return dt;
             }
             catch (Exception ex)
             {
@@ -187,45 +178,39 @@ namespace DAL.Standard
         private List<T> ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure) where T : class, new()
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentNullException(EMPTY_QUERY_STRING);
+                throw new ArgumentNullException(nameof(sqlQuery));
 
             try
             {
-                using (var conn = new SqlConnection(connection))
-                {
-                    using (var cmd = new SqlCommand(sqlQuery, conn))
-                    {
-                        cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
+                using var conn = new SqlConnection(connection);
+                using var cmd = new SqlCommand(sqlQuery, conn);
+                cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
 
-                        if (parameters != null)
-                        {
-                            foreach (SqlParameter parameter in parameters)
-                                cmd.Parameters.Add(parameter);
-                        }
+                if (parameters != null)
+                {
+                    foreach (SqlParameter parameter in parameters)
+                        cmd.Parameters.Add(parameter);
+                }
 
 #if (DEBUG)
-                        string SqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
+                string sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
 #endif
 
-                        conn.Open();
+                conn.Open();
 
-                        using (SqlDataReader data_reader = cmd.ExecuteReader())
-                        {
-                            var output = ParseDatareaderResult<T>(data_reader, _ThrowUnmappedFieldsError);
+                using SqlDataReader data_reader = cmd.ExecuteReader();
+                var output = ParseDatareaderResult<T>(data_reader, _ThrowUnmappedFieldsError);
 
-                            if (parameters != null)
-                            {
-                                for (int i = 0; i < cmd.Parameters.Count; i++)
-                                    parameters[i].Value = cmd.Parameters[i].Value;
-                            }
-
-                            data_reader.Close();
-                            conn.Close();
-
-                            return output;
-                        }
-                    }
+                if (parameters != null)
+                {
+                    for (int i = 0; i < cmd.Parameters.Count; i++)
+                        parameters[i].Value = cmd.Parameters[i].Value;
                 }
+
+                data_reader.Close();
+                conn.Close();
+
+                return output;
             }
             catch (Exception ex)
             {
@@ -247,48 +232,42 @@ namespace DAL.Standard
         private T ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure, Func<SqlDataReader, T> processor)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentNullException(EMPTY_QUERY_STRING);
+                throw new ArgumentNullException(nameof(sqlQuery));
 
             if (processor == null)
-                throw new ArgumentNullException(NULL_PROCESSOR_METHOD);
+                throw new ArgumentNullException(nameof(processor));
 
             try
             {
-                using (var conn = new SqlConnection(connection))
-                {
-                    using (var cmd = new SqlCommand(sqlQuery, conn))
-                    {
-                        cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
+                using var conn = new SqlConnection(connection);
+                using var cmd = new SqlCommand(sqlQuery, conn);
+                cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
 
-                        if (parameters != null)
-                        {
-                            foreach (SqlParameter parameter in parameters)
-                                cmd.Parameters.Add(parameter);
-                        }
+                if (parameters != null)
+                {
+                    foreach (SqlParameter parameter in parameters)
+                        cmd.Parameters.Add(parameter);
+                }
 
 #if (DEBUG)
-                        string SqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
+                string sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
 #endif
 
-                        conn.Open();
+                conn.Open();
 
-                        using (SqlDataReader data_reader = cmd.ExecuteReader())
-                        {
-                            var output = processor.Invoke(data_reader);
+                using SqlDataReader data_reader = cmd.ExecuteReader();
+                var output = processor.Invoke(data_reader);
 
-                            if (parameters != null)
-                            {
-                                for (int i = 0; i < cmd.Parameters.Count; i++)
-                                    parameters[i].Value = cmd.Parameters[i].Value;
-                            }
-
-                            data_reader.Close();
-                            conn.Close();
-
-                            return output;
-                        }
-                    }
+                if (parameters != null)
+                {
+                    for (int i = 0; i < cmd.Parameters.Count; i++)
+                        parameters[i].Value = cmd.Parameters[i].Value;
                 }
+
+                data_reader.Close();
+                conn.Close();
+
+                return output;
             }
             catch (Exception ex)
             {
@@ -310,42 +289,38 @@ namespace DAL.Standard
         private int ExecuteNonQuery(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentNullException(EMPTY_QUERY_STRING);
+                throw new ArgumentNullException(nameof(sqlQuery));
 
             if (string.IsNullOrWhiteSpace(connection))
-                throw new ArgumentNullException(EMPTY_CONNECTION_STRING);
+                throw new ArgumentNullException(nameof(connection));
 
             try
             {
-                using (var conn = new SqlConnection(connection))
-                {
-                    using (var cmd = new SqlCommand(sqlQuery, conn))
-                    {
-                        cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
+                using var conn = new SqlConnection(connection);
+                using var cmd = new SqlCommand(sqlQuery, conn);
+                cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
 
-                        if (parameters != null)
-                        {
-                            foreach (SqlParameter parameter in parameters)
-                                cmd.Parameters.Add(parameter);
-                        }
+                if (parameters != null)
+                {
+                    foreach (SqlParameter parameter in parameters)
+                        cmd.Parameters.Add(parameter);
+                }
 
 #if (DEBUG)
-                        string SqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
+                string sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
 #endif
 
-                        conn.Open();
-                        int results = cmd.ExecuteNonQuery();
-                        conn.Close();
+                conn.Open();
+                int results = cmd.ExecuteNonQuery();
+                conn.Close();
 
-                        if (parameters != null)
-                        {
-                            for (int i = 0; i < cmd.Parameters.Count; i++)
-                                parameters[i].Value = cmd.Parameters[i].Value;
-                        }
-
-                        return results;
-                    }
+                if (parameters != null)
+                {
+                    for (int i = 0; i < cmd.Parameters.Count; i++)
+                        parameters[i].Value = cmd.Parameters[i].Value;
                 }
+
+                return results;
             }
             catch (Exception ex)
             {
@@ -367,57 +342,53 @@ namespace DAL.Standard
         private T ExecuteScalar<T>(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentNullException(EMPTY_QUERY_STRING);
+                throw new ArgumentNullException(nameof(sqlQuery));
 
             try
             {
-                using (var conn = new SqlConnection(connection))
+                using var conn = new SqlConnection(connection);
+                using var cmd = new SqlCommand(sqlQuery, conn);
+                T results = default;
+
+                cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
+
+                if (parameters != null)
                 {
-                    using (var cmd = new SqlCommand(sqlQuery, conn))
-                    {
-                        T results = default;
-
-                        cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
-
-                        if (parameters != null)
-                        {
-                            foreach (SqlParameter parameter in parameters)
-                                cmd.Parameters.Add(parameter);
-                        }
+                    foreach (SqlParameter parameter in parameters)
+                        cmd.Parameters.Add(parameter);
+                }
 
 #if (DEBUG)
-                        string SqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
+                string sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
 #endif
 
-                        conn.Open();
+                conn.Open();
 
-                        object buffer = cmd.ExecuteScalar();
+                object buffer = cmd.ExecuteScalar();
 
-                        if (buffer == null)
-                        {
-                            results = default;
-                        }
-                        else
-                        {
-                            if (buffer.GetType() == typeof(DBNull))
-                                results = default;
-                            else if (buffer is T t)
-                                return t;
-                            else
-                                return (T)Convert.ChangeType(buffer, typeof(T));
-                        }
-
-                        conn.Close();
-
-                        if (parameters != null)
-                        {
-                            for (int i = 0; i < cmd.Parameters.Count; i++)
-                                parameters[i].Value = cmd.Parameters[i].Value;
-                        }
-
-                        return results;
-                    }
+                if (buffer == null)
+                {
+                    results = default;
                 }
+                else
+                {
+                    if (buffer.GetType() == typeof(DBNull))
+                        results = default;
+                    else if (buffer is T t)
+                        return t;
+                    else
+                        return (T)Convert.ChangeType(buffer, typeof(T));
+                }
+
+                conn.Close();
+
+                if (parameters != null)
+                {
+                    for (int i = 0; i < cmd.Parameters.Count; i++)
+                        parameters[i].Value = cmd.Parameters[i].Value;
+                }
+
+                return results;
             }
             catch (Exception ex)
             {
@@ -443,7 +414,7 @@ namespace DAL.Standard
         public static string GenericListToStringList<T>(IEnumerable<T> list, string quoteCharacter = null, string quoteEscapeCharacter = null)
         {
             if (list == null)
-                throw new ArgumentNullException("Cannot convert a null IEnumerable object");
+                throw new ArgumentNullException(nameof(list));
 
             var sb = new StringBuilder();
             bool firstFlag = true;
@@ -482,7 +453,7 @@ namespace DAL.Standard
         private string GenerateSqlDebugString(string sqlQuery, IList<SqlParameter> parameterList)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentNullException(EMPTY_QUERY_STRING);
+                throw new ArgumentNullException(nameof(sqlQuery));
 
             if (parameterList == null || parameterList.Count == 0)
                 return sqlQuery;

@@ -16,16 +16,15 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
-namespace DAL.Standard.SqlMetadata
+namespace DAL.DataBase.SqlMetadata
 {
     public class SqlDatabase
     {
         public const string DEFAULT_CONNECTION_STRING = "Data Source=Localhost;Initial Catalog=Master;Integrated Security=SSPI;Connect Timeout=1;";
+        private const int START_INDEX = 1;
 
         public string Name { get; set; }
         public Dictionary<string, SqlTable> Tables { get; set; }
@@ -41,11 +40,6 @@ namespace DAL.Standard.SqlMetadata
 
         public SqlDatabase()
         {
-            Reset();
-        }
-
-        private void Reset()
-        {
             Name = string.Empty;
             Tables = new Dictionary<string, SqlTable>();
             StoredProcedures = new Dictionary<string, SqlScript>();
@@ -54,13 +48,23 @@ namespace DAL.Standard.SqlMetadata
             ConnectionString = string.Empty;
         }
 
+        private void Reset()
+        {
+            Name = string.Empty;
+            Tables.Clear();
+            StoredProcedures.Clear(); ;
+            Functions.Clear(); ;
+            Constraints.Clear(); ;
+            ConnectionString = string.Empty;
+        }
+
         public void LoadDatabaseMetadata(string databaseName, string connectionString)
         {
             if (string.IsNullOrEmpty(databaseName))
-                throw new ArgumentException(nameof(databaseName));
+                throw new ArgumentNullException(nameof(databaseName));
 
             if (string.IsNullOrEmpty(connectionString))
-                throw new ArgumentException(nameof(connectionString));
+                throw new ArgumentNullException(nameof(connectionString));
 
             Reset();
 
@@ -71,7 +75,7 @@ namespace DAL.Standard.SqlMetadata
             string sqlQuery = GetTableData();
 
             var db = new Database(ConnectionString);
-            DataTable dt = db.ExecuteQuery(sqlQuery, null);
+            var dt = db.ExecuteQuery(sqlQuery, null!);
 
             if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
             {
@@ -87,7 +91,7 @@ namespace DAL.Standard.SqlMetadata
 
                     if (!Tables.ContainsKey(fullTableName))
                     {
-                        SqlTable sqlTable = new SqlTable(this, schemaName, tableName);
+                        var sqlTable = new SqlTable(this, schemaName, tableName);
                         Tables.Add(fullTableName, sqlTable);
                     }
 
@@ -103,7 +107,7 @@ namespace DAL.Standard.SqlMetadata
                         IsPk = Convert.ToBoolean(dr["IsPK"]),
                         IsIdentity = Convert.ToBoolean(dr["IsIdentity"]),
                         ColumnOrdinal = Convert.ToInt32(dr["ColumnOrdinal"]),
-                        DefaultValue = (dr["DefaultValue"] == DBNull.Value) ? string.Empty : RemoveWrappingCharacters((string)dr["DefaultValue"])
+                        DefaultValue = dr["DefaultValue"] == DBNull.Value ? string.Empty : RemoveWrappingCharacters((string)dr["DefaultValue"])
                     };
 
                     if (Tables[fullTableName].Columns.ContainsKey(columnName))
@@ -116,13 +120,13 @@ namespace DAL.Standard.SqlMetadata
             // get SP
             sqlQuery = GetStoredProcedures();
             db = new Database(ConnectionString);
-            dt = db.ExecuteQuery(sqlQuery, null);
+            dt = db.ExecuteQuery(sqlQuery, null!);
 
             if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
             {
                 foreach (DataRow dr in dt.Rows)
                 {
-                    SqlScript sql_script = new SqlScript
+                    var sql_script = new SqlScript
                     {
                         Name = (string)dr["Name"],
                         Body = (string)dr["Body"]
@@ -138,13 +142,13 @@ namespace DAL.Standard.SqlMetadata
             // get functions
             sqlQuery = GetFunctions();
             db = new Database(ConnectionString);
-            dt = db.ExecuteQuery(sqlQuery, null);
+            dt = db.ExecuteQuery(sqlQuery, null!);
 
             if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
             {
                 foreach (DataRow dr in dt.Rows)
                 {
-                    SqlScript sql_script = new SqlScript
+                    var sql_script = new SqlScript
                     {
                         Name = (string)dr["Name"],
                         Body = (string)dr["Body"]
@@ -160,13 +164,13 @@ namespace DAL.Standard.SqlMetadata
             // get constraints
             sqlQuery = GetConstraints();
             db = new Database(ConnectionString);
-            dt = db.ExecuteQuery(sqlQuery, null);
+            dt = db.ExecuteQuery(sqlQuery, null!);
 
             if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
             {
                 foreach (DataRow dr in dt.Rows)
                 {
-                    SqlConstraint sql_constraint = new SqlConstraint
+                    var sql_constraint = new SqlConstraint
                     {
                         ConstraintName = (string)dr["ConstraintName"],
                         FKTable = (string)dr["FKTable"],
@@ -194,17 +198,17 @@ namespace DAL.Standard.SqlMetadata
             /*
             USE [<db>] 
 
-            SELECT	ss.[Name]							AS [SchemaName],
-		            so.[Name]							AS [TableName],
-                    sc.[Name]				            AS [ColumnName],
-                    st.[name]							AS [DataType],
-                    sc.[max_length]						AS [Length],
-                    sc.[precision]			            AS [Precision],
-                    sc.[scale]				            AS [Scale],	 
-                    sc.[is_nullable]		            AS [IsNullable],
-					ISNULL(si.[is_primary_key],0)		AS [IsPK],
-					sc.[is_identity]		            AS [IsIdentity],
-                    sc.[column_id]			            AS [ColumnOrdinal],
+            SELECT	ss.[Name] AS [SchemaName],
+		            so.[Name] AS [TableName],
+                    sc.[Name] S [ColumnName],
+                    st.[name] AS [DataType],
+                    sc.[max_length] AS [Length],
+                    sc.[precision] AS [Precision],
+                    sc.[scale] AS [Scale],	 
+                    sc.[is_nullable] AS [IsNullable],
+					ISNULL(si.[is_primary_key],0) AS [IsPK],
+					sc.[is_identity] AS [IsIdentity],
+                    sc.[column_id] AS [ColumnOrdinal],
 					OBJECT_DEFINITION(sc.default_object_id) AS [Default Value]
 
             FROM	sys.objects so
@@ -257,8 +261,8 @@ namespace DAL.Standard.SqlMetadata
             /*
             USE [<db>] 
 
-            SELECT	sys.objects.name	AS [Name],
-                    syscomments.text	AS [Body] 
+            SELECT	sys.objects.name AS [Name],
+                    syscomments.text AS [Body] 
             FROM	sys.objects
                     INNER JOIN syscomments ON sys.objects.object_id = syscomments.id
             WHERE	sys.objects.type = 'p'
@@ -366,13 +370,16 @@ namespace DAL.Standard.SqlMetadata
         /// gets rid of characters that wrap a sql default value
         /// Ex: ('Something') -> Something
         /// </summary>
-        protected string RemoveWrappingCharacters(string input)
+        protected static string RemoveWrappingCharacters(string input)
         {
-            if (input.Length > 1 && (input[0] == '(' || input[0] == '\''))
-                input = input[1..^2];
+            if (input == null)
+                return input!;
 
             if (input.Length > 1 && (input[0] == '(' || input[0] == '\''))
-                input = input[1..^2];
+                input = input[START_INDEX..^2];
+
+            if (input.Length > 1 && (input[0] == '(' || input[0] == '\''))
+                input = input[START_INDEX..^2];
 
             return input;
         }

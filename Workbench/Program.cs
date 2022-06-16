@@ -2,13 +2,13 @@
 using System.Data.SqlClient;
 using System.Diagnostics;
 
-using DAL.Standard;
+using DAL.DataBase;
 
 namespace Workbench
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static void Main(string[] Args)
         {
             AppDomain.CurrentDomain.UnhandledException += Application_Error;
             var sw = Stopwatch.StartNew();
@@ -16,7 +16,7 @@ namespace Workbench
             // do stuff here
 
             IDatabase test = new DatabaseFake();
-            var parameters = new SqlParameter[0];
+            var parameters = Array.Empty<SqlParameter>();
 
             //IDatabase test = new Database(LOCAL_SQL, true, true);
 

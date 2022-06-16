@@ -16,17 +16,16 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-using System;
 using System.Data;
 
-namespace DAL.Standard.SqlMetadata
+namespace DAL.DataBase.SqlMetadata
 {
     public class SqlColumn
     {
-        public SqlTable Table { get; set; }
-        public string Schema { get; set; }
-        public string Name { get; set; }
-        public string DataType { get; set; }
+        public SqlTable? Table { get; set; }
+        public string? Schema { get; set; }
+        public string? Name { get; set; }
+        public string? DataType { get; set; }
         public int Length { get; set; }
         public int Precision { get; set; }
         public int Scale { get; set; }
@@ -34,7 +33,7 @@ namespace DAL.Standard.SqlMetadata
         public bool IsPk { get; set; }
         public bool IsIdentity { get; set; }
         public int ColumnOrdinal { get; set; }
-        public string DefaultValue { get; set; }
+        public string? DefaultValue { get; set; }
 
         public SqlDbType SqlDataType
         {
@@ -48,7 +47,7 @@ namespace DAL.Standard.SqlMetadata
                 if (DataType == "sql_variant")
                     return SqlDbType.Variant;
 
-                return (SqlDbType)Enum.Parse(typeof(SqlDbType), DataType, true);
+                return (SqlDbType)Enum.Parse(typeof(SqlDbType), DataType!, true);
             }
         }
         public eSqlBaseType BaseType
@@ -78,9 +77,9 @@ namespace DAL.Standard.SqlMetadata
 
         protected eSqlBaseType MapBaseType()
         {
-            SqlDbType sql_type = (SqlDbType)Enum.Parse(typeof(SqlDbType), DataType, true);
+            SqlDbType sqlType = (SqlDbType)Enum.Parse(typeof(SqlDbType), DataType!, true);
 
-            return sql_type switch
+            return sqlType switch
             {
                 SqlDbType.BigInt => eSqlBaseType.Integer,
                 SqlDbType.Binary => eSqlBaseType.BinaryData,

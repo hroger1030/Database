@@ -33,7 +33,7 @@ namespace DAL.Standard
         private void WriteArguments(string sqlQuery, IList<SqlParameter> parameters)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentException(EMPTY_QUERY_STRING);
+                throw new ArgumentException(nameof(sqlQuery));
 
             Debug.WriteLine($"Sql query: {sqlQuery}");
 
@@ -78,7 +78,7 @@ namespace DAL.Standard
         public T ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor)
         {
             if (processor == null)
-                throw new ArgumentException(NULL_PROCESSOR_METHOD);
+                throw new ArgumentException(nameof(processor));
 
             Debug.WriteLine("Called ExecuteQuery<T>()");
             Debug.WriteLine($"Processor: '{processor}'");
@@ -98,7 +98,7 @@ namespace DAL.Standard
         public T ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor)
         {
             if (processor == null)
-                throw new ArgumentException(NULL_PROCESSOR_METHOD);
+                throw new ArgumentException(nameof(processor));
 
             Debug.WriteLine("Called ExecuteQuerySp<T>()");
             Debug.WriteLine($"Processor: '{processor}'");

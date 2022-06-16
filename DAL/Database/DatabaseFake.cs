@@ -16,20 +16,21 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 
-namespace DAL.Core
+namespace DAL.DataBase
 {
     public class DatabaseFake : IDatabase
     {
-        private void WriteArguments(string sqlQuery, IList<SqlParameter> parameters)
+        private const string EMPTY_QUERY_STRING = "Query string is null or empty";
+        private const string NULL_PROCESSOR_METHOD = "Processor method is null";
+
+        private static void WriteArguments(string sqlQuery, IList<SqlParameter> parameters)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentException(nameof(sqlQuery));
+                throw new ArgumentException(EMPTY_QUERY_STRING);
 
             Debug.WriteLine($"Sql query: {sqlQuery}");
 
@@ -74,13 +75,13 @@ namespace DAL.Core
         public T ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor)
         {
             if (processor == null)
-                throw new ArgumentException(nameof(processor));
+                throw new ArgumentException(NULL_PROCESSOR_METHOD);
 
             Debug.WriteLine("Called ExecuteQuery<T>()");
             Debug.WriteLine($"Processor: '{processor}'");
             WriteArguments(sqlQuery, parameters);
 
-            return default(T);
+            return default!;
         }
 
         public List<T> ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()
@@ -94,13 +95,13 @@ namespace DAL.Core
         public T ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor)
         {
             if (processor == null)
-                throw new ArgumentException(nameof(processor));
+                throw new ArgumentException(NULL_PROCESSOR_METHOD);
 
             Debug.WriteLine("Called ExecuteQuerySp<T>()");
             Debug.WriteLine($"Processor: '{processor}'");
             WriteArguments(sqlQuery, parameters);
 
-            return default(T);
+            return default!;
         }
 
         public int ExecuteNonQuery(string sqlQuery, IList<SqlParameter> parameters)
@@ -124,7 +125,7 @@ namespace DAL.Core
             Debug.WriteLine("Called ExecuteScalar()");
             WriteArguments(sqlQuery, parameters);
 
-            return default(T);
+            return default!;
         }
 
         public T ExecuteScalarSp<T>(string sqlQuery, IList<SqlParameter> parameters)
@@ -132,7 +133,7 @@ namespace DAL.Core
             Debug.WriteLine("Called ExecuteScalarSp()");
             WriteArguments(sqlQuery, parameters);
 
-            return default(T);
+            return default!;
         }
 
         public DataTable GetSchema()
