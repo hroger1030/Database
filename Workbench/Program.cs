@@ -8,6 +8,8 @@ namespace Workbench
 {
     public class Program
     {
+        private const string SQL_CONN = "Data Source=.;Initial Catalog=master;Integrated Security=True;Pooling=true;";
+
         public static void Main(string[] Args)
         {
             AppDomain.CurrentDomain.UnhandledException += Application_Error;
@@ -18,7 +20,7 @@ namespace Workbench
             IDatabase test = new DatabaseFake();
             var parameters = Array.Empty<SqlParameter>();
 
-            //IDatabase test = new Database(LOCAL_SQL, true, true);
+            //IDatabase test = new Database(SQL_CONN, true, true);
 
             //var parameters = new SqlParameter[]
             //{

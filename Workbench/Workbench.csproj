@@ -17,8 +17,8 @@
   <ItemGroup>
     <ProjectReference Include="..\DAL.Core\DAL.Core.csproj" />
     <ProjectReference Include="..\DAL.Framework\DAL.Framework.csproj" />
+    <ProjectReference Include="..\DAL.Net\DAL.Net.csproj" />
     <ProjectReference Include="..\DAL.Standard\DAL.Standard.csproj" />
-    <ProjectReference Include="..\DAL\DAL.csproj" />
   </ItemGroup>
 
 </Project>
