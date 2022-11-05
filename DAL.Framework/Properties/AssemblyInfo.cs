@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("DAL")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("DAL.Framework")]
+[assembly: AssemblyDescription("Lightweight data access layer for Dotnet Framework projects")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Global Conquest Games")]
-[assembly: AssemblyProduct("DAL Framework")]
+[assembly: AssemblyProduct("DAL.Framework")]
 [assembly: AssemblyCopyright("Copyright © Roger Hill 2007")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

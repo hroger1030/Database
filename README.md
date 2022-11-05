@@ -91,6 +91,6 @@ var parameters = new SqlParameter[]
 List<Employee> results = db.ExecuteQuerySp<Employee>("[dbo].[GetEmployeesByRole]", parameters);
 ```
 
-This second use case is rather interesting,as it lets us simply generate containers that match the output of a stored 
+This second use case is rather interesting, as it lets us simply generate containers that match the output of a stored 
 procedure and not worry about the details of how the object is loaded. This model also is able to correctly cast 
 to properties that are enumerated values, giving us a method to used strongly typed enumerations in our objects.
