@@ -1,8 +1,8 @@
-﻿using System;
+﻿using DAL.DataBase;
+using Newtonsoft.Json;
+using System;
 using System.Data.SqlClient;
 using System.Diagnostics;
-
-using DAL.DataBase;
 
 namespace Workbench
 {
@@ -47,8 +47,8 @@ namespace Workbench
                 Console.WriteLine($"Fatal error encountered, cannot continue: {ex}");
                 Console.ResetColor();
 
-                // test output format
-                //string output = JsonConvert.SerializeObject(ex);
+                // push this to debug stream too
+                Debug.WriteLine(JsonConvert.SerializeObject(ex));
 
                 Console.WriteLine();
                 Console.WriteLine("Press any key to exit...");
