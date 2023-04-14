@@ -1,6 +1,8 @@
 ﻿using DAL.DataBase;
+using Microsoft.SqlServer.Types;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
 
@@ -8,7 +10,8 @@ namespace Workbench
 {
     public class Program
     {
-        private const string SQL_CONN = "Data Source=.;Initial Catalog=master;Integrated Security=True;Pooling=true;";
+        private const string SQL_CONN1 = "Data Source=.;Initial Catalog=master;Integrated Security=True;Pooling=true;";
+        private const string SQL_CONN2 = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=AdhocTests;Integrated Security=True;Pooling=true;";
 
         public static void Main(string[] Args)
         {
@@ -17,10 +20,10 @@ namespace Workbench
 
             // do stuff here
 
-            IDatabase test = new DatabaseFake();
-            var parameters = Array.Empty<SqlParameter>();
+            //IDatabase test = new DatabaseFake();
+            //var parameters = Array.Empty<SqlParameter>();
 
-            //IDatabase test = new Database(SQL_CONN, true, true);
+            IDatabase test = new DAL.DataBase.Database(SQL_CONN2, true, true);
 
             //var parameters = new SqlParameter[]
             //{
@@ -28,7 +31,25 @@ namespace Workbench
             //    new SqlParameter() { Value = "blork", ParameterName = "@Snorrg", DbType = DbType.String, Size = 50 }
             //};
 
-            test.ExecuteQuerySp("AccountData.Account_CheckEmail", parameters);
+            //test.ExecuteQuerySp("AccountData.Account_CheckEmail", parameters);
+
+            //Func<SqlDataReader, Dictionary<int, string>> processor = delegate (SqlDataReader reader)
+            //{
+            //    var output = new Dictionary<int, string>();
+
+            //    while (reader.Read())
+            //    {
+            //        int id = (int)reader["Id"];
+            //        string name = (string)reader["Location"];
+
+            //        output.Add(id, name);
+            //    }
+
+            //    return output;
+            //};
+
+            var result = test.ExecuteQuery<GeoTest>("select * from test", null);
+
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"Total run time: {sw.Elapsed}");
@@ -61,5 +82,11 @@ namespace Workbench
                 Debug.WriteLine($"Unhandled application error: {ex}");
             }
         }
+    }
+
+    public class GeoTest
+    {
+        public int Id { get; set; }
+        public SqlGeometry Location { get; set; }
     }
 }

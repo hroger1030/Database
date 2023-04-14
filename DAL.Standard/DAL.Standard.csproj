@@ -12,9 +12,9 @@
     <RepositoryType>git</RepositoryType>
     <Copyright>Roger Hill, 2007</Copyright>
     <SignAssembly>false</SignAssembly>
-    <AssemblyVersion>1.0.4.0</AssemblyVersion>
-    <FileVersion>1.0.4.0</FileVersion>
-    <Version>1.0.4.0</Version>
+    <AssemblyVersion>1.0.5.0</AssemblyVersion>
+    <FileVersion>1.0.5.0</FileVersion>
+    <Version>1.0.5.0</Version>
     <Description>DAL.Standard is a light weight wrapper around ADO.NET objects to make working with sql dbs simple and easy.</Description>
     <PackageTags>ADO, SQL, Database, C#</PackageTags>
     <PackageReleaseNotes>Converted all parameter arrays to IList objects, added in improved exception data options.</PackageReleaseNotes>
@@ -42,7 +42,7 @@
 
   <ItemGroup>
     <PackageReference Include="dotMorten.Microsoft.SqlServer.Types" Version="2.5.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.4" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
   </ItemGroup>
 
 </Project>

@@ -18,8 +18,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using System.Data;
 using System.Data.SqlClient;
+using System.Data.SqlTypes;
 using System.Reflection;
 using System.Text;
+using Microsoft.SqlServer.Types;
 
 namespace DAL.DataBase
 {
@@ -136,7 +138,8 @@ namespace DAL.DataBase
                 }
 
 #if (DEBUG)
-                var SqlDebugString = GenerateSqlDebugString(sqlQuery, parameters!);
+                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters!);
+                Console.WriteLine(sqlDebugString);
 #endif
 
                 var dt = new DataTable();
@@ -190,6 +193,7 @@ namespace DAL.DataBase
 
 #if (DEBUG)
                 string sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters!);
+                Console.WriteLine(sqlDebugString);
 #endif
 
                 conn.Open();
@@ -247,6 +251,7 @@ namespace DAL.DataBase
 
 #if (DEBUG)
                 string sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters!);
+                Console.WriteLine(sqlDebugString);
 #endif
 
                 conn.Open();
@@ -304,6 +309,7 @@ namespace DAL.DataBase
 
 #if (DEBUG)
                 string sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters!);
+                Console.WriteLine(sqlDebugString);
 #endif
 
                 conn.Open();
@@ -356,6 +362,7 @@ namespace DAL.DataBase
 
 #if (DEBUG)
                 string sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters!);
+                Console.WriteLine(sqlDebugString);
 #endif
 
                 conn.Open();
@@ -508,7 +515,7 @@ namespace DAL.DataBase
                 propertyLookup.Add(propertyInfo.Name, propertyInfo);
 
             T new_object;
-            object fieldValue;
+            object? fieldValue;
 
             while (reader.Read())
             {
@@ -700,9 +707,21 @@ namespace DAL.DataBase
                                 // no idea how to handle a SqlGeometry type
                                 throw new NotImplementedException("SqlGeometry is an unsupported datatype");
 
+                            //if (reader[i] == DBNull.Value)
+                            //    fieldValue = reader[columnName] as Microsoft.SqlServer.Types.SqlGeometry ?? null;
+                            //else
+                            //    fieldValue = (Microsoft.SqlServer.Types.SqlGeometry)reader[columnName];
+                            //break;
+
                             case "Microsoft.SqlServer.Types.SqlGeography":
                                 // no idea how to handle a SqlGeography type
                                 throw new NotImplementedException("SqlGeography is an unsupported datatype");
+
+                            //if (reader[i] == DBNull.Value)
+                            //    fieldValue = reader[columnName] as Microsoft.SqlServer.Types.SqlGeography ?? null;
+                            //else
+                            //    fieldValue = (Microsoft.SqlServer.Types.SqlGeography)reader[columnName];
+                            //break;
 
                             default:
                                 if (propertyType.IsEnum)

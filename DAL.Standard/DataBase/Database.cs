@@ -140,7 +140,8 @@ namespace DAL.Standard
                 }
 
 #if (DEBUG)
-                string sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
+                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters!);
+                Console.WriteLine(sqlDebugString);
 #endif
 
                 var dt = new DataTable();
@@ -193,7 +194,8 @@ namespace DAL.Standard
                 }
 
 #if (DEBUG)
-                string sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
+                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters!);
+                Console.WriteLine(sqlDebugString);
 #endif
 
                 conn.Open();
@@ -250,7 +252,8 @@ namespace DAL.Standard
                 }
 
 #if (DEBUG)
-                string sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
+                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters!);
+                Console.WriteLine(sqlDebugString);
 #endif
 
                 conn.Open();
@@ -307,7 +310,8 @@ namespace DAL.Standard
                 }
 
 #if (DEBUG)
-                string sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
+                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters!);
+                Console.WriteLine(sqlDebugString);
 #endif
 
                 conn.Open();
@@ -359,7 +363,8 @@ namespace DAL.Standard
                 }
 
 #if (DEBUG)
-                string sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
+                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters!);
+                Console.WriteLine(sqlDebugString);
 #endif
 
                 conn.Open();

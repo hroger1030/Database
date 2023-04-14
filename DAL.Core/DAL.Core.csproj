@@ -10,9 +10,9 @@
     <Company>GlobalConquestGames</Company>
     <Copyright>Roger Hill, 2007</Copyright>
     <RepositoryType>git</RepositoryType>
-    <AssemblyVersion>1.0.4.0</AssemblyVersion>
-    <FileVersion>1.0.4.0</FileVersion>
-    <Version>1.0.4.0</Version>
+    <AssemblyVersion>1.0.5.0</AssemblyVersion>
+    <FileVersion>1.0.5.0</FileVersion>
+    <Version>1.0.5.0</Version>
     <Title>DAL.Core</Title>
     <Description>This is dotnet core port of the database DAL project. </Description>
     <PackageIcon>gc.png</PackageIcon>
@@ -41,7 +41,7 @@
 
   <ItemGroup>
     <PackageReference Include="dotMorten.Microsoft.SqlServer.Types" Version="2.5.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.4" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
   </ItemGroup>
 
 </Project>

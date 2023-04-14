@@ -1,16 +1,18 @@
 # Database
-This is a simple db interface assembly that I have had kicking around for a good ten 
-years, I thought it might be worth sharing with people. It is a wrapper around a number
+This is a simple MS-SQL db interface object that I have been using for a number of years 
+that I thought might be worth sharing with people. It is a wrapper around a number
 of ADO calls tied into an ORM object mapper that can automatically read record sets into
 POCO objects with corresponding fields. It also has the ability to load SQL meta data into
 objects and create in memory representations of DB schemas.
 
+I created this years ago because I saw things like Microsoft's Entity Framework that where
+complex, bloated, and inefficient. The way to build a better ORM is not by trying to 
+make something complex, but something lightweight and flexible. This is the result of 
+those efforts.
+
 I created a .net framework, .net core, and .net standard build of the assembly so
 you should have the correct native version available regardless of what you are working
-on.
-
-There is a lot of stuff here that I have yet to fully document, so please drop me a line
- if you have any questions. 
+on. Please drop me a line if you have any questions. 
 
 ## Sample Code
 
