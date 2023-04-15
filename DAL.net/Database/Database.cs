@@ -18,10 +18,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using System.Data;
 using System.Data.SqlClient;
-using System.Data.SqlTypes;
 using System.Reflection;
 using System.Text;
-using Microsoft.SqlServer.Types;
 
 namespace DAL.DataBase
 {

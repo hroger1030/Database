@@ -10,10 +10,9 @@ namespace Workbench
 {
     public class Program
     {
-        private const string SQL_CONN1 = "Data Source=.;Initial Catalog=master;Integrated Security=True;Pooling=true;";
-        private const string SQL_CONN2 = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=AdhocTests;Integrated Security=True;Pooling=true;";
+        private const string SQL_CONN = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=AdhocTests;Integrated Security=True;Pooling=true;";
 
-        public static void Main(string[] Args)
+        public static void Main()
         {
             AppDomain.CurrentDomain.UnhandledException += Application_Error;
             var sw = Stopwatch.StartNew();
@@ -23,7 +22,7 @@ namespace Workbench
             //IDatabase test = new DatabaseFake();
             //var parameters = Array.Empty<SqlParameter>();
 
-            IDatabase test = new DAL.DataBase.Database(SQL_CONN2, true, true);
+            IDatabase test = new DAL.DataBase.Database(SQL_CONN, true, true);
 
             //var parameters = new SqlParameter[]
             //{

@@ -27,9 +27,6 @@ namespace DAL.Standard
 {
     public sealed class Database : IDatabase
     {
-        private const string EMPTY_QUERY_STRING = "Query string is null or empty";
-        private const string EMPTY_CONNECTION_STRING = "Connection string is null or empty";
-        private const string NULL_PROCESSOR_METHOD = "Processor method is null";
         private const string DEFAULT_CONNECTION_STRING = "Data Source=Localhost;Initial Catalog=Master;Integrated Security=SSPI;Connect Timeout=1;";
 
         private const string EXCEPTION_SQL_PREFIX = "Sql.Parameter";
@@ -172,7 +169,7 @@ namespace DAL.Standard
                         ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
                 }
 
-                throw ex;
+                throw;
             }
         }
 
@@ -227,7 +224,7 @@ namespace DAL.Standard
                         ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
                 }
 
-                throw ex;
+                throw;
             }
         }
 
@@ -285,7 +282,7 @@ namespace DAL.Standard
                         ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
                 }
 
-                throw ex;
+                throw;
             }
         }
 
@@ -339,7 +336,7 @@ namespace DAL.Standard
                         ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
                 }
 
-                throw ex;
+                throw;
             }
         }
 
@@ -408,7 +405,7 @@ namespace DAL.Standard
                         ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
                 }
 
-                throw ex;
+                throw;
             }
         }
 

@@ -27,9 +27,6 @@ namespace DAL.Framework
 {
     public sealed class Database : IDatabase
     {
-        private const string EMPTY_QUERY_STRING = "Query string is null or empty";
-        private const string EMPTY_CONNECTION_STRING = "Connection string is null or empty";
-        private const string NULL_PROCESSOR_METHOD = "Processor method is null";
         private const string DEFAULT_CONNECTION_STRING = "Data Source=Localhost;Initial Catalog=Master;Integrated Security=SSPI;Connect Timeout=1;";
 
         private const string EXCEPTION_SQL_PREFIX = "Sql.Parameter";
@@ -52,7 +49,7 @@ namespace DAL.Framework
         public Database(string connection, bool logConnection = false, bool logParameters = false, bool throwUnmappedFieldsError = true)
         {
             if (string.IsNullOrWhiteSpace(connection))
-                throw new ArgumentNullException(EMPTY_CONNECTION_STRING);
+                throw new ArgumentNullException(nameof(connection));
 
             _Connection = connection;
             _LogConnection = logConnection;
@@ -127,7 +124,7 @@ namespace DAL.Framework
         private DataTable ExecuteQuery(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentNullException(EMPTY_QUERY_STRING);
+                throw new ArgumentNullException(nameof(sqlQuery));
 
             try
             {
@@ -181,14 +178,14 @@ namespace DAL.Framework
                         ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
                 }
 
-                throw ex;
+                throw;
             }
         }
 
         private List<T> ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure) where T : class, new()
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentNullException(EMPTY_QUERY_STRING);
+                throw new ArgumentNullException(nameof(sqlQuery));
 
             try
             {
@@ -242,17 +239,17 @@ namespace DAL.Framework
                         ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
                 }
 
-                throw ex;
+                throw;
             }
         }
 
         private T ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure, Func<SqlDataReader, T> processor)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentNullException(EMPTY_QUERY_STRING);
+                throw new ArgumentNullException(nameof(sqlQuery));
 
             if (processor == null)
-                throw new ArgumentNullException(NULL_PROCESSOR_METHOD);
+                throw new ArgumentNullException(nameof(processor));
 
             try
             {
@@ -306,17 +303,17 @@ namespace DAL.Framework
                         ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
                 }
 
-                throw ex;
+                throw;
             }
         }
 
         private int ExecuteNonQuery(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentNullException(EMPTY_QUERY_STRING);
+                throw new ArgumentNullException(nameof(sqlQuery));
 
             if (string.IsNullOrWhiteSpace(connection))
-                throw new ArgumentNullException(EMPTY_CONNECTION_STRING);
+                throw new ArgumentNullException(nameof(connection));
 
             try
             {
@@ -364,14 +361,14 @@ namespace DAL.Framework
                         ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
                 }
 
-                throw ex;
+                throw;
             }
         }
 
         private T ExecuteScalar<T>(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentNullException(EMPTY_QUERY_STRING);
+                throw new ArgumentNullException(nameof(sqlQuery));
 
             try
             {
@@ -406,8 +403,8 @@ namespace DAL.Framework
                         {
                             if (buffer.GetType() == typeof(DBNull))
                                 results = default;
-                            else if (buffer is T)
-                                return (T)buffer;
+                            else if (buffer is T t)
+                                return t;
                             else
                                 return (T)Convert.ChangeType(buffer, typeof(T));
                         }
@@ -437,7 +434,7 @@ namespace DAL.Framework
                         ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
                 }
 
-                throw ex;
+                throw;
             }
         }
 
@@ -487,7 +484,7 @@ namespace DAL.Framework
         private string GenerateSqlDebugString(string sqlQuery, IList<SqlParameter> parameterList)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentNullException(EMPTY_QUERY_STRING);
+                throw new ArgumentNullException(nameof(sqlQuery));
 
             if (parameterList == null || parameterList.Count == 0)
                 return sqlQuery;
