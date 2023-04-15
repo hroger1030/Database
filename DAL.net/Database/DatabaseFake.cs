@@ -20,7 +20,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 
-namespace DAL.DataBase
+namespace DAL.Net
 {
     public class DatabaseFake : IDatabase
     {

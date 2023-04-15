@@ -65,6 +65,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="DataBase\DatabaseHelpers.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="DataBase\DatabaseFake.cs" />
     <Compile Include="DataBase\Database.cs" />

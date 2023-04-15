@@ -25,14 +25,8 @@ using System.Text;
 
 namespace DAL.Standard
 {
-    public sealed class Database : IDatabase
+    public partial class Database : IDatabase
     {
-        private const string DEFAULT_CONNECTION_STRING = "Data Source=Localhost;Initial Catalog=Master;Integrated Security=SSPI;Connect Timeout=1;";
-
-        private const string EXCEPTION_SQL_PREFIX = "Sql.Parameter";
-        private const string EXCEPTION_KEY_QUERY = "Sql.Query";
-        private const string EXCEPTION_KEY_CONNECTION = "Sql.ConnectionString";
-
         private readonly string _Connection;
         private readonly bool _LogConnection;
         private readonly bool _LogParameters;
@@ -405,7 +399,7 @@ namespace DAL.Standard
                         ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
                 }
 
-                throw;
+                throwv;
             }
         }
 

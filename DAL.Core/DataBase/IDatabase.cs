@@ -26,7 +26,7 @@ namespace DAL.Core
 {
     public interface IDatabase
     {
-        // Sync Calls
+        // Sync Methods
 
         int ExecuteNonQuery(string sqlQuery, IList<SqlParameter> parameters);
         int ExecuteNonQuerySp(string sqlQuery, IList<SqlParameter> parameters);
@@ -45,7 +45,7 @@ namespace DAL.Core
 
         DataTable GetSchema();
 
-        // Async Calls
+        // Async Methods
 
         Task<int> ExecuteNonQueryAsync(string sqlQuery, IList<SqlParameter> parameters);
         Task<int> ExecuteNonQuerySpAsync(string sqlQuery, IList<SqlParameter> parameters);

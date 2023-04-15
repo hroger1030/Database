@@ -19,7 +19,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 using System.Data;
 using System.Text;
 
-namespace DAL.DataBase.SqlMetadata
+namespace DAL.Net.SqlMetadata
 {
     public class SqlDatabase
     {

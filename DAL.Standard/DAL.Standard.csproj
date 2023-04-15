@@ -12,9 +12,9 @@
     <RepositoryType>git</RepositoryType>
     <Copyright>Roger Hill, 2007</Copyright>
     <SignAssembly>false</SignAssembly>
-    <AssemblyVersion>1.0.5.0</AssemblyVersion>
-    <FileVersion>1.0.5.0</FileVersion>
-    <Version>1.0.5.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
+    <Version>2.0.0.0</Version>
     <Description>DAL.Standard is a light weight wrapper around ADO.NET objects to make working with sql dbs simple and easy.</Description>
     <PackageTags>ADO, SQL, Database, C#</PackageTags>
     <PackageReleaseNotes>Converted all parameter arrays to IList objects, added in improved exception data options.</PackageReleaseNotes>

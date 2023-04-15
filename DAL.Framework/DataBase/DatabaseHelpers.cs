@@ -16,421 +16,25 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+using Microsoft.SqlServer.Types;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DAL.Framework
 {
-    public partial class Database : IDatabase
+    public partial class Database
     {
-        private readonly string _Connection;
-        private readonly bool _LogConnection;
-        private readonly bool _LogParameters;
-        private readonly bool _ThrowUnmappedFieldsError;
-
-        public Database() : this(DEFAULT_CONNECTION_STRING) { }
-
-        /// <summary>
-        /// CTOR for Database object
-        /// </summary>
-        /// <param name="connection">A sql connection string.</param>
-        /// <param name="logConnection">Allow connection string to be included in thrown exceptions. Defaults to false.</param>
-        /// <param name="logParameters">Allow query parameters to be included in thrown exceptions. Defaults to false.</param>
-        public Database(string connection, bool logConnection = false, bool logParameters = false, bool throwUnmappedFieldsError = true)
-        {
-            if (string.IsNullOrWhiteSpace(connection))
-                throw new ArgumentNullException(nameof(connection));
-
-            _Connection = connection;
-            _LogConnection = logConnection;
-            _LogParameters = logParameters;
-            _ThrowUnmappedFieldsError = throwUnmappedFieldsError;
-        }
-
-        public DataTable ExecuteQuery(string sqlQuery, IList<SqlParameter> parameters)
-        {
-            return ExecuteQuery(sqlQuery, parameters, _Connection, false);
-        }
-
-        public DataTable ExecuteQuerySp(string sqlQuery, IList<SqlParameter> parameters)
-        {
-            return ExecuteQuery(sqlQuery, parameters, _Connection, true);
-        }
-
-        public List<T> ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()
-        {
-            return ExecuteQuery<T>(sqlQuery, parameters, _Connection, false);
-        }
-
-        public T ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor)
-        {
-            return ExecuteQuery<T>(sqlQuery, parameters, _Connection, false, processor);
-        }
-
-        public List<T> ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()
-        {
-            return ExecuteQuery<T>(sqlQuery, parameters, _Connection, true);
-        }
-
-        public T ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor)
-        {
-            return ExecuteQuery<T>(sqlQuery, parameters, _Connection, true, processor);
-        }
-
-        public int ExecuteNonQuery(string sqlQuery, IList<SqlParameter> parameters)
-        {
-            return ExecuteNonQuery(sqlQuery, parameters, _Connection, false);
-        }
-
-        public int ExecuteNonQuerySp(string sqlQuery, IList<SqlParameter> parameters)
-        {
-            return ExecuteNonQuery(sqlQuery, parameters, _Connection, true);
-        }
-
-        public T ExecuteScalar<T>(string sqlQuery, IList<SqlParameter> parameters)
-        {
-            return ExecuteScalar<T>(sqlQuery, parameters, _Connection, false);
-        }
-
-        public T ExecuteScalarSp<T>(string sqlQuery, IList<SqlParameter> parameters)
-        {
-            return ExecuteScalar<T>(sqlQuery, parameters, _Connection, true);
-        }
-
-        public DataTable GetSchema()
-        {
-            using (SqlConnection conn = new SqlConnection(_Connection))
-            {
-                DataTable dt = null;
-
-                conn.Open();
-                dt = conn.GetSchema("Databases");
-                conn.Close();
-
-                return dt;
-            }
-        }
-
-        private DataTable ExecuteQuery(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure)
-        {
-            if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentNullException(nameof(sqlQuery));
-
-            try
-            {
-                using (var conn = new SqlConnection(connection))
-                {
-                    using (var cmd = new SqlCommand(sqlQuery, conn))
-                    {
-                        using (SqlDataAdapter adapter = new SqlDataAdapter())
-                        {
-                            cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
-
-                            if (parameters != null)
-                            {
-                                foreach (SqlParameter parameter in parameters)
-                                    cmd.Parameters.Add(parameter);
-                            }
-
-#if (DEBUG)
-                            var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
-                            Console.WriteLine(sqlDebugString);
-#endif
-
-                            var dt = new DataTable();
-
-                            conn.Open();
-                            adapter.SelectCommand = cmd;
-                            adapter.Fill(dt);
-                            conn.Close();
-
-                            if (parameters != null)
-                            {
-                                for (int i = 0; i < cmd.Parameters.Count; i++)
-                                    parameters[i].Value = cmd.Parameters[i].Value;
-                            }
-
-                            return dt;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.Data.Add(EXCEPTION_KEY_QUERY, sqlQuery);
-
-                if (_LogConnection)
-                    ex.Data.Add(EXCEPTION_KEY_CONNECTION, connection);
-
-                if (_LogParameters && parameters != null)
-                {
-                    for (int i = 0; i < parameters.Count; i++)
-                        ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
-                }
-
-                throw;
-            }
-        }
-
-        private List<T> ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure) where T : class, new()
-        {
-            if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentNullException(nameof(sqlQuery));
-
-            try
-            {
-                using (var conn = new SqlConnection(connection))
-                {
-                    using (var cmd = new SqlCommand(sqlQuery, conn))
-                    {
-                        cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
-
-                        if (parameters != null)
-                        {
-                            foreach (SqlParameter parameter in parameters)
-                                cmd.Parameters.Add(parameter);
-                        }
-
-#if (DEBUG)
-                        var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
-                        Console.WriteLine(sqlDebugString);
-#endif
-
-                        conn.Open();
-
-                        using (SqlDataReader data_reader = cmd.ExecuteReader())
-                        {
-                            var output = ParseDatareaderResult<T>(data_reader, _ThrowUnmappedFieldsError);
-
-                            if (parameters != null)
-                            {
-                                for (int i = 0; i < cmd.Parameters.Count; i++)
-                                    parameters[i].Value = cmd.Parameters[i].Value;
-                            }
-
-                            data_reader.Close();
-                            conn.Close();
-
-                            return output;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.Data.Add(EXCEPTION_KEY_QUERY, sqlQuery);
-
-                if (_LogConnection)
-                    ex.Data.Add(EXCEPTION_KEY_CONNECTION, connection);
-
-                if (_LogParameters && parameters != null)
-                {
-                    for (int i = 0; i < parameters.Count; i++)
-                        ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
-                }
-
-                throw;
-            }
-        }
-
-        private T ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure, Func<SqlDataReader, T> processor)
-        {
-            if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentNullException(nameof(sqlQuery));
-
-            if (processor == null)
-                throw new ArgumentNullException(nameof(processor));
-
-            try
-            {
-                using (var conn = new SqlConnection(connection))
-                {
-                    using (var cmd = new SqlCommand(sqlQuery, conn))
-                    {
-                        cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
-
-                        if (parameters != null)
-                        {
-                            foreach (SqlParameter parameter in parameters)
-                                cmd.Parameters.Add(parameter);
-                        }
-
-#if (DEBUG)
-                        var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
-                        Console.WriteLine(sqlDebugString);
-#endif
-
-                        conn.Open();
-
-                        using (SqlDataReader data_reader = cmd.ExecuteReader())
-                        {
-                            var output = processor.Invoke(data_reader);
-
-                            if (parameters != null)
-                            {
-                                for (int i = 0; i < cmd.Parameters.Count; i++)
-                                    parameters[i].Value = cmd.Parameters[i].Value;
-                            }
-
-                            data_reader.Close();
-                            conn.Close();
-
-                            return output;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.Data.Add(EXCEPTION_KEY_QUERY, sqlQuery);
-
-                if (_LogConnection)
-                    ex.Data.Add(EXCEPTION_KEY_CONNECTION, connection);
-
-                if (_LogParameters && parameters != null)
-                {
-                    for (int i = 0; i < parameters.Count; i++)
-                        ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
-                }
-
-                throw;
-            }
-        }
-
-        private int ExecuteNonQuery(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure)
-        {
-            if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentNullException(nameof(sqlQuery));
-
-            if (string.IsNullOrWhiteSpace(connection))
-                throw new ArgumentNullException(nameof(connection));
-
-            try
-            {
-                using (var conn = new SqlConnection(connection))
-                {
-                    using (var cmd = new SqlCommand(sqlQuery, conn))
-                    {
-                        cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
-
-                        if (parameters != null)
-                        {
-                            foreach (SqlParameter parameter in parameters)
-                                cmd.Parameters.Add(parameter);
-                        }
-
-#if (DEBUG)
-                        var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
-                        Console.WriteLine(sqlDebugString);
-#endif
-
-                        conn.Open();
-                        int results = cmd.ExecuteNonQuery();
-                        conn.Close();
-
-                        if (parameters != null)
-                        {
-                            for (int i = 0; i < cmd.Parameters.Count; i++)
-                                parameters[i].Value = cmd.Parameters[i].Value;
-                        }
-
-                        return results;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.Data.Add(EXCEPTION_KEY_QUERY, sqlQuery);
-
-                if (_LogConnection)
-                    ex.Data.Add(EXCEPTION_KEY_CONNECTION, connection);
-
-                if (_LogParameters && parameters != null)
-                {
-                    for (int i = 0; i < parameters.Count; i++)
-                        ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
-                }
-
-                throw;
-            }
-        }
-
-        private T ExecuteScalar<T>(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure)
-        {
-            if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentNullException(nameof(sqlQuery));
-
-            try
-            {
-                using (var conn = new SqlConnection(connection))
-                {
-                    using (var cmd = new SqlCommand(sqlQuery, conn))
-                    {
-                        T results = default;
-
-                        cmd.CommandType = (storedProcedure) ? CommandType.StoredProcedure : CommandType.Text;
-
-                        if (parameters != null)
-                        {
-                            foreach (SqlParameter parameter in parameters)
-                                cmd.Parameters.Add(parameter);
-                        }
-
-#if (DEBUG)
-                        var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
-                        Console.WriteLine(sqlDebugString);
-#endif
-
-                        conn.Open();
-
-                        object buffer = cmd.ExecuteScalar();
-
-                        if (buffer == null)
-                        {
-                            results = default;
-                        }
-                        else
-                        {
-                            if (buffer.GetType() == typeof(DBNull))
-                                results = default;
-                            else if (buffer is T t)
-                                return t;
-                            else
-                                return (T)Convert.ChangeType(buffer, typeof(T));
-                        }
-
-                        conn.Close();
-
-                        if (parameters != null)
-                        {
-                            for (int i = 0; i < cmd.Parameters.Count; i++)
-                                parameters[i].Value = cmd.Parameters[i].Value;
-                        }
-
-                        return results;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.Data.Add(EXCEPTION_KEY_QUERY, sqlQuery);
-
-                if (_LogConnection)
-                    ex.Data.Add(EXCEPTION_KEY_CONNECTION, connection);
-
-                if (_LogParameters && parameters != null)
-                {
-                    for (int i = 0; i < parameters.Count; i++)
-                        ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
-                }
-
-                throw;
-            }
-        }
+        public const string DEFAULT_CONNECTION_STRING = "Data Source=Localhost;Initial Catalog=Master;Integrated Security=SSPI;Connect Timeout=1;";
+        public const string EXCEPTION_SQL_PREFIX = "Sql.Parameter";
+        public const string EXCEPTION_KEY_QUERY = "Sql.Query";
+        public const string EXCEPTION_KEY_CONNECTION = "Sql.ConnectionString";
+
+        #region Sync Methods
 
         /// <summary>
         /// Converts a list of IEnumerable objects to a string of comma delimited items. If a quote_character
@@ -439,7 +43,7 @@ namespace DAL.Framework
         public static string GenericListToStringList<T>(IEnumerable<T> list, string quoteCharacter = null, string quoteEscapeCharacter = null)
         {
             if (list == null)
-                throw new ArgumentNullException("Cannot convert a null IEnumerable object");
+                throw new ArgumentNullException(nameof(list));
 
             var sb = new StringBuilder();
             bool firstFlag = true;
@@ -475,7 +79,7 @@ namespace DAL.Framework
         /// <summary>
         /// Method creates sql debugging strings with parameterized argument lists
         /// </summary>
-        private string GenerateSqlDebugString(string sqlQuery, IList<SqlParameter> parameterList)
+        public static string GenerateSqlDebugString(string sqlQuery, IList<SqlParameter> parameterList)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
                 throw new ArgumentNullException(nameof(sqlQuery));
@@ -527,7 +131,7 @@ namespace DAL.Framework
         /// have properties names that match column names. It can be configured to throw exceptions if there isn't a 1:1 mapping.
         /// </summary>
         /// <returns></returns>
-        private List<T> ParseDatareaderResult<T>(SqlDataReader reader, bool throwUnmappedFieldsError = false) where T : class, new()
+        public static List<T> ParseDatareaderResult<T>(SqlDataReader reader, bool throwUnmappedFieldsError) where T : class, new()
         {
             var outputType = typeof(T);
             var results = new List<T>();
@@ -726,16 +330,16 @@ namespace DAL.Framework
 
                             case "Microsoft.SqlServer.Types.SqlGeometry":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as Microsoft.SqlServer.Types.SqlGeometry ?? null;
+                                    fieldValue = reader[columnName] as SqlGeometry ?? null;
                                 else
-                                    fieldValue = (Microsoft.SqlServer.Types.SqlGeometry)reader[columnName];
+                                    fieldValue = (SqlGeometry)reader[columnName];
                                 break;
 
                             case "Microsoft.SqlServer.Types.SqlGeography":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as Microsoft.SqlServer.Types.SqlGeography ?? null;
+                                    fieldValue = reader[columnName] as SqlGeography ?? null;
                                 else
-                                    fieldValue = (Microsoft.SqlServer.Types.SqlGeography)reader[columnName];
+                                    fieldValue = (SqlGeography)reader[columnName];
                                 break;
 
                             default:
@@ -773,7 +377,51 @@ namespace DAL.Framework
             return results;
         }
 
-        private DataTable ConvertObjectToDataTable<T>(IEnumerable<T> input)
+        /// <summary>
+        /// Reads in a collection of SqlParameters and adds them to a SqlCommand object
+        /// </summary>
+        /// <param name="parameters">List of sql parameters supplied to method</param>
+        /// <param name="cmd">command object for query</param>
+        public static void ReadInParameters(IList<SqlParameter> parameters, SqlCommand cmd)
+        {
+            if (cmd == null)
+                throw new ArgumentNullException(nameof(cmd));
+
+            if (parameters != null)
+            {
+                foreach (SqlParameter parameter in parameters)
+                    cmd.Parameters.Add(parameter);
+            }
+        }
+
+        /// <summary>
+        /// Helper method to write sql output parameters back to parameter collection.
+        /// </summary>
+        /// <param name="parameters">List of sql parameters supplied to method</param>
+        /// <param name="cmd">command object to pull output from</param>
+        public static void PersistOutputParameters(IList<SqlParameter> parameters, SqlCommand cmd)
+        {
+            if (cmd == null)
+                throw new ArgumentNullException(nameof(cmd));
+
+            if (parameters != null)
+            {
+                if (cmd.Parameters.Count != parameters.Count)
+                    throw new Exception($"Sql command parameter count ({cmd.Parameters.Count}) does not match input parameter count ({parameters.Count})");
+
+                for (int i = 0; i < cmd.Parameters.Count; i++)
+                    parameters[i].Value = cmd.Parameters[i].Value;
+            }
+        }
+
+        /// <summary>
+        /// Generates a SqlParameter object from a generic object list. This allows you to pass in a list of N 
+        /// objects into a stored procedure as a single argument. The sqlTypeName type needs to exist in the db
+        /// however, and be of the correct type.
+        /// 
+        /// Sample: ConvertObjectCollectionToParameter("@Foo", "dbo.SomeUserType", a_generic_object_collection);
+        /// </summary>
+        public static SqlParameter ConvertObjectCollectionToParameter<T>(string parameterName, string sqlTypeName, IEnumerable<T> input)
         {
             var dt = new DataTable();
             var outputType = typeof(T);
@@ -792,7 +440,60 @@ namespace DAL.Framework
                 dt.Rows.Add(dr);
             }
 
-            return dt;
+            var sql_parameter = new SqlParameter(parameterName, dt)
+            {
+                SqlDbType = SqlDbType.Structured,
+                TypeName = sqlTypeName,
+            };
+
+            return sql_parameter;
+        }
+
+        #endregion
+
+        #region Async Methods
+
+        public static async Task<string> GenericListToStringListAsync<T>(IEnumerable<T> list, string quoteCharacter = null, string quoteEscapeCharacter = null)
+        {
+            return await Task.Run(() => GenericListToStringList(list, quoteCharacter, quoteEscapeCharacter));
+        }
+
+        /// <summary>
+        /// Method creates sql debugging strings with parameterized argument lists
+        /// </summary>
+        public static async Task<string> GenerateSqlDebugStringAsync(string sqlQuery, IList<SqlParameter> parameterList)
+        {
+            return await Task.Run(() => GenerateSqlDebugString(sqlQuery, parameterList));
+        }
+
+        /// <summary>
+        /// This method performs automatic mapping between a data reader and a POCO object, mapping any values that 
+        /// have properties names that match column names. It can be configured to throw exceptions if there isn't a 1:1 mapping.
+        /// </summary>
+        /// <returns></returns>
+        public static async Task<List<T>> ParseDatareaderResultAsync<T>(SqlDataReader reader, bool throwUnmappedFieldsError) where T : class, new()
+        {
+            return await Task.Run(() => ParseDatareaderResult<T>(reader, throwUnmappedFieldsError));
+        }
+
+        /// <summary>
+        /// Reads in a collection of SqlParameters and adds them to a SqlCommand object
+        /// </summary>
+        /// <param name="parameters">List of sql parameters supplied to method</param>
+        /// <param name="cmd">command object for query</param>
+        public static async Task ReadInParametersAsync(IList<SqlParameter> parameters, SqlCommand cmd)
+        {
+            await Task.Run(() => ReadInParameters(parameters, cmd));
+        }
+
+        /// <summary>
+        /// Helper method to write sql output parameters back to parameter collection.
+        /// </summary>
+        /// <param name="parameters">List of sql parameters supplied to method</param>
+        /// <param name="cmd">command object to pull output from</param>
+        public static async Task PersistOutputParametersAsync(IList<SqlParameter> parameters, SqlCommand cmd)
+        {
+            await Task.Run(() => PersistOutputParameters(parameters, cmd));
         }
 
         /// <summary>
@@ -802,17 +503,11 @@ namespace DAL.Framework
         /// 
         /// Sample: ConvertObjectCollectionToParameter("@Foo", "dbo.SomeUserType", a_generic_object_collection);
         /// </summary>
-        public SqlParameter ConvertObjectCollectionToParameter<T>(string parameterName, string sqlTypeName, IEnumerable<T> input)
+        public static async Task<SqlParameter> ConvertObjectCollectionToParameterAsync<T>(string parameterName, string sqlTypeName, IEnumerable<T> input)
         {
-            DataTable dt = ConvertObjectToDataTable(input);
-
-            var sql_parameter = new SqlParameter(parameterName, dt)
-            {
-                SqlDbType = SqlDbType.Structured,
-                TypeName = sqlTypeName
-            };
-
-            return sql_parameter;
+            return await Task.Run(() => ConvertObjectCollectionToParameter<T>(parameterName, sqlTypeName, input));
         }
+
+        #endregion
     }
 }

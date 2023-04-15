@@ -10,9 +10,9 @@
     <Company>GlobalConquestGames</Company>
     <Copyright>Roger Hill, 2007</Copyright>
     <RepositoryType>git</RepositoryType>
-    <AssemblyVersion>1.0.5.0</AssemblyVersion>
-    <FileVersion>1.0.5.0</FileVersion>
-    <Version>1.0.5.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
+    <Version>2.0.0.0</Version>
     <Title>DAL.Core</Title>
     <Description>This is dotnet core port of the database DAL project. </Description>
     <PackageIcon>gc.png</PackageIcon>
