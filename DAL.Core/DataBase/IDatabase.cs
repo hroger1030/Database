@@ -20,11 +20,14 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Threading.Tasks;
 
 namespace DAL.Core
 {
     public interface IDatabase
     {
+        // Sync Calls
+
         int ExecuteNonQuery(string sqlQuery, IList<SqlParameter> parameters);
         int ExecuteNonQuerySp(string sqlQuery, IList<SqlParameter> parameters);
 
@@ -41,5 +44,24 @@ namespace DAL.Core
         T ExecuteScalarSp<T>(string sqlQuery, IList<SqlParameter> parameters);
 
         DataTable GetSchema();
+
+        // Async Calls
+
+        Task<int> ExecuteNonQueryAsync(string sqlQuery, IList<SqlParameter> parameters);
+        Task<int> ExecuteNonQuerySpAsync(string sqlQuery, IList<SqlParameter> parameters);
+
+        Task<DataTable> ExecuteQueryAsync(string sqlQuery, IList<SqlParameter> parameters);
+        Task<DataTable> ExecuteQuerySpAsync(string sqlQuery, IList<SqlParameter> parameters);
+
+        Task<T> ExecuteQueryAsync<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor);
+        Task<T> ExecuteQuerySpAsync<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor);
+
+        Task<List<T>> ExecuteQueryAsync<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new();
+        Task<List<T>> ExecuteQuerySpAsync<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new();
+
+        Task<T> ExecuteScalarAsync<T>(string sqlQuery, IList<SqlParameter> parameters);
+        Task<T> ExecuteScalarSpAsync<T>(string sqlQuery, IList<SqlParameter> parameters);
+
+        Task<DataTable> GetSchemaAsync();
     }
 }
