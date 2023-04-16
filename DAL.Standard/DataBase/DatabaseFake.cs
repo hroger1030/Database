@@ -20,57 +20,53 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Diagnostics;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace DAL.Standard
 {
     public class DatabaseFake : IDatabase
     {
-        private const string EMPTY_QUERY_STRING = "Query string is null or empty";
-        private const string NULL_PROCESSOR_METHOD = "Processor method is null";
-        private const string DEFAULT_CONNECTION_STRING = "local host connection string";
-
-        private void WriteArguments(string sqlQuery, IList<SqlParameter> parameters)
-        {
-            if (string.IsNullOrWhiteSpace(sqlQuery))
-                throw new ArgumentException(nameof(sqlQuery));
-
-            Debug.WriteLine($"Sql query: {sqlQuery}");
-
-            if (parameters == null)
-                return;
-
-            foreach (var item in parameters)
-                Debug.WriteLine($"Parameter: {item}");
-
-            Debug.WriteLine(string.Empty);
-        }
+        /// <summary>
+        /// Contains a list of commands that have been executed against the database.
+        /// </summary>
+        public List<string> CommandHistory { get; set; } = new List<string>();
 
         public DatabaseFake()
         {
-            Debug.WriteLine("DatabaseFake Initialized");
+            CommandHistory.Add("DatabaseFake Initialized");
         }
+
+        #region Sync Methods
 
         public DataTable ExecuteQuery(string sqlQuery, IList<SqlParameter> parameters)
         {
-            Debug.WriteLine("Called ExecuteQuery()");
-            WriteArguments(sqlQuery, parameters);
+            CommandHistory.Add("Called ExecuteQuery()");
+            CommandHistory.Add(WriteArguments(sqlQuery, parameters));
 
             return new DataTable();
         }
 
         public DataTable ExecuteQuerySp(string sqlQuery, IList<SqlParameter> parameters)
         {
-            Debug.WriteLine("Called ExecuteQuerySp()");
-            WriteArguments(sqlQuery, parameters);
+            CommandHistory.Add("Called ExecuteQuerySp()");
+            CommandHistory.Add(WriteArguments(sqlQuery, parameters));
 
             return new DataTable();
         }
 
         public List<T> ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()
         {
-            Debug.WriteLine("Called ExecuteQuery<T>()");
-            WriteArguments(sqlQuery, parameters);
+            CommandHistory.Add("Called ExecuteQuery<T>()");
+            CommandHistory.Add(WriteArguments(sqlQuery, parameters));
+
+            return new List<T>();
+        }
+
+        public List<T> ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()
+        {
+            CommandHistory.Add("Called ExecuteQuerySp<T>()");
+            CommandHistory.Add(WriteArguments(sqlQuery, parameters));
 
             return new List<T>();
         }
@@ -80,19 +76,11 @@ namespace DAL.Standard
             if (processor == null)
                 throw new ArgumentException(nameof(processor));
 
-            Debug.WriteLine("Called ExecuteQuery<T>()");
-            Debug.WriteLine($"Processor: '{processor}'");
-            WriteArguments(sqlQuery, parameters);
+            CommandHistory.Add("Called ExecuteQuery<T>()");
+            CommandHistory.Add($"Processor: '{processor}'");
+            CommandHistory.Add(WriteArguments(sqlQuery, parameters));
 
-            return default(T);
-        }
-
-        public List<T> ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()
-        {
-            Debug.WriteLine("Called ExecuteQuerySp<T>()");
-            WriteArguments(sqlQuery, parameters);
-
-            return new List<T>();
+            return default;
         }
 
         public T ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor)
@@ -100,50 +88,219 @@ namespace DAL.Standard
             if (processor == null)
                 throw new ArgumentException(nameof(processor));
 
-            Debug.WriteLine("Called ExecuteQuerySp<T>()");
-            Debug.WriteLine($"Processor: '{processor}'");
-            WriteArguments(sqlQuery, parameters);
+            CommandHistory.Add("Called ExecuteQuerySp<T>()");
+            CommandHistory.Add($"Processor: '{processor}'");
+            CommandHistory.Add(WriteArguments(sqlQuery, parameters));
 
-            return default(T);
+            return default;
         }
 
         public int ExecuteNonQuery(string sqlQuery, IList<SqlParameter> parameters)
         {
-            Debug.WriteLine("Called ExecuteNonQuery()");
-            WriteArguments(sqlQuery, parameters);
+            CommandHistory.Add("Called ExecuteNonQuery()");
+            CommandHistory.Add(WriteArguments(sqlQuery, parameters));
 
             return 0;
         }
 
         public int ExecuteNonQuerySp(string sqlQuery, IList<SqlParameter> parameters)
         {
-            Debug.WriteLine("Called ExecuteNonQuerySp()");
-            WriteArguments(sqlQuery, parameters);
+            CommandHistory.Add("Called ExecuteNonQuerySp()");
+            CommandHistory.Add(WriteArguments(sqlQuery, parameters));
 
             return 0;
         }
 
         public T ExecuteScalar<T>(string sqlQuery, IList<SqlParameter> parameters)
         {
-            Debug.WriteLine("Called ExecuteScalar()");
-            WriteArguments(sqlQuery, parameters);
+            CommandHistory.Add("Called ExecuteScalar()");
+            CommandHistory.Add(WriteArguments(sqlQuery, parameters));
 
-            return default(T);
+            return default;
         }
 
         public T ExecuteScalarSp<T>(string sqlQuery, IList<SqlParameter> parameters)
         {
-            Debug.WriteLine("Called ExecuteScalarSp()");
-            WriteArguments(sqlQuery, parameters);
+            CommandHistory.Add("Called ExecuteScalarSp()");
+            CommandHistory.Add(WriteArguments(sqlQuery, parameters));
 
-            return default(T);
+            return default;
         }
 
         public DataTable GetSchema()
         {
-            Debug.WriteLine("Called GetSchema()");
+            CommandHistory.Add("Called GetSchema()");
 
             return new DataTable();
         }
+
+        #endregion
+
+        #region Async Methods
+
+
+        public async Task<DataTable> ExecuteQueryAsync(string sqlQuery, IList<SqlParameter> parameters)
+        {
+            await Task.Run(() =>
+            {
+                CommandHistory.Add("Called ExecuteQueryAsync()");
+                CommandHistory.Add(WriteArguments(sqlQuery, parameters));
+            });
+
+            return new DataTable();
+        }
+
+        public async Task<DataTable> ExecuteQuerySpAsync(string sqlQuery, IList<SqlParameter> parameters)
+        {
+            await Task.Run(() =>
+            {
+                CommandHistory.Add("Called ExecuteQuerySpAsync()");
+                CommandHistory.Add(WriteArguments(sqlQuery, parameters));
+            });
+
+            return new DataTable();
+        }
+
+        public async Task<List<T>> ExecuteQueryAsync<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()
+        {
+            await Task.Run(() =>
+            {
+                CommandHistory.Add("Called ExecuteQueryAsync<T>()");
+                CommandHistory.Add(WriteArguments(sqlQuery, parameters));
+            });
+
+            return new List<T>();
+        }
+
+        public async Task<List<T>> ExecuteQuerySpAsync<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()
+        {
+            await Task.Run(() =>
+            {
+                CommandHistory.Add("Called ExecuteQuerySpAsync<T>()");
+                CommandHistory.Add(WriteArguments(sqlQuery, parameters));
+            });
+
+            return new List<T>();
+        }
+
+        public async Task<T> ExecuteQueryAsync<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, Task<T>> processor)
+        {
+            if (processor == null)
+                throw new ArgumentException(nameof(processor));
+
+            await Task.Run(() =>
+            {
+                CommandHistory.Add("Called ExecuteQueryAsync<T>()");
+                CommandHistory.Add($"Processor: '{processor}'");
+                CommandHistory.Add(WriteArguments(sqlQuery, parameters));
+            });
+
+            return default;
+        }
+
+        public async Task<T> ExecuteQuerySpAsync<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, Task<T>> processor)
+        {
+            if (processor == null)
+                throw new ArgumentException(nameof(processor));
+
+            await Task.Run(() =>
+            {
+                CommandHistory.Add("Called ExecuteQuerySpAsync<T>()");
+                CommandHistory.Add($"Processor: '{processor}'");
+                CommandHistory.Add(WriteArguments(sqlQuery, parameters));
+            });
+
+            return default;
+        }
+
+        public async Task<int> ExecuteNonQueryAsync(string sqlQuery, IList<SqlParameter> parameters)
+        {
+            await Task.Run(() =>
+            {
+                CommandHistory.Add("Called ExecuteNonQueryAsync()");
+                CommandHistory.Add(WriteArguments(sqlQuery, parameters));
+            });
+
+            return 0;
+        }
+
+        public async Task<int> ExecuteNonQuerySpAsync(string sqlQuery, IList<SqlParameter> parameters)
+        {
+            await Task.Run(() =>
+            {
+                CommandHistory.Add("Called ExecuteNonQuerySpAsync()");
+                CommandHistory.Add(WriteArguments(sqlQuery, parameters));
+            });
+
+            return 0;
+        }
+
+        public async Task<T> ExecuteScalarAsync<T>(string sqlQuery, IList<SqlParameter> parameters)
+        {
+            await Task.Run(() =>
+            {
+                CommandHistory.Add("Called ExecuteScalarAsync()");
+                CommandHistory.Add(WriteArguments(sqlQuery, parameters));
+            });
+
+            return default;
+        }
+
+        public async Task<T> ExecuteScalarSpAsync<T>(string sqlQuery, IList<SqlParameter> parameters)
+        {
+            await Task.Run(() =>
+            {
+                CommandHistory.Add("Called ExecuteScalarSpAsync()");
+                CommandHistory.Add(WriteArguments(sqlQuery, parameters));
+            });
+
+            return default;
+        }
+
+        public async Task<DataTable> GetSchemaAsync()
+        {
+            await Task.Run(() =>
+            {
+                CommandHistory.Add("Called GetSchema()");
+            });
+
+            return new DataTable();
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        /// <summary>
+        /// Writes out a sql query and parameters to a string.
+        /// </summary>
+        public static string WriteArguments(string sqlQuery, IList<SqlParameter> parameters)
+        {
+            if (string.IsNullOrWhiteSpace(sqlQuery))
+                throw new ArgumentException(nameof(sqlQuery));
+
+            var sb = new StringBuilder();
+
+            sb.AppendLine($"Sql query: {sqlQuery}");
+
+            if (parameters != null)
+            {
+                foreach (var item in parameters)
+                    sb.AppendLine($"Parameter: {item}");
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Writes out a sql query and parameters to a string.
+        /// </summary>
+        public static async Task<string> WriteArgumentsAsync(string sqlQuery, IList<SqlParameter> parameters)
+        {
+            var output = await Task.Run(() => WriteArguments(sqlQuery, parameters));
+            return output;
+        }
+
+        #endregion
     }
 }

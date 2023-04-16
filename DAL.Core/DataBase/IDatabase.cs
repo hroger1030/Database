@@ -26,42 +26,56 @@ namespace DAL.Core
 {
     public interface IDatabase
     {
-        // Sync Methods
+        #region Sync Methods
 
         int ExecuteNonQuery(string sqlQuery, IList<SqlParameter> parameters);
+
         int ExecuteNonQuerySp(string sqlQuery, IList<SqlParameter> parameters);
 
         DataTable ExecuteQuery(string sqlQuery, IList<SqlParameter> parameters);
+
         DataTable ExecuteQuerySp(string sqlQuery, IList<SqlParameter> parameters);
 
         T ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor);
+
         T ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor);
 
         List<T> ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new();
+
         List<T> ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new();
 
         T ExecuteScalar<T>(string sqlQuery, IList<SqlParameter> parameters);
+
         T ExecuteScalarSp<T>(string sqlQuery, IList<SqlParameter> parameters);
 
         DataTable GetSchema();
 
-        // Async Methods
+        #endregion
+
+        #region Async Methods
 
         Task<int> ExecuteNonQueryAsync(string sqlQuery, IList<SqlParameter> parameters);
+
         Task<int> ExecuteNonQuerySpAsync(string sqlQuery, IList<SqlParameter> parameters);
 
         Task<DataTable> ExecuteQueryAsync(string sqlQuery, IList<SqlParameter> parameters);
+
         Task<DataTable> ExecuteQuerySpAsync(string sqlQuery, IList<SqlParameter> parameters);
 
-        Task<T> ExecuteQueryAsync<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor);
-        Task<T> ExecuteQuerySpAsync<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor);
+        Task<T> ExecuteQueryAsync<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, Task<T>> processor);
+
+        Task<T> ExecuteQuerySpAsync<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, Task<T>> processor);
 
         Task<List<T>> ExecuteQueryAsync<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new();
+
         Task<List<T>> ExecuteQuerySpAsync<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new();
 
         Task<T> ExecuteScalarAsync<T>(string sqlQuery, IList<SqlParameter> parameters);
+
         Task<T> ExecuteScalarSpAsync<T>(string sqlQuery, IList<SqlParameter> parameters);
 
         Task<DataTable> GetSchemaAsync();
+
+        #endregion
     }
 }

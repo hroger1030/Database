@@ -29,7 +29,7 @@ namespace DAL.Net
 {
     public partial class Database
     {
-        public const string DEFAULT_CONNECTION_STRING = "Data Source=Localhost;Initial Catalog=Master;Integrated Security=SSPI;Connect Timeout=1;";
+        public const string DEFAULT_CONNECTION_STRING = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=master;Integrated Security=True;Pooling=true;";
         public const string EXCEPTION_SQL_PREFIX = "Sql.Parameter";
         public const string EXCEPTION_KEY_QUERY = "Sql.Query";
         public const string EXCEPTION_KEY_CONNECTION = "Sql.ConnectionString";
@@ -40,7 +40,7 @@ namespace DAL.Net
         /// Converts a list of IEnumerable objects to a string of comma delimited items. If a quote_character
         /// is defined, this will wrap each item with the character(s) passed.
         /// </summary>
-        public static string GenericListToStringList<T>(IEnumerable<T> list, string quoteCharacter = null, string quoteEscapeCharacter = null)
+        public static string GenericListToStringList<T>(IEnumerable<T> list, string? quoteCharacter = null, string? quoteEscapeCharacter = null)
         {
             if (list == null)
                 throw new ArgumentNullException(nameof(list));
@@ -61,7 +61,7 @@ namespace DAL.Net
                 }
                 else
                 {
-                    string buffer = item.ToString();
+                    string? buffer = item.ToString();
 
                     if (!string.IsNullOrWhiteSpace(quoteEscapeCharacter))
                         buffer = buffer.Replace(quoteCharacter, quoteEscapeCharacter);
@@ -79,7 +79,7 @@ namespace DAL.Net
         /// <summary>
         /// Method creates sql debugging strings with parameterized argument lists
         /// </summary>
-        public static string GenerateSqlDebugString(string sqlQuery, IList<SqlParameter> parameterList)
+        public static string GenerateSqlDebugString(string? sqlQuery, IList<SqlParameter> parameterList)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
                 throw new ArgumentNullException(nameof(sqlQuery));
@@ -151,7 +151,7 @@ namespace DAL.Net
                 {
                     string columnName = reader.GetName(i);
 
-                    if (propertyLookup.TryGetValue(columnName, out PropertyInfo propertyInfo))
+                    if (propertyLookup.TryGetValue(columnName, out PropertyInfo? propertyInfo))
                     {
                         Type propertyType = propertyInfo.PropertyType;
                         string propertyName = propertyInfo.PropertyType.FullName;
@@ -425,16 +425,16 @@ namespace DAL.Net
         {
             var dt = new DataTable();
             var outputType = typeof(T);
-            var object_properties = outputType.GetProperties();
+            var objectProperties = outputType.GetProperties();
 
-            foreach (var propertyInfo in object_properties)
+            foreach (var propertyInfo in objectProperties)
                 dt.Columns.Add(propertyInfo.Name);
 
             foreach (var item in input)
             {
                 var dr = dt.NewRow();
 
-                foreach (var property in object_properties)
+                foreach (var property in objectProperties)
                     dr[property.Name] = outputType.GetProperty(property.Name).GetValue(item, null);
 
                 dt.Rows.Add(dr);
@@ -453,7 +453,7 @@ namespace DAL.Net
 
         #region Async Methods
 
-        public static async Task<string> GenericListToStringListAsync<T>(IEnumerable<T> list, string quoteCharacter = null, string quoteEscapeCharacter = null)
+        public static async Task<string> GenericListToStringListAsync<T>(IEnumerable<T> list, string? quoteCharacter = null, string? quoteEscapeCharacter = null)
         {
             return await Task.Run(() => GenericListToStringList(list, quoteCharacter, quoteEscapeCharacter));
         }

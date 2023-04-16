@@ -22,13 +22,5 @@ namespace DAL.Standard.SqlMetadata
     {
         public string Name { get; set; }
         public string Body { get; set; }
-
-        public SqlScript() : this(string.Empty, string.Empty) { }
-
-        public SqlScript(string name, string body)
-        {
-            Name = name;
-            Body = body;
-        }
     }
 }

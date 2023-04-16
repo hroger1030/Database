@@ -23,40 +23,21 @@ namespace DAL.Net.SqlMetadata
 {
     public class SqlDatabase
     {
-        public const string DEFAULT_CONNECTION_STRING = "Data Source=Localhost;Initial Catalog=Master;Integrated Security=SSPI;Connect Timeout=1;";
-        private const int START_INDEX = 1;
+        /// <summary>
+        /// We are assuming that we are working off a local SQL Server instance by default
+        /// </summary>
+        public const string LOCAL_DB = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=master;Integrated Security=True;Pooling=true;";
 
-        public string Name { get; set; }
-        public Dictionary<string, SqlTable> Tables { get; set; }
-        public Dictionary<string, SqlScript> StoredProcedures { get; set; }
-        public Dictionary<string, SqlScript> Functions { get; set; }
-        public Dictionary<string, SqlConstraint> Constraints { get; set; }
-        public string ConnectionString { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public Dictionary<string, SqlTable> Tables { get; set; } = new Dictionary<string, SqlTable>();
+        public Dictionary<string, SqlScript> StoredProcedures { get; set; } = new Dictionary<string, SqlScript>();
+        public Dictionary<string, SqlScript> Functions { get; set; } = new Dictionary<string, SqlScript>();
+        public Dictionary<string, SqlConstraint> Constraints { get; set; } = new Dictionary<string, SqlConstraint>();
+        public string ConnectionString { get; set; } = string.Empty;
 
-        public string FormattedDatabaseName
-        {
-            get { return $"[{Name}]"; }
-        }
+        public string FormattedDatabaseName => $"[{Name}]";
 
-        public SqlDatabase()
-        {
-            Name = string.Empty;
-            Tables = new Dictionary<string, SqlTable>();
-            StoredProcedures = new Dictionary<string, SqlScript>();
-            Functions = new Dictionary<string, SqlScript>();
-            Constraints = new Dictionary<string, SqlConstraint>();
-            ConnectionString = string.Empty;
-        }
-
-        private void Reset()
-        {
-            Name = string.Empty;
-            Tables.Clear();
-            StoredProcedures.Clear(); ;
-            Functions.Clear(); ;
-            Constraints.Clear(); ;
-            ConnectionString = string.Empty;
-        }
+        public SqlDatabase() { }
 
         public void LoadDatabaseMetadata(string databaseName, string connectionString)
         {
@@ -65,8 +46,6 @@ namespace DAL.Net.SqlMetadata
 
             if (string.IsNullOrEmpty(connectionString))
                 throw new ArgumentNullException(nameof(connectionString));
-
-            Reset();
 
             Name = databaseName;
             ConnectionString = connectionString;
@@ -370,16 +349,13 @@ namespace DAL.Net.SqlMetadata
         /// gets rid of characters that wrap a sql default value
         /// Ex: ('Something') -> Something
         /// </summary>
-        protected static string RemoveWrappingCharacters(string input)
+        protected string RemoveWrappingCharacters(string input)
         {
-            if (input == null)
-                return input!;
+            if (input.Length > 1 && (input[0] == '(' || input[0] == '\''))
+                input = input[1..^2];
 
             if (input.Length > 1 && (input[0] == '(' || input[0] == '\''))
-                input = input[START_INDEX..^2];
-
-            if (input.Length > 1 && (input[0] == '(' || input[0] == '\''))
-                input = input[START_INDEX..^2];
+                input = input[1..^2];
 
             return input;
         }

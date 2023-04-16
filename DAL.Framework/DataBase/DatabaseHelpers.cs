@@ -29,7 +29,7 @@ namespace DAL.Framework
 {
     public partial class Database
     {
-        public const string DEFAULT_CONNECTION_STRING = "Data Source=Localhost;Initial Catalog=Master;Integrated Security=SSPI;Connect Timeout=1;";
+        public const string DEFAULT_CONNECTION_STRING = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=master;Integrated Security=True;Pooling=true;";
         public const string EXCEPTION_SQL_PREFIX = "Sql.Parameter";
         public const string EXCEPTION_KEY_QUERY = "Sql.Query";
         public const string EXCEPTION_KEY_CONNECTION = "Sql.ConnectionString";

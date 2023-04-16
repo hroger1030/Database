@@ -22,20 +22,13 @@ namespace DAL.Standard.SqlMetadata
 {
     public class SqlConstraint
     {
-        public string ConstraintName { get; set; }
-        public string FKTable { get; set; }
-        public string FKColumn { get; set; }
-        public string PKTable { get; set; }
-        public string PKColumn { get; set; }
+        public string ConstraintName { get; set; } = string.Empty;
+        public string FKTable { get; set; } = string.Empty;
+        public string FKColumn { get; set; } = string.Empty;
+        public string PKTable { get; set; } = string.Empty;
+        public string PKColumn { get; set; } = string.Empty;
 
-        public SqlConstraint()
-        {
-            ConstraintName = string.Empty;
-            FKTable = string.Empty;
-            FKColumn = string.Empty;
-            PKTable = string.Empty;
-            PKColumn = string.Empty;
-        }
+        public SqlConstraint() { }
 
         public SqlConstraint(string constraintName, string fkTable, string fkColumn, string pkTable, string pkColumn)
         {

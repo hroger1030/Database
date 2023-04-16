@@ -1,15 +1,16 @@
-﻿using DAL.DataBase;
+﻿using DAL.Net;
 using Microsoft.SqlServer.Types;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Diagnostics;
 
 namespace Workbench
 {
     public class Program
     {
+        /// <summary>
+        /// We are assuming that we are working off a local SQL Server instance by default
+        /// </summary>
         private const string SQL_CONN = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=AdhocTests;Integrated Security=True;Pooling=true;";
 
         public static void Main()
@@ -22,7 +23,7 @@ namespace Workbench
             //IDatabase test = new DatabaseFake();
             //var parameters = Array.Empty<SqlParameter>();
 
-            IDatabase test = new DAL.DataBase.Database(SQL_CONN, true, true);
+            IDatabase test = new Database(SQL_CONN, true, true);
 
             //var parameters = new SqlParameter[]
             //{

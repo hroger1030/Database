@@ -25,34 +25,21 @@ namespace DAL.Standard.SqlMetadata
 {
     public class SqlDatabase
     {
-        public const string DEFAULT_CONNECTION_STRING = "Data Source=Localhost;Initial Catalog=Master;Integrated Security=SSPI;Connect Timeout=1;";
+        /// <summary>
+        /// We are assuming that we are working off a local SQL Server instance by default
+        /// </summary>
+        public const string LOCAL_DB = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=master;Integrated Security=True;Pooling=true;";
 
-        public string Name { get; set; }
-        public Dictionary<string, SqlTable> Tables { get; set; }
-        public Dictionary<string, SqlScript> StoredProcedures { get; set; }
-        public Dictionary<string, SqlScript> Functions { get; set; }
-        public Dictionary<string, SqlConstraint> Constraints { get; set; }
-        public string ConnectionString { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public Dictionary<string, SqlTable> Tables { get; set; } = new Dictionary<string, SqlTable>();
+        public Dictionary<string, SqlScript> StoredProcedures { get; set; } = new Dictionary<string, SqlScript>();
+        public Dictionary<string, SqlScript> Functions { get; set; } = new Dictionary<string, SqlScript>();
+        public Dictionary<string, SqlConstraint> Constraints { get; set; } = new Dictionary<string, SqlConstraint>();
+        public string ConnectionString { get; set; } = string.Empty;
 
-        public string FormattedDatabaseName
-        {
-            get { return $"[{Name}]"; }
-        }
+        public string FormattedDatabaseName => $"[{Name}]";
 
-        public SqlDatabase()
-        {
-            Reset();
-        }
-
-        private void Reset()
-        {
-            Name = string.Empty;
-            Tables = new Dictionary<string, SqlTable>();
-            StoredProcedures = new Dictionary<string, SqlScript>();
-            Functions = new Dictionary<string, SqlScript>();
-            Constraints = new Dictionary<string, SqlConstraint>();
-            ConnectionString = string.Empty;
-        }
+        public SqlDatabase() { }
 
         public void LoadDatabaseMetadata(string databaseName, string connectionString)
         {
@@ -61,8 +48,6 @@ namespace DAL.Standard.SqlMetadata
 
             if (string.IsNullOrEmpty(connectionString))
                 throw new ArgumentException(nameof(connectionString));
-
-            Reset();
 
             Name = databaseName;
             ConnectionString = connectionString;
@@ -81,8 +66,8 @@ namespace DAL.Standard.SqlMetadata
                     string columnName = (string)dr["ColumnName"];
                     string schemaName = (string)dr["SchemaName"];
 
-                    // because tables are tied to the schema they are in, we need to make sure that
-                    // the schema is included with the table name.
+                    // because tables are tied to the schema they are in, we need 
+                    // to make sure that the schema is included with the table name.
                     string fullTableName = $"{schemaName}.{tableName}";
 
                     if (!Tables.ContainsKey(fullTableName))
@@ -91,7 +76,7 @@ namespace DAL.Standard.SqlMetadata
                         Tables.Add(fullTableName, sqlTable);
                     }
 
-                    var sql_column = new SqlColumn
+                    var sqlColumn = new SqlColumn
                     {
                         Schema = (string)dr["SchemaName"],
                         Table = Tables[fullTableName],
@@ -109,7 +94,7 @@ namespace DAL.Standard.SqlMetadata
                     if (Tables[fullTableName].Columns.ContainsKey(columnName))
                         throw new Exception($"Column {columnName} already exists in table {Tables[tableName]}");
                     else
-                        Tables[fullTableName].Columns.Add(columnName, sql_column);
+                        Tables[fullTableName].Columns.Add(columnName, sqlColumn);
                 }
             }
 
@@ -122,16 +107,16 @@ namespace DAL.Standard.SqlMetadata
             {
                 foreach (DataRow dr in dt.Rows)
                 {
-                    SqlScript sql_script = new SqlScript
+                    var sqlScript = new SqlScript
                     {
                         Name = (string)dr["Name"],
                         Body = (string)dr["Body"]
                     };
 
-                    if (StoredProcedures.ContainsKey(sql_script.Name))
-                        StoredProcedures[sql_script.Name].Body += sql_script.Body;
+                    if (StoredProcedures.ContainsKey(sqlScript.Name))
+                        StoredProcedures[sqlScript.Name].Body += sqlScript.Body;
                     else
-                        StoredProcedures.Add(sql_script.Name, sql_script);
+                        StoredProcedures.Add(sqlScript.Name, sqlScript);
                 }
             }
 
@@ -144,16 +129,16 @@ namespace DAL.Standard.SqlMetadata
             {
                 foreach (DataRow dr in dt.Rows)
                 {
-                    SqlScript sql_script = new SqlScript
+                    var sqlFunctions = new SqlScript
                     {
                         Name = (string)dr["Name"],
                         Body = (string)dr["Body"]
                     };
 
-                    if (Functions.ContainsKey(sql_script.Name))
-                        Functions[sql_script.Name].Body += sql_script.Body;
+                    if (Functions.ContainsKey(sqlFunctions.Name))
+                        Functions[sqlFunctions.Name].Body += sqlFunctions.Body;
                     else
-                        Functions.Add(sql_script.Name, sql_script);
+                        Functions.Add(sqlFunctions.Name, sqlFunctions);
                 }
             }
 
@@ -166,7 +151,7 @@ namespace DAL.Standard.SqlMetadata
             {
                 foreach (DataRow dr in dt.Rows)
                 {
-                    SqlConstraint sql_constraint = new SqlConstraint
+                    var sqlConstraint = new SqlConstraint
                     {
                         ConstraintName = (string)dr["ConstraintName"],
                         FKTable = (string)dr["FKTable"],
@@ -175,10 +160,10 @@ namespace DAL.Standard.SqlMetadata
                         PKColumn = (string)dr["PKColumn"]
                     };
 
-                    if (Constraints.ContainsKey(sql_constraint.ConstraintName))
-                        throw new Exception($"Constraint {sql_constraint.ConstraintName} already exists");
+                    if (Constraints.ContainsKey(sqlConstraint.ConstraintName))
+                        throw new Exception($"Constraint {sqlConstraint.ConstraintName} already exists");
                     else
-                        Constraints.Add(sql_constraint.ConstraintName, sql_constraint);
+                        Constraints.Add(sqlConstraint.ConstraintName, sqlConstraint);
                 }
             }
             return;
