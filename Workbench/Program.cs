@@ -1,8 +1,10 @@
 ﻿using DAL.Net;
-using Microsoft.SqlServer.Types;
 using Newtonsoft.Json;
 using System;
+using System.Data;
+using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Workbench
 {
@@ -11,27 +13,21 @@ namespace Workbench
         /// <summary>
         /// We are assuming that we are working off a local SQL Server instance by default
         /// </summary>
-        private const string SQL_CONN = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=AdhocTests;Integrated Security=True;Pooling=true;";
+        private const string SQL_CONN = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=master;Integrated Security=True;Pooling=true;";
 
         public static void Main()
         {
             AppDomain.CurrentDomain.UnhandledException += Application_Error;
             var sw = Stopwatch.StartNew();
 
-            // do stuff here
 
-            //IDatabase test = new DatabaseFake();
-            //var parameters = Array.Empty<SqlParameter>();
-
+            // run integration tests against the testDb
             IDatabase test = new Database(SQL_CONN, true, true);
 
-            //var parameters = new SqlParameter[]
-            //{
-            //    new SqlParameter() { Value = 3.4f, ParameterName = "@Fooo", DbType = DbType.Single },
-            //    new SqlParameter() { Value = "blork", ParameterName = "@Snorrg", DbType = DbType.String, Size = 50 }
-            //};
-
-            //test.ExecuteQuerySp("AccountData.Account_CheckEmail", parameters);
+            var parameters = new SqlParameter[]
+            {
+                new SqlParameter() { Value = 1, ParameterName = "@Id", DbType = DbType.Int32 },
+            };
 
             //Func<SqlDataReader, Dictionary<int, string>> processor = delegate (SqlDataReader reader)
             //{
@@ -48,8 +44,7 @@ namespace Workbench
             //    return output;
             //};
 
-            var result = test.ExecuteQuery<GeoTest>("select * from test", null);
-
+            var result =  Task.Run(() => test.ExecuteQuerySpAsync<DbTestTable>("[toolsdb].[dbo].[SelectAllData]", parameters)).Result;
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"Total run time: {sw.Elapsed}");
@@ -82,11 +77,5 @@ namespace Workbench
                 Debug.WriteLine($"Unhandled application error: {ex}");
             }
         }
-    }
-
-    public class GeoTest
-    {
-        public int Id { get; set; }
-        public SqlGeometry Location { get; set; }
     }
 }

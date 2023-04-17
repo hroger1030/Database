@@ -16,14 +16,10 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-using Microsoft.SqlServer.Types;
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace DAL.Net
 {
@@ -141,7 +137,7 @@ namespace DAL.Net
                 propertyLookup.Add(propertyInfo.Name, propertyInfo);
 
             T new_object;
-            object fieldValue;
+            object? fieldValue;
 
             while (reader.Read())
             {
@@ -167,7 +163,7 @@ namespace DAL.Net
                         {
                             case "System.Int32":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as int? ?? null;
+                                    fieldValue = null;
                                 else
                                     fieldValue = (int)reader[columnName];
                                 break;
@@ -223,6 +219,13 @@ namespace DAL.Net
                                     fieldValue = reader[columnName] as DateTime? ?? null;
                                 else
                                     fieldValue = DateTime.Parse(reader[columnName].ToString());
+                                break;
+
+                            case "System.TimeSpan":
+                                if (reader[i] == DBNull.Value)
+                                    fieldValue = null;
+                                else
+                                    fieldValue = TimeSpan.Parse(reader[columnName].ToString());
                                 break;
 
                             case "System.Guid":
@@ -291,7 +294,8 @@ namespace DAL.Net
 
                             case "System.Int64":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as long? ?? null;
+                                    fieldValue = null;
+                                    //fieldValue = reader[columnName] as long? ?? null;
                                 else
                                     fieldValue = (long)reader[columnName];
                                 break;
@@ -325,22 +329,25 @@ namespace DAL.Net
                                 break;
 
                             case "System.Udt":
-                                // no idea how to handle a custom type
+                                // generated a Microsoft.SqlServer.Server.InvalidUdtException. Don't know how to fix it, seems like a reader bug.
                                 throw new NotImplementedException("System.Udt is an unsupported datatype");
 
                             case "Microsoft.SqlServer.Types.SqlGeometry":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as SqlGeometry ?? null;
-                                else
-                                    fieldValue = (SqlGeometry)reader[columnName];
-                                break;
+                                // generated a Microsoft.SqlServer.Server.InvalidUdtException. Don't know how to fix it, seems like a reader bug.
+                                throw new NotImplementedException("Microsoft.SqlServer.Types.SqlGeometry is an unsupported datatype");
 
                             case "Microsoft.SqlServer.Types.SqlGeography":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as SqlGeography ?? null;
-                                else
-                                    fieldValue = (SqlGeography)reader[columnName];
-                                break;
+                                // generated a Microsoft.SqlServer.Server.InvalidUdtException. Don't know how to fix it, seems like a reader bug.
+                                throw new NotImplementedException("Microsoft.SqlServer.Types.SqlGeography is an unsupported datatype");
+
+                            case "Microsoft.SqlServer.Types.SqlHierarchyId":
+                                // generated a Microsoft.SqlServer.Server.InvalidUdtException. Don't know how to fix it, seems like a reader bug.
+                                throw new NotImplementedException("Microsoft.SqlServer.Types.SqlHierarchyId is an unsupported datatype");
+                                //if (reader[i] == DBNull.Value)
+                                //    fieldValue = null;
+                                //else
+                                //    fieldValue = (SqlHierarchyId)reader[columnName];
+                                //break;
 
                             default:
                                 if (propertyType.IsEnum)

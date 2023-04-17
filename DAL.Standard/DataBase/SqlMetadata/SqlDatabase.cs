@@ -25,11 +25,6 @@ namespace DAL.Standard.SqlMetadata
 {
     public class SqlDatabase
     {
-        /// <summary>
-        /// We are assuming that we are working off a local SQL Server instance by default
-        /// </summary>
-        public const string LOCAL_DB = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=master;Integrated Security=True;Pooling=true;";
-
         public string Name { get; set; } = string.Empty;
         public Dictionary<string, SqlTable> Tables { get; set; } = new Dictionary<string, SqlTable>();
         public Dictionary<string, SqlScript> StoredProcedures { get; set; } = new Dictionary<string, SqlScript>();

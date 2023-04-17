@@ -17,22 +17,30 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 /*
-	A few helper Commands
+This scrip will drop and recreate a test table used to validate all the DAL methods that are supported.
 
-create database [toolsdb]
-go
+A few helper Commands
 
-use [toolsdb]
-go
+drop table [dbo].[testtable]
+drop procedure [dbo].[SelectAllData]
+truncate table testtable
 
 select * from testtable
-insert [testtable] ([biginttestnull]) values (42)
-truncate table testtable
-drop table [dbo].[testtable]
+exec [dbo].[SelectDataById] '1'
 */
 
+-- create db if it doesnt exist
+IF NOT EXISTS (SELECT name FROM master.dbo.sysdatabases WHERE name = N'toolsDb')
+CREATE DATABASE [toolsDb]
+GO
+
+-- point at correct db
 USE [ToolsDB]
 GO
+
+-- drop and re-create the table
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TestTable]') AND type in (N'U'))
+drop table [dbo].[testtable]
 
 CREATE TABLE [dbo].[TestTable](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
@@ -60,12 +68,12 @@ CREATE TABLE [dbo].[TestTable](
 	[imageTestNull] [image] NULL,
 	[intTest] [int] NOT NULL,
 	[intTestNull] [int] NULL,
-	[geographyTest] [geography] NOT NULL,
-	[geographyTestNull] [geography] NULL,
-	[geometryTest] [geometry] NOT NULL,
-	[geometryTestNull] [geometry] NULL,
-	[heiarchyIdTest] [hierarchyid] NOT NULL,
-	[heiarchyIdTestNull] [hierarchyid] NULL,
+	--[geographyTest] [geography] NOT NULL,
+	--[geographyTestNull] [geography] NULL,
+	--[geometryTest] [geometry] NOT NULL,
+	---[geometryTestNull] [geometry] NULL,
+	--[heiarchyIdTest] [hierarchyid] NOT NULL,
+	--[heiarchyIdTestNull] [hierarchyid] NULL,
 	[moneyTest] [money] NOT NULL,
 	[moneyTestNull] [money] NULL,
 	[ncharTest] [nchar](8) NOT NULL,
@@ -74,8 +82,8 @@ CREATE TABLE [dbo].[TestTable](
 	[ntextTestNull] [ntext] NULL,
 	[numericTest] [numeric](18, 0) NOT NULL,
 	[numericTestNull] [numeric](18, 0) NULL,
-	[nvarcharText] [nvarchar](2) NOT NULL,
-	[nvarcharTextNull] [nvarchar](2) NULL,
+	[nvarcharTest] [nvarchar](2) NOT NULL,
+	[nvarcharTestNull] [nvarchar](2) NULL,
 	[nvarcharMAXTest] [nvarchar](max) NOT NULL,
 	[nvarcharMAXTestNull] [nvarchar](max) NULL,
 	[realTest] [real] NOT NULL,
@@ -94,8 +102,8 @@ CREATE TABLE [dbo].[TestTable](
 	[timeTestNull] [time](7) NULL,
 	[tinyintTest] [tinyint] NOT NULL,
 	[tinyintTestNull] [tinyint] NULL,
-	[uniqueidentifierTest] [uniqueidentifier] NOT NULL,
-	[uniqueidentifierTestNull] [uniqueidentifier] NULL,
+	--[uniqueidentifierTest] [uniqueidentifier] NOT NULL,
+	--[uniqueidentifierTestNull] [uniqueidentifier] NULL,
 	[varbinaryTest] [varbinary](1) NOT NULL,
 	[varbinaryTestNull] [varbinary](1) NULL,
 	[varbinaryMAXTest] [varbinary](max) NOT NULL,
@@ -116,27 +124,8 @@ GO
 
 --------------------------------------------------------------------------------------------------------------------------------
 
-/*
-	[dbo].[SelectBigint]
-	exec [dbo].[SelectAllData] '1'
-	drop procedure [dbo].[SelectAllData]
-*/
-CREATE PROCEDURE [dbo].[SelectAllData]
-(
-	@Id INT
-)
-AS
-
-SELECT	* 
-FROM	TestTable
-WHERE	Id = @Id
-
-GO
-
-
---------------------------------------------------------------------------------------------------------------------------------
-
-ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_bigintTest]  DEFAULT ((9223372036854775807.)) FOR [bigintTest]
+-- add default values. some values are commented out because we cannot support them in code yet.
+ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_bigintTest]  DEFAULT ((9223372036854775807)) FOR [bigintTest]
 GO
 
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_binaryTest]  DEFAULT (0xFF) FOR [binaryTest]
@@ -148,7 +137,7 @@ GO
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_charTest]  DEFAULT ('abcdefghijklmnopqrstuvwxyz') FOR [charTest]
 GO
 
-ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_dateTest]  DEFAULT (getutcdate()) FOR [dateTest]
+ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_dateTest]  DEFAULT ('9999-12-31') FOR [dateTest]
 GO
 
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_datetimeTest]  DEFAULT (getutcdate()) FOR [datetimeTest]
@@ -160,10 +149,10 @@ GO
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_datetimeoffsetTest]  DEFAULT (getutcdate()) FOR [datetimeoffsetTest]
 GO
 
-ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_decimalTest]  DEFAULT ((1234567890.123456789)) FOR [decimalTest]
+ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_decimalTest]  DEFAULT ((1234567890)) FOR [decimalTest]
 GO
 
-ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_floatTest]  DEFAULT ((1234567890.123456789)) FOR [floatTest]
+ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_floatTest]  DEFAULT ((1234567890.12345)) FOR [floatTest]
 GO
 
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_imageTest]  DEFAULT (0xFF) FOR [imageTest]
@@ -172,13 +161,13 @@ GO
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_intTest]  DEFAULT ((2147483647)) FOR [intTest]
 GO
 
-ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_geographyTest]  DEFAULT ([GEOGRAPHY]::Point((47.6062),(122.3321),(4326))) FOR [geographyTest]
-GO
+--ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_geographyTest]  DEFAULT ([GEOGRAPHY]::Point((47.6062),(122.3321),(4326))) FOR [geographyTest]
+--GO
 
-ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_geometryTest]  DEFAULT ([geometry]::STPointFromText('POINT (100 100)',(0))) FOR [geometryTest]
-GO
+--ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_geometryTest]  DEFAULT ([geometry]::STPointFromText('POINT (100 100)',(0))) FOR [geometryTest]
+--GO
 
-ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_heiarchyTest]  DEFAULT ('/1/') FOR [heiarchyIdTest]
+--ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_heiarchyTest]  DEFAULT ('/1/') FOR [heiarchyIdTest]
 GO
 
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_moneyTest]  DEFAULT ((922337203685477.5807)) FOR [moneyTest]
@@ -193,7 +182,7 @@ GO
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_numericTest]  DEFAULT ((1)) FOR [numericTest]
 GO
 
-ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_nvarcharText]  DEFAULT (N'你好') FOR [nvarcharText]
+ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_nvarcharTest]  DEFAULT (N'你好') FOR [nvarcharTest]
 GO
 
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_nvarcharMAXTest]  DEFAULT (N'你好') FOR [nvarcharMAXTest]
@@ -223,8 +212,8 @@ GO
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_tinyintTest]  DEFAULT ((255)) FOR [tinyintTest]
 GO
 
-ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_uniqueidentifierTest]  DEFAULT (newid()) FOR [uniqueidentifierTest]
-GO
+--ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_uniqueidentifierTest]  DEFAULT (newid()) FOR [uniqueidentifierTest]
+--GO
 
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_varbinaryTest]  DEFAULT (0xFF) FOR [varbinaryTest]
 GO
@@ -239,6 +228,40 @@ ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_varcharMAXTest]  DEF
 GO
 
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_xmlTest]  DEFAULT (0x3C3F786D6C2076657273696F6E3D22312E302220656E636F64696E673D225554462D38223F3E20200D0A3C526F6F743E20200D0A093C50726F647563744465736372697074696F6E2050726F647563744D6F64656C49443D2235223E20200D0A09093C53756D6D6172793E536F6D6520546578743C2F53756D6D6172793E20200D0A093C2F50726F647563744465736372697074696F6E3E20200D0A3C2F526F6F743E2020) FOR [xmlTest]
+GO
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+-- put the default test data in the table
+truncate table testtable
+go
+
+insert [testtable] ([biginttest]) values (9223372036854775807)
+insert [testtable] ([biginttest]) values (9223372036854775807)
+insert [testtable] ([biginttest]) values (9223372036854775807)
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+-- drop and recreate a SP
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID(N'[dbo].[SelectDataById]'))
+DROP PROCEDURE [dbo].[SelectDataById]
+GO
+
+/*
+	[dbo].[SelectBigint]
+	exec [dbo].[SelectDataById] '1'
+
+*/
+CREATE PROCEDURE [dbo].[SelectDataById]
+(
+	@Id INT
+)
+AS
+
+SELECT		* 
+FROM		TestTable
+WHERE		Id = @Id
+ORDER BY	ID
 GO
 
 

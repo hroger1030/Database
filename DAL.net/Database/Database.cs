@@ -99,12 +99,14 @@ namespace DAL.Net
             return ExecuteScalar<T>(sqlQuery, parameters, _Connection, true);
         }
 
-        public DataTable GetSchema()
+        public DataTable GetSchema(eCollectionType collection, string[]? restrictions = null)
         {
+            var buffer = collection.ToString().Replace('_', ' ');
+
             using var conn = new SqlConnection(_Connection);
 
             conn.Open();
-            var dt = conn.GetSchema("Databases");
+            var dt = conn.GetSchema(buffer, restrictions);
             conn.Close();
 
             return dt;
@@ -391,12 +393,14 @@ namespace DAL.Net
             return await ExecuteScalarAsync<T>(sqlQuery, parameters, _Connection, true);
         }
 
-        public async Task<DataTable> GetSchemaAsync()
+        public async Task<DataTable> GetSchemaAsync(eCollectionType collection, string[]? restrictions = null)
         {
+            var buffer = collection.ToString().Replace('_', ' ');
+
             using var conn = new SqlConnection(_Connection);
 
             await conn.OpenAsync();
-            DataTable dt = await Task.Run(() => conn.GetSchema("Databases"));
+            DataTable dt = await Task.Run(() => conn.GetSchema(buffer, restrictions));
             await conn.CloseAsync();
 
             return dt;
@@ -579,7 +583,7 @@ namespace DAL.Net
             }
         }
 
-        private async Task<T?> ExecuteScalarAsync<T>(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure)
+        private async Task<T> ExecuteScalarAsync<T>(string sqlQuery, IList<SqlParameter> parameters, string connection, bool storedProcedure)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
                 throw new ArgumentNullException(nameof(sqlQuery));

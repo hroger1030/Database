@@ -16,12 +16,9 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace DAL.Net
 {
@@ -127,9 +124,9 @@ namespace DAL.Net
             return default;
         }
 
-        public DataTable GetSchema()
+        public DataTable GetSchema(eCollectionType collection, string[]? restrictions = null)
         {
-            CommandHistory.Add("Called GetSchema()");
+            CommandHistory.Add($"Called GetSchema({collection}, {restrictions})");
 
             return new DataTable();
         }
@@ -257,11 +254,11 @@ namespace DAL.Net
             return default;
         }
 
-        public async Task<DataTable> GetSchemaAsync()
+        public async Task<DataTable> GetSchemaAsync(eCollectionType collection, string[]? restrictions = null)
         {
             await Task.Run(() =>
             {
-                CommandHistory.Add("Called GetSchema()");
+                CommandHistory.Add($"Called GetSchema({collection}, {restrictions})");
             });
 
             return new DataTable();

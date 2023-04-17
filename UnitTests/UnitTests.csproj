@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+
+    <Authors>Roger Hill</Authors>
+
+    <Company>GlobalGonquestGames</Company>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
+    <PackageReference Include="nunit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DAL.Core\DAL.Core.csproj" />
+    <ProjectReference Include="..\DAL.Framework\DAL.Framework.csproj" />
+    <ProjectReference Include="..\DAL.Net\DAL.Net.csproj" />
+    <ProjectReference Include="..\DAL.Standard\DAL.Standard.csproj" />
+  </ItemGroup>
+
+</Project>

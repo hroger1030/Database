@@ -48,7 +48,7 @@ namespace DAL.Core
 
         T ExecuteScalarSp<T>(string sqlQuery, IList<SqlParameter> parameters);
 
-        DataTable GetSchema();
+        DataTable GetSchema(eCollectionType collection, string[] restrictions = null);
 
         #endregion
 
@@ -74,7 +74,7 @@ namespace DAL.Core
 
         Task<T> ExecuteScalarSpAsync<T>(string sqlQuery, IList<SqlParameter> parameters);
 
-        Task<DataTable> GetSchemaAsync();
+        Task<DataTable> GetSchemaAsync(eCollectionType collection, string[] restrictions = null);
 
         #endregion
     }
