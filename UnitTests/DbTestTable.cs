@@ -37,11 +37,11 @@ namespace UnitTests
 
         public DateTime datetime2Test { get; set; }
 
-        public DateTime datetime2TestNull { get; set; }
+        public DateTime? datetime2TestNull { get; set; }
 
-        public DateTime datetimeoffsetTest { get; set; }
+        public DateTimeOffset datetimeoffsetTest { get; set; }
 
-        public DateTime? datetimeoffsetTestNull { get; set; }
+        public DateTimeOffset? datetimeoffsetTestNull { get; set; }
 
         public decimal decimalTest { get; set; }
 

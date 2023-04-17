@@ -68,14 +68,14 @@ namespace DAL.Framework
             return ExecuteQuery<T>(sqlQuery, parameters, _Connection, false);
         }
 
-        public T ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor)
-        {
-            return ExecuteQuery<T>(sqlQuery, parameters, _Connection, false, processor);
-        }
-
         public List<T> ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()
         {
             return ExecuteQuery<T>(sqlQuery, parameters, _Connection, true);
+        }
+
+        public T ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor)
+        {
+            return ExecuteQuery<T>(sqlQuery, parameters, _Connection, false, processor);
         }
 
         public T ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor)

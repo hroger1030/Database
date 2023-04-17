@@ -137,16 +137,16 @@ GO
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_charTest]  DEFAULT ('abcdefghijklmnopqrstuvwxyz') FOR [charTest]
 GO
 
-ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_dateTest]  DEFAULT ('9999-12-31') FOR [dateTest]
+ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_dateTest]  DEFAULT ('9999-12-31Z') FOR [dateTest]
 GO
 
-ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_datetimeTest]  DEFAULT (getutcdate()) FOR [datetimeTest]
+ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_datetimeTest]  DEFAULT ('9999-12-31T23:59:59.997') FOR [datetimeTest]
 GO
 
-ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_datetime2Test]  DEFAULT (sysutcdatetime()) FOR [datetime2Test]
+ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_datetime2Test]  DEFAULT ('9999-12-31T23:59:59.997') FOR [datetime2Test]
 GO
 
-ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_datetimeoffsetTest]  DEFAULT (getutcdate()) FOR [datetimeoffsetTest]
+ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_datetimeoffsetTest]  DEFAULT ('9999-12-31T23:59:59.997Z') FOR [datetimeoffsetTest]
 GO
 
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_decimalTest]  DEFAULT ((1234567890)) FOR [decimalTest]

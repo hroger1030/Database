@@ -57,6 +57,11 @@ namespace UnitTests
 
         public readonly static string QUERY_BASIC_SELECT_WITH_PARAMETERS = $"select * from [{DB_NAME}].[{SCHEMA_NAME}].[{TABLE_NAME}] where Id = @Id order by Id";
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        public readonly static string STOREDPROC_SELECT_WITH_PARAMETERS = $"[{DB_NAME}].[{SCHEMA_NAME}].[{PROCEDURE_NAME}]";
+
+
         /// <summary>
         /// We are seeding the database with known values, so we can test the results.
         /// If any of the constants are altered, this function will need to be updated to match.
@@ -75,7 +80,78 @@ namespace UnitTests
             if (input.binaryTest.Length == 1 && input.binaryTest[0] != 0xFF)
                 return false;
 
-            if (input.binaryTestNull == null)
+            if (input.binaryTestNull != null)
+                return false;
+
+            if (!input.bitTest)
+                return false;
+
+            if (input.bitTestNull != null)
+                return false;
+
+            if (input.charTest != "abcdefghijklmnopqrstuvwxyz")
+                return false;
+
+            if (input.charTestNull != null)
+                return false;
+
+            if (input.dateTest != new DateTime(9999,12,31,0,0,0,0,DateTimeKind.Utc))
+                return false;
+
+            if (input.datetimeTest != new DateTime(9999, 12, 31, 23, 59, 59, 997, DateTimeKind.Unspecified))
+                return false;
+
+            if (input.datetimeTestNull != null)
+                return false;
+
+            if (input.datetime2Test != new DateTime(9999, 12, 31, 23, 59, 59, 997, DateTimeKind.Unspecified))
+                return false;
+
+            if (input.datetime2TestNull != null)
+                return false;
+
+            if (input.datetimeoffsetTest != new DateTimeOffset(9999, 12, 31, 23, 59, 59, 997, TimeSpan.FromHours(0)))
+                return false;
+
+            if (input.datetimeoffsetTestNull != null)
+                return false;
+
+            if (input.decimalTest != 1234567890)
+                return false;
+
+            if (input.decimalTestNull != null)
+                return false;
+
+            if (input.floatTest != 1234567890.12345)
+                return false;
+
+            if (input.floatTestNull != null)
+                return false;
+
+            if (input.imageTest.Length == 1 && input.imageTest[0] != 0xFF)
+                return false;
+
+            if (input.imageTestNull != null)
+                return false;
+
+            if (input.intTest != int.MaxValue)
+                return false;
+
+            if (input.intTestNull != null)
+                return false;
+
+            //NYI
+            //geographyTest
+            //geographyTestNull
+            //geometryTest
+            //geometryTestNull
+            //heiarchyIdTest
+            //heiarchyIdTestNull
+
+            if (input.moneyTest != 922337203685477.5807m)
+                return false;
+
+            if (input.moneyTestNull != null)
                 return false;
 
             return true;
@@ -90,75 +166,57 @@ namespace UnitTests
                 var buffer = new DbTestTable
                 {
                     Id = (int)reader["Id"],
+
                     bigintTest = (long)reader["bigintTest"],
                     bigintTestNull = (reader["bigintTestNull"] == DBNull.Value) ? null : (long?)reader["bigintTestNull"],
+
                     binaryTest = (byte[])reader["binaryTest"],
                     binaryTestNull = (reader["binaryTestNull"] == DBNull.Value) ? null : (byte[])reader["binaryTestNull"],
+
+                    bitTest = (bool)reader["bitTest"],
+                    bitTestNull = (reader["bitTestNull"] == DBNull.Value) ? null : (bool?)reader["bitTestNull"],
+
+                    charTest = (string)reader["charTest"],
+                    charTestNull = (reader["charTestNull"] == DBNull.Value) ? null : (string)reader["charTestNull"],
+
+                    dateTest = (DateTime)reader["dateTest"],
+                    dateTestNull = (reader["dateTestNull"] == DBNull.Value) ? null : (DateTime?)reader["dateTestNull"],
+
+                    datetimeTest = (DateTime)reader["datetimeTest"],
+                    datetimeTestNull = (reader["datetimeTestNull"] == DBNull.Value) ? null : (DateTime?)reader["datetimeTestNull"],
+
+                    datetime2Test = (DateTime)reader["datetime2Test"],
+                    datetime2TestNull = (reader["datetime2TestNull"] == DBNull.Value) ? null : (DateTime?)reader["datetime2Test"],
+
+                    datetimeoffsetTest = (DateTimeOffset)reader["datetimeoffsetTest"],
+                    datetimeoffsetTestNull = (reader["datetimeoffsetTestNull"] == DBNull.Value) ? null : (DateTimeOffset?)reader["datetimeoffsetTestNull"],
+
+                    decimalTest = (decimal)reader["decimalTest"],
+                    decimalTestNull = (reader["decimalTestNull"] == DBNull.Value) ? null : (decimal?)reader["decimalTestNull"],
+
+                    floatTest = (double)reader["floatTest"],
+                    floatTestNull = (reader["floatTestNull"] == DBNull.Value) ? null : (double?)reader["floatTestNull"],
+
+                    imageTest = (byte[])reader["imageTest"],
+                    imageTestNull = (reader["imageTestNull"] == DBNull.Value) ? null : (byte[])reader["imageTestNull"],
+
+                    intTest = (int)reader["intTest"],
+                    intTestNull = (reader["intTestNull"] == DBNull.Value) ? null : (int?)reader["intTestNull"],
+
+                    //NYI
+                    //geographyTest
+                    //geographyTestNull
+                    //geometryTest
+                    //geometryTestNull
+                    //heiarchyIdTest
+                    //heiarchyIdTestNull
+
+                    moneyTest = (decimal)reader["moneyTest"],
+                    moneyTestNull = (reader["moneyTestNull"] == DBNull.Value) ? null : (decimal?)reader["moneyTestNull"],
                 };
 
 
-                //public bool bitTest { get; set; }
-                //public bool? bitTestNull { get; set; }
 
-                //public string charTest { get; set; }
-                //public string charTestNull { get; set; }
-
-                //public DateTime dateTest { get; set; }
-                //public DateTime? dateTestNull { get; set; }
-
-                //public DateTime datetimeTest { get; set; }
-                //public DateTime? datetimeTestNull { get; set; }
-
-                //public DateTime datetime2Test { get; set; }
-                //public DateTime datetime2TestNull { get; set; }
-
-                //public DateTime datetimeoffsetTest { get; set; }
-                //public DateTime? datetimeoffsetTestNull { get; set; }
-
-                //public decimal decimalTest { get; set; }
-                //public decimal? decimalTestNull { get; set; }
-
-                //public double floatTest { get; set; }
-                //public double? floatTestNull { get; set; }
-
-                //public byte[] imageTest { get; set; }
-                //public byte[] imageTestNull { get; set; }
-
-                //public int intTest { get; set; }
-                //public int? intTestNull { get; set; }
-
-                ///// <summary>
-                ///// NYI - ADO does not support this type
-                ///// </summary>
-                //public SqlGeography geographyTest { get; set; }
-
-                ///// <summary>
-                ///// NYI - ADO does not support this type
-                ///// </summary>
-                //public SqlGeography geographyTestNull { get; set; }
-
-                ///// <summary>
-                ///// NYI - ADO does not support this type
-                ///// </summary>
-                //public SqlGeometry geometryTest { get; set; }
-
-                ///// <summary>
-                ///// NYI - ADO does not support this type
-                ///// </summary>
-                //public SqlGeometry geometryTestNull { get; set; }
-
-                ///// <summary>
-                ///// NYI - ADO does not support this type
-                ///// </summary>
-                //public SqlHierarchyId heiarchyIdTest { get; set; }
-
-                ///// <summary>
-                ///// NYI - ADO does not support this type
-                ///// </summary>
-                //public SqlHierarchyId heiarchyIdTestNull { get; set; }
-
-                //public decimal moneyTest { get; set; }
-                //public decimal? moneyTestNull { get; set; }
                 //public string ncharTest { get; set; }
                 //public string ncharTestNull { get; set; }
                 //public string ntextTest { get; set; }
