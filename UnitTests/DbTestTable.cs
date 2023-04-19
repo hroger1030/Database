@@ -1,5 +1,4 @@
-﻿using Microsoft.SqlServer.Types;
-using System;
+﻿using System;
 
 namespace UnitTests
 {
@@ -62,32 +61,32 @@ namespace UnitTests
         /// <summary>
         /// NYI - ADO does not support this type
         /// </summary>
-        public SqlGeography geographyTest { get; set; }
+        //public SqlGeography geographyTest { get; set; }
 
         /// <summary>
         /// NYI - ADO does not support this type
         /// </summary>
-        public SqlGeography geographyTestNull { get; set; }
+        //public SqlGeography geographyTestNull { get; set; }
 
         /// <summary>
         /// NYI - ADO does not support this type
         /// </summary>
-        public SqlGeometry geometryTest { get; set; }
+        //public SqlGeometry geometryTest { get; set; }
 
         /// <summary>
         /// NYI - ADO does not support this type
         /// </summary>
-        public SqlGeometry geometryTestNull { get; set; }
+        //public SqlGeometry geometryTestNull { get; set; }
 
         /// <summary>
         /// NYI - ADO does not support this type
         /// </summary>
-        public SqlHierarchyId heiarchyIdTest { get; set; }
+        //public SqlHierarchyId heiarchyIdTest { get; set; }
 
         /// <summary>
         /// NYI - ADO does not support this type
         /// </summary>
-        public SqlHierarchyId heiarchyIdTestNull { get; set; }
+        //public SqlHierarchyId heiarchyIdTestNull { get; set; }
 
         public decimal moneyTest { get; set; }
 

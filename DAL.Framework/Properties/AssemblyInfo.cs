@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("DAL.Framework")]
-[assembly: AssemblyDescription("Lightweight data access layer for Dotnet Framework projects")]
+[assembly: AssemblyDescription("DAL.Framework is a SQL db interface and data mapper, designed to probide a lightweight way to manager sql data.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Global Conquest Games")]
 [assembly: AssemblyProduct("DAL.Framework")]
@@ -31,5 +31,5 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.0.4.0")]
-[assembly: AssemblyFileVersion("1.0.4.0")]
+[assembly: AssemblyVersion("2.0.0.2")]
+[assembly: AssemblyFileVersion("2.0.0.2")]
