@@ -36,7 +36,7 @@ namespace DAL.Net
         /// Converts a list of IEnumerable objects to a string of comma delimited items. If a quote_character
         /// is defined, this will wrap each item with the character(s) passed.
         /// </summary>
-        public static string GenericListToStringList<T>(IEnumerable<T> list, string? quoteCharacter = null, string? quoteEscapeCharacter = null)
+        public static string GenericListToStringList<T>(IEnumerable<T> list, string quoteCharacter = null, string quoteEscapeCharacter = null)
         {
             if (list == null)
                 throw new ArgumentNullException(nameof(list));
@@ -57,7 +57,7 @@ namespace DAL.Net
                 }
                 else
                 {
-                    string? buffer = item.ToString();
+                    string buffer = item.ToString();
 
                     if (!string.IsNullOrWhiteSpace(quoteEscapeCharacter))
                         buffer = buffer.Replace(quoteCharacter, quoteEscapeCharacter);
@@ -75,7 +75,7 @@ namespace DAL.Net
         /// <summary>
         /// Method creates sql debugging strings with parameterized argument lists
         /// </summary>
-        public static string GenerateSqlDebugString(string? sqlQuery, IList<SqlParameter> parameterList)
+        public static string GenerateSqlDebugString(string sqlQuery, IList<SqlParameter> parameterList)
         {
             if (string.IsNullOrWhiteSpace(sqlQuery))
                 throw new ArgumentNullException(nameof(sqlQuery));
@@ -443,7 +443,7 @@ namespace DAL.Net
 
         #region Async Methods
 
-        public static async Task<string> GenericListToStringListAsync<T>(IEnumerable<T> list, string? quoteCharacter = null, string? quoteEscapeCharacter = null)
+        public static async Task<string> GenericListToStringListAsync<T>(IEnumerable<T> list, string quoteCharacter = null, string quoteEscapeCharacter = null)
         {
             return await Task.Run(() => GenericListToStringList(list, quoteCharacter, quoteEscapeCharacter));
         }

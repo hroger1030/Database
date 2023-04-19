@@ -16,9 +16,8 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-using Microsoft.SqlServer.Types;
-using System;
 using System.Collections.Generic;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Reflection;
@@ -53,7 +52,7 @@ namespace DAL.Core
                 if (firstFlag)
                     firstFlag = false;
                 else
-                    sb.Append(",");
+                    sb.Append(',');
 
                 if (item == null)
                 {
@@ -167,7 +166,7 @@ namespace DAL.Core
                         {
                             case "System.Int32":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as int? ?? null;
+                                    fieldValue = null;
                                 else
                                     fieldValue = (int)reader[columnName];
                                 break;
@@ -181,67 +180,63 @@ namespace DAL.Core
 
                             case "System.Double":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as double? ?? null;
+                                    fieldValue = null;
                                 else
                                     fieldValue = (double)reader[columnName];
                                 break;
 
                             case "System.Float":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as float? ?? null;
+                                    fieldValue = null;
                                 else
                                     fieldValue = (float)reader[columnName];
                                 break;
 
                             case "System.Boolean":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as bool? ?? null;
+                                    fieldValue = null;
                                 else
                                     fieldValue = (bool)reader[columnName];
                                 break;
 
-                            case "System.Boolean[]":
-                                if (reader[i] == DBNull.Value)
-                                {
-                                    fieldValue = null;
-                                }
-                                else
-                                {
-                                    // inline conversion, blech. improve later.
-                                    var byteArray = (byte[])reader[i];
-                                    var boolArray = new bool[byteArray.Length];
-
-                                    for (int index = 0; index < byteArray.Length; index++)
-                                        boolArray[index] = Convert.ToBoolean(byteArray[index]);
-
-                                    fieldValue = boolArray;
-                                }
-                                break;
-
                             case "System.DateTime":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as DateTime? ?? null;
+                                    fieldValue = null;
                                 else
-                                    fieldValue = DateTime.Parse(reader[columnName].ToString());
+                                    fieldValue = (DateTime)reader[columnName];
+                                break;
+
+                            case "System.DateTimeOffset":
+                                if (reader[i] == DBNull.Value)
+                                    fieldValue = null;
+                                else
+                                    fieldValue = (DateTimeOffset)reader[columnName];
+                                break;
+
+                            case "System.TimeSpan":
+                                if (reader[i] == DBNull.Value)
+                                    fieldValue = null;
+                                else
+                                    fieldValue = (TimeSpan)reader[columnName];
                                 break;
 
                             case "System.Guid":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as Guid? ?? null;
+                                    fieldValue = null;
                                 else
                                     fieldValue = (Guid)reader[columnName];
                                 break;
 
                             case "System.Single":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as float? ?? null;
+                                    fieldValue = null;
                                 else
-                                    fieldValue = float.Parse(reader[columnName].ToString());
+                                    fieldValue = (float)reader[columnName];
                                 break;
 
                             case "System.Decimal":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as decimal? ?? null;
+                                    fieldValue = null;
                                 else
                                     fieldValue = (decimal)reader[columnName];
                                 break;
@@ -270,35 +265,35 @@ namespace DAL.Core
 
                             case "System.SByte":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as sbyte? ?? null;
+                                    fieldValue = null;
                                 else
                                     fieldValue = (sbyte)reader[columnName];
                                 break;
 
                             case "System.Char":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as char? ?? null;
+                                    fieldValue = null;
                                 else
                                     fieldValue = (char)reader[columnName];
                                 break;
 
                             case "System.UInt32":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as uint? ?? null;
+                                    fieldValue = null;
                                 else
                                     fieldValue = (uint)reader[columnName];
                                 break;
 
                             case "System.Int64":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as long? ?? null;
+                                    fieldValue = null;
                                 else
                                     fieldValue = (long)reader[columnName];
                                 break;
 
                             case "System.UInt64":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as ulong? ?? null;
+                                    fieldValue = null;
                                 else
                                     fieldValue = (ulong)reader[columnName];
                                 break;
@@ -312,35 +307,33 @@ namespace DAL.Core
 
                             case "System.Int16":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as short? ?? null;
+                                    fieldValue = null;
                                 else
                                     fieldValue = (short)reader[columnName];
                                 break;
 
                             case "System.UInt16":
                                 if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as ushort? ?? null;
+                                    fieldValue = null;
                                 else
                                     fieldValue = (ushort)reader[columnName];
                                 break;
 
                             case "System.Udt":
-                                // no idea how to handle a custom type
+                                // generated a Microsoft.SqlServer.Server.InvalidUdtException. Don't know how to fix it, seems like a reader bug.
                                 throw new NotImplementedException("System.Udt is an unsupported datatype");
 
                             case "Microsoft.SqlServer.Types.SqlGeometry":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as SqlGeometry ?? null;
-                                else
-                                    fieldValue = (SqlGeometry)reader[columnName];
-                                break;
+                                // generated a Microsoft.SqlServer.Server.InvalidUdtException. Don't know how to fix it, seems like a reader bug.
+                                throw new NotImplementedException("Microsoft.SqlServer.Types.SqlGeometry is an unsupported datatype");
 
                             case "Microsoft.SqlServer.Types.SqlGeography":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = reader[columnName] as SqlGeography ?? null;
-                                else
-                                    fieldValue = (SqlGeography)reader[columnName];
-                                break;
+                                // generated a Microsoft.SqlServer.Server.InvalidUdtException. Don't know how to fix it, seems like a reader bug.
+                                throw new NotImplementedException("Microsoft.SqlServer.Types.SqlGeography is an unsupported datatype");
+
+                            case "Microsoft.SqlServer.Types.SqlHierarchyId":
+                                // generated a Microsoft.SqlServer.Server.InvalidUdtException. Don't know how to fix it, seems like a reader bug.
+                                throw new NotImplementedException("Microsoft.SqlServer.Types.SqlHierarchyId is an unsupported datatype");
 
                             default:
                                 if (propertyType.IsEnum)
@@ -425,16 +418,16 @@ namespace DAL.Core
         {
             var dt = new DataTable();
             var outputType = typeof(T);
-            var object_properties = outputType.GetProperties();
+            var objectProperties = outputType.GetProperties();
 
-            foreach (var propertyInfo in object_properties)
+            foreach (var propertyInfo in objectProperties)
                 dt.Columns.Add(propertyInfo.Name);
 
             foreach (var item in input)
             {
                 var dr = dt.NewRow();
 
-                foreach (var property in object_properties)
+                foreach (var property in objectProperties)
                     dr[property.Name] = outputType.GetProperty(property.Name).GetValue(item, null);
 
                 dt.Rows.Add(dr);

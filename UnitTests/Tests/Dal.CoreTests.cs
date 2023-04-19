@@ -30,7 +30,7 @@ namespace UnitTests
     /// This class presumes that you have run the GenerateTestTable.sql
     /// </summary>
     [TestFixture]
-    public class DALNetTests
+    public class DALCoreTests
     {
         private IDatabase _Db;
 

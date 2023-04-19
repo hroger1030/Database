@@ -23,9 +23,9 @@ namespace DAL.Net.SqlMetadata
     public class SqlColumn
     {
         public SqlTable? Table { get; set; }
-        public string? Schema { get; set; }
-        public string? Name { get; set; }
-        public string? DataType { get; set; }
+        public string Schema { get; set; }
+        public string Name { get; set; }
+        public string DataType { get; set; }
         public int Length { get; set; }
         public int Precision { get; set; }
         public int Scale { get; set; }
@@ -33,7 +33,7 @@ namespace DAL.Net.SqlMetadata
         public bool IsPk { get; set; }
         public bool IsIdentity { get; set; }
         public int ColumnOrdinal { get; set; }
-        public string? DefaultValue { get; set; }
+        public string DefaultValue { get; set; }
 
         public SqlDbType SqlDataType
         {

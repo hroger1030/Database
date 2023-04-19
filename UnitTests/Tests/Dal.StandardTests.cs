@@ -16,7 +16,7 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-using DAL.Net;
+using DAL.Standard;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -30,7 +30,7 @@ namespace UnitTests
     /// This class presumes that you have run the GenerateTestTable.sql
     /// </summary>
     [TestFixture]
-    public class DALNetTests
+    public class DalStandardTests
     {
         private IDatabase _Db;
 

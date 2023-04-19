@@ -1,10 +1,10 @@
 ﻿using DAL.Net;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace Workbench
 {
@@ -13,38 +13,37 @@ namespace Workbench
         /// <summary>
         /// We are assuming that we are working off a local SQL Server instance by default
         /// </summary>
-        //private const string SQL_CONN = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=master;Integrated Security=True;Pooling=true;";
+        private const string SQL_CONN = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=master;Integrated Security=True;Pooling=true;";
 
         public static void Main()
         {
             AppDomain.CurrentDomain.UnhandledException += Application_Error;
             var sw = Stopwatch.StartNew();
 
-
             // run integration tests against the testDb
-            //IDatabase test = new Database(SQL_CONN, true, true);
+            IDatabase test = new Database(SQL_CONN, true, true);
 
-            //var parameters = new SqlParameter[]
-            //{
-            //    new SqlParameter() { Value = 1, ParameterName = "@Id", DbType = DbType.Int32 },
-            //};
+            var parameters = new SqlParameter[]
+            {
+                new SqlParameter() { Value = 1, ParameterName = "@Id", DbType = DbType.Int32 },
+            };
 
-            //Func<SqlDataReader, Dictionary<int, string>> processor = delegate (SqlDataReader reader)
-            //{
-            //    var output = new Dictionary<int, string>();
+            Func<SqlDataReader, Dictionary<int, string>> processor = delegate (SqlDataReader reader)
+            {
+                var output = new Dictionary<int, string>();
 
-            //    while (reader.Read())
-            //    {
-            //        int id = (int)reader["Id"];
-            //        string name = (string)reader["Location"];
+                while (reader.Read())
+                {
+                    int id = (int)reader["Id"];
+                    string name = (string)reader["Name"];
 
-            //        output.Add(id, name);
-            //    }
+                    output.Add(id, name);
+                }
 
-            //    return output;
-            //};
+                return output;
+            };
 
-            //var result =  Task.Run(() => test.ExecuteQuerySpAsync<UnitTests.DbTestTable>("[toolsdb].[dbo].[SelectDataById]", parameters)).Result;
+            //var result = test.ExecuteQuery("select * from dbo.users where id = @Id", parameters, processor);
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"Total run time: {sw.Elapsed}");
