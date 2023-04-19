@@ -152,7 +152,7 @@ namespace DAL.Net
                         ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
                 }
 
-                throw ex;
+                throw;
             }
         }
 
@@ -195,7 +195,7 @@ namespace DAL.Net
                         ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
                 }
 
-                throw ex;
+                throw;
             }
         }
 
@@ -241,7 +241,7 @@ namespace DAL.Net
                         ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
                 }
 
-                throw ex;
+                throw;
             }
         }
 
@@ -285,7 +285,7 @@ namespace DAL.Net
                         ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
                 }
 
-                throw ex;
+                throw;
             }
         }
 
@@ -335,7 +335,7 @@ namespace DAL.Net
                         ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
                 }
 
-                throw ex;
+                throw;
             }
         }
 

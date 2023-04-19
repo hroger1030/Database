@@ -129,9 +129,9 @@ namespace UnitTests
 
         public decimal? smallmoneyTestNull { get; set; }
 
-        public object sql_variantTest { get; set; }
+        public byte[] sqlvariantTest { get; set; }
 
-        public object sql_variantTestNull { get; set; }
+        public byte[] sqlvariantTestNull { get; set; }
 
         public string textTest { get; set; }
 
@@ -149,6 +149,7 @@ namespace UnitTests
         /// NYI - ADO does not support this type
         /// </summary>
         public byte[] uniqueidentifierTest { get; set; }
+
         /// <summary>
         /// NYI - ADO does not support this type
         /// </summary>

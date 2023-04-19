@@ -13,7 +13,7 @@ namespace Workbench
         /// <summary>
         /// We are assuming that we are working off a local SQL Server instance by default
         /// </summary>
-        private const string SQL_CONN = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=master;Integrated Security=True;Pooling=true;";
+        //private const string SQL_CONN = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=master;Integrated Security=True;Pooling=true;";
 
         public static void Main()
         {
@@ -22,12 +22,12 @@ namespace Workbench
 
 
             // run integration tests against the testDb
-            IDatabase test = new Database(SQL_CONN, true, true);
+            //IDatabase test = new Database(SQL_CONN, true, true);
 
-            var parameters = new SqlParameter[]
-            {
-                new SqlParameter() { Value = 1, ParameterName = "@Id", DbType = DbType.Int32 },
-            };
+            //var parameters = new SqlParameter[]
+            //{
+            //    new SqlParameter() { Value = 1, ParameterName = "@Id", DbType = DbType.Int32 },
+            //};
 
             //Func<SqlDataReader, Dictionary<int, string>> processor = delegate (SqlDataReader reader)
             //{
@@ -44,7 +44,7 @@ namespace Workbench
             //    return output;
             //};
 
-            var result =  Task.Run(() => test.ExecuteQuerySpAsync<DbTestTable>("[toolsdb].[dbo].[SelectAllData]", parameters)).Result;
+            //var result =  Task.Run(() => test.ExecuteQuerySpAsync<UnitTests.DbTestTable>("[toolsdb].[dbo].[SelectDataById]", parameters)).Result;
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"Total run time: {sw.Elapsed}");

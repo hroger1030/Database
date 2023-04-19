@@ -22,7 +22,7 @@ This scrip will drop and recreate a test table used to validate all the DAL meth
 A few helper Commands
 
 drop table [dbo].[testtable]
-drop procedure [dbo].[SelectAllData]
+drop procedure [dbo].[SelectDataById]
 truncate table testtable
 
 select * from testtable
@@ -43,7 +43,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TestTa
 drop table [dbo].[testtable]
 
 CREATE TABLE [dbo].[TestTable](
-	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Id] [int] NOT NULL,
 	[bigintTest] [bigint] NOT NULL,
 	[bigintTestNull] [bigint] NULL,
 	[binaryTest] [binary](1) NOT NULL,
@@ -76,8 +76,8 @@ CREATE TABLE [dbo].[TestTable](
 	--[heiarchyIdTestNull] [hierarchyid] NULL,
 	[moneyTest] [money] NOT NULL,
 	[moneyTestNull] [money] NULL,
-	[ncharTest] [nchar](8) NOT NULL,
-	[ncharTestNull] [nchar](8) NULL,
+	[ncharTest] [nchar](2) NOT NULL,
+	[ncharTestNull] [nchar](2) NULL,
 	[ntextTest] [ntext] NOT NULL,
 	[ntextTestNull] [ntext] NULL,
 	[numericTest] [numeric](18, 0) NOT NULL,
@@ -94,8 +94,8 @@ CREATE TABLE [dbo].[TestTable](
 	[smallintTestNull] [smallint] NULL,
 	[smallmoneyTest] [smallmoney] NOT NULL,
 	[smallmoneyTestNull] [smallmoney] NULL,
-	[sql_variantTest] [sql_variant] NOT NULL,
-	[sql_variantTestNull] [sql_variant] NULL,
+	[sqlvariantTest] [sql_variant] NOT NULL,
+	[sqlvariantTestNull] [sql_variant] NULL,
 	[textTest] [text] NOT NULL,
 	[textTestNull] [text] NULL,
 	[timeTest] [time](7) NOT NULL,
@@ -115,7 +115,7 @@ CREATE TABLE [dbo].[TestTable](
 	[xmlTest] [xml] NOT NULL,
 	[xmlTestNull] [xml] NULL,
 	[timestampTest] [timestamp] NOT NULL,
- CONSTRAINT [PK_Test] PRIMARY KEY CLUSTERED 
+ CONSTRAINT [PK_TestTable] PRIMARY KEY CLUSTERED 
 (
 	[Id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
@@ -179,7 +179,7 @@ GO
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_ntextTest]  DEFAULT (N'你好') FOR [ntextTest]
 GO
 
-ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_numericTest]  DEFAULT ((1)) FOR [numericTest]
+ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_numericTest]  DEFAULT ((999999999999999999)) FOR [numericTest]
 GO
 
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_nvarcharTest]  DEFAULT (N'你好') FOR [nvarcharTest]
@@ -191,7 +191,7 @@ GO
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_realTest]  DEFAULT ((1234567890.123456789)) FOR [realTest]
 GO
 
-ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_smalldatetimeTest]  DEFAULT (getutcdate()) FOR [smalldatetimeTest]
+ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_smalldatetimeTest]  DEFAULT ('2079-06-06') FOR [smalldatetimeTest]
 GO
 
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_smallintTest]  DEFAULT ((32767)) FOR [smallintTest]
@@ -200,13 +200,13 @@ GO
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_smallmoneyTest]  DEFAULT ((214748.3647)) FOR [smallmoneyTest]
 GO
 
-ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_sql_variantTest]  DEFAULT (0xFF) FOR [sql_variantTest]
+ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_sqlvariantTest]  DEFAULT (0xFF) FOR [sqlvariantTest]
 GO
 
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_textTest]  DEFAULT ('The quick brown fox Jumped over the lazy dog') FOR [textTest]
 GO
 
-ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_timeTest]  DEFAULT (getutcdate()) FOR [timeTest]
+ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_timeTest]  DEFAULT ('23:59:59') FOR [timeTest]
 GO
 
 ALTER TABLE [dbo].[TestTable] ADD  CONSTRAINT [DF_TestTable_tinyintTest]  DEFAULT ((255)) FOR [tinyintTest]
@@ -233,12 +233,12 @@ GO
 --------------------------------------------------------------------------------------------------------------------------------
 
 -- put the default test data in the table
-truncate table testtable
-go
+--truncate table testtable
+--go
 
-insert [testtable] ([biginttest]) values (9223372036854775807)
-insert [testtable] ([biginttest]) values (9223372036854775807)
-insert [testtable] ([biginttest]) values (9223372036854775807)
+--insert [testtable] ([Id]) values (1)
+--insert [testtable] ([Id]) values (2)
+--insert [testtable] ([Id]) values (3)
 
 --------------------------------------------------------------------------------------------------------------------------------
 
@@ -263,5 +263,8 @@ FROM		TestTable
 WHERE		Id = @Id
 ORDER BY	ID
 GO
+
+
+
 
 

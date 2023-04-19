@@ -22,11 +22,13 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-namespace UnitTests.Tests
+namespace UnitTests
 {
+    /// <summary>
+    /// This class presumes that you have run the GenerateTestTable.sql
+    /// </summary>
     [TestFixture]
     public class SynchronousTests
     {
@@ -63,7 +65,7 @@ namespace UnitTests.Tests
             _Db = null;
         }
 
-        ///////////////////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
         [Test]
         [Category("GetSchema")]
@@ -193,118 +195,207 @@ namespace UnitTests.Tests
             Assert.IsTrue(exists);
         }
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // test datatable select
+
         [Test]
         [Category("InlineSql")]
         [Category("SynchronousTests")]
         public void InlineSql_SelectAll_DataTable()
         {
-            var buffer = _Db.ExecuteQuery(Constants.QUERY_BASIC_SELECT, null);
+            int count;
+
+            // insert a new value
+            count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_INSERT_WITH_PARAMETERS, CreateIdParameters());
+            Assert.IsTrue(count == 1);
+
+            // load value
+            var buffer = _Db.ExecuteQuery(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters());
 
             Assert.IsNotNull(buffer);
+            Assert.IsTrue(buffer.Rows.Count == 1);
+            Assert.IsTrue(buffer.Columns.Count != 0);
+
+            // delete value
+            count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters());
+            Assert.IsTrue(count == 1);
         }
 
         [Test]
         [Category("InlineSql")]
-        [Category("SynchronousTests")]
-        public void InlineSql_SelectAll_Poco()
+        [Category("AsynchronousTests")]
+        public async Task InlineSql_SelectAllAsync_DataTable()
         {
-            var buffer = _Db.ExecuteQuery<DbTestTable>(Constants.QUERY_BASIC_SELECT, null);
+            int count;
+
+            // insert a new value
+            count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_INSERT_WITH_PARAMETERS, CreateIdParameters());
+            Assert.IsTrue(count == 1);
+
+            // load value
+            var buffer = await _Db.ExecuteQueryAsync(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters());
 
             Assert.IsNotNull(buffer);
-            Assert.IsTrue(buffer.Count == 3);
+            Assert.IsTrue(buffer.Rows.Count != 0);
+            Assert.IsTrue(buffer.Columns.Count != 0);
 
-            foreach (var item in buffer)
-                Assert.IsTrue(Constants.IsDbTestTableCorrect(item));
+            // delete value
+            count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters());
+            Assert.IsTrue(count == 1);
+        }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // test inline sql select all as POCO
+
+        [Test]
+        [Category("InlineSql")]
+        [Category("Synchronous_Tests")]
+        public void InlineSql_FullCRUD_POCOs()
+        {
+            int count;
+            List<DbTestTable> buffer;
+
+            // insert a new value
+            count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_INSERT_WITH_PARAMETERS, CreateIdParameters());
+            Assert.IsTrue(count == 1);
+
+            // load value and check it
+            buffer = _Db.ExecuteQuery<DbTestTable>(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters());
+
+            Assert.IsNotNull(buffer);
+            Assert.IsTrue(buffer.Count == 1);
+            Assert.IsTrue(Constants.IsDbTestTableCorrect(buffer[0], 1));
+
+            // update value 
+            count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_UPDATE_WITH_PARAMETERS, CreateIdParameters());
+            Assert.IsTrue(count == 1);
+
+            // load value and check it
+            buffer = _Db.ExecuteQuery<DbTestTable>(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(99));
+
+            Assert.IsNotNull(buffer);
+            Assert.IsTrue(buffer.Count == 1);
+            Assert.IsTrue(Constants.IsDbTestTableCorrect(buffer[0], 99));
+
+            // delete value
+            count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters(99));
+            Assert.IsTrue(count == 1);
         }
 
         [Test]
         [Category("InlineSql")]
-        [Category("SynchronousTests")]
-        public void InlineSql_SelectAll_ManualParse()
+        [Category("Asynchronous_Tests")]
+        public async Task InlineSql_FullCRUDAsync_POCOs()
         {
-            var buffer = _Db.ExecuteQuery(Constants.QUERY_BASIC_SELECT, null, Constants.ParseDatareader);
+            int count;
+            List<DbTestTable> buffer;
 
-            Assert.IsNotNull(buffer);
-            Assert.IsTrue(buffer.Count == 3);
+            // insert a new value
+            count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_INSERT_WITH_PARAMETERS, CreateIdParameters());
+            Assert.IsTrue(count == 1);
 
-            foreach (var item in buffer)
-                Assert.IsTrue(Constants.IsDbTestTableCorrect(item));
-        }
-
-        [Test]
-        [Category("StoredProcs")]
-        [Category("SynchronousTests")]
-        public void StoredProc_SelectWithParams_Poco()
-        {
-            var parameters = new SqlParameter[]
-            {
-                new SqlParameter() { Value = 1, ParameterName = "@Id", DbType = DbType.Int32 },
-            };
-
-            var buffer = _Db.ExecuteQuerySp<DbTestTable>(Constants.STOREDPROC_SELECT_WITH_PARAMETERS, parameters);
+            // load value and check it
+            buffer = await _Db.ExecuteQueryAsync<DbTestTable>(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters());
 
             Assert.IsNotNull(buffer);
             Assert.IsTrue(buffer.Count == 1);
+            Assert.IsTrue(Constants.IsDbTestTableCorrect(buffer[0], 1));
 
-            foreach (var item in buffer)
-                Assert.IsTrue(Constants.IsDbTestTableCorrect(item));
-        }
+            // update value 
+            count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_UPDATE_WITH_PARAMETERS, CreateIdParameters());
+            Assert.IsTrue(count == 1);
 
-        [Test]
-        [Category("StoredProcs")]
-        [Category("Async")]
-        public async Task StoredProc_SelectWithParamsAsync_Poco()
-        {
-            var parameters = new SqlParameter[]
-            {
-                new SqlParameter() { Value = 1, ParameterName = "@Id", DbType = DbType.Int32 },
-            };
-
-            var buffer = await _Db.ExecuteQuerySpAsync<DbTestTable>(Constants.STOREDPROC_SELECT_WITH_PARAMETERS, parameters);
+            // load value and check it
+            buffer = await _Db.ExecuteQueryAsync<DbTestTable>(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(99));
 
             Assert.IsNotNull(buffer);
             Assert.IsTrue(buffer.Count == 1);
+            Assert.IsTrue(Constants.IsDbTestTableCorrect(buffer[0], 99));
 
-            foreach (var item in buffer)
-                Assert.IsTrue(Constants.IsDbTestTableCorrect(item));
+            // delete value
+            count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters(99));
+            Assert.IsTrue(count == 1);
         }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
         [Test]
         [Category("StoredProcs")]
-        [Category("SynchronousTests")]
+        [Category("Synchronous_Tests")]
         public void StoredProc_SelectWithParams_ManualParse()
         {
-            var parameters = new SqlParameter[]
-            {
-                new SqlParameter() { Value = 1, ParameterName = "@Id", DbType = DbType.Int32 },
-            };
+            int count;
+            List<DbTestTable> buffer;
 
-            var buffer = _Db.ExecuteQuerySp(Constants.STOREDPROC_SELECT_WITH_PARAMETERS, parameters, Constants.ParseDatareader);
+            // insert a new value
+            count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_INSERT_WITH_PARAMETERS, CreateIdParameters());
+            Assert.IsTrue(count == 1);
+
+            // load value and check it
+            buffer = _Db.ExecuteQuery(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(), Constants.ParseDatareader);
 
             Assert.IsNotNull(buffer);
             Assert.IsTrue(buffer.Count == 1);
+            Assert.IsTrue(Constants.IsDbTestTableCorrect(buffer[0], 1));
 
-            foreach (var item in buffer)
-                Assert.IsTrue(Constants.IsDbTestTableCorrect(item));
+            // update value 
+            count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_UPDATE_WITH_PARAMETERS, CreateIdParameters());
+            Assert.IsTrue(count == 1);
+
+            // load value and check it
+            buffer = _Db.ExecuteQuery(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(99), Constants.ParseDatareader);
+
+            Assert.IsNotNull(buffer);
+            Assert.IsTrue(buffer.Count == 1);
+            Assert.IsTrue(Constants.IsDbTestTableCorrect(buffer[0], 99));
+
+            // delete value
+            count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters(99));
+            Assert.IsTrue(count == 1);
         }
 
-        //[Test]
-        //[Category("StoredProcs")]
-        //[Category("Async")]
-        //public async Task StoredProc_SelectWithParamsAsync_ManualParse()
-        //{
-        //    var parameters = new SqlParameter[]
-        //    {
-        //        new SqlParameter() { Value = 1, ParameterName = "@Id", DbType = DbType.Int32 },
-        //    };
+        [Test]
+        [Category("StoredProcs")]
+        [Category("Asynchronous_Tests")]
+        public async Task StoredProc_SelectWithParamsAsync_ManualParse()
+        {
+            int count;
+            List<DbTestTable> buffer;
 
-        //    var buffer = await _Db.ExecuteQuerySpAsync<List<DbTestTable>>(Constants.STOREDPROC_SELECT_WITH_PARAMETERS, parameters, Constants.ParseDatareader);
+            // insert a new value
+            count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_INSERT_WITH_PARAMETERS, CreateIdParameters());
+            Assert.IsTrue(count == 1);
 
-        //    Assert.IsNotNull(buffer);
-        //    Assert.IsTrue(buffer.Count == 1);
+            // load value and check it
+            buffer = await _Db.ExecuteQueryAsync(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(), Constants.ParseDatareaderAsync);
 
-        //    foreach (var item in buffer)
-        //        Assert.IsTrue(Constants.IsDbTestTableCorrect(item));
-        //}
+            Assert.IsNotNull(buffer);
+            Assert.IsTrue(buffer.Count == 1);
+            Assert.IsTrue(Constants.IsDbTestTableCorrect(buffer[0], 1));
+
+            // update value 
+            count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_UPDATE_WITH_PARAMETERS, CreateIdParameters());
+            Assert.IsTrue(count == 1);
+
+            // load value and check it
+            buffer = await _Db.ExecuteQueryAsync(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(99), Constants.ParseDatareaderAsync);
+
+            Assert.IsNotNull(buffer);
+            Assert.IsTrue(buffer.Count == 1);
+            Assert.IsTrue(Constants.IsDbTestTableCorrect(buffer[0], 99));
+
+            // delete value
+            count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters(99));
+            Assert.IsTrue(count == 1);
+        }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        public static SqlParameter[] CreateIdParameters(int id = 1)
+        {
+            return new SqlParameter[] { new SqlParameter() { Value = id, ParameterName = "@Id", DbType = DbType.Int32 } };
+        }
     }
 }

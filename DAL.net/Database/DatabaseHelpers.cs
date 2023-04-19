@@ -49,7 +49,7 @@ namespace DAL.Net
                 if (firstFlag)
                     firstFlag = false;
                 else
-                    sb.Append(",");
+                    sb.Append(',');
 
                 if (item == null)
                 {
@@ -194,23 +194,6 @@ namespace DAL.Net
                                     fieldValue = null;
                                 else
                                     fieldValue = (bool)reader[columnName];
-                                break;
-
-                            case "System.Boolean[]":
-                                if (reader[i] == DBNull.Value)
-                                {
-                                    fieldValue = null;
-                                }
-                                else
-                                {
-                                    var byteArray = (byte[])reader[i];
-                                    var boolArray = new bool[byteArray.Length];
-
-                                    for (int index = 0; index < byteArray.Length; index++)
-                                        boolArray[index] = Convert.ToBoolean(byteArray[index]);
-
-                                    fieldValue = boolArray;
-                                }
                                 break;
 
                             case "System.DateTime":

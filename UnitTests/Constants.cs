@@ -16,10 +16,10 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
-using Microsoft.SqlServer.Types;
+using System.Threading.Tasks;
 
 namespace UnitTests
 {
@@ -53,22 +53,28 @@ namespace UnitTests
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        public readonly static string QUERY_BASIC_SELECT = $"select * from [{DB_NAME}].[{SCHEMA_NAME}].[{TABLE_NAME}] order by Id";
+        // Basic crud operations. Note that the order they are executed in might affect the results of the tests.
+        // the operations should be produce the same results when executed in order no matter how many times the test is run
 
         public readonly static string QUERY_BASIC_SELECT_WITH_PARAMETERS = $"select * from [{DB_NAME}].[{SCHEMA_NAME}].[{TABLE_NAME}] where Id = @Id order by Id";
 
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////
+        public readonly static string QUERY_BASIC_INSERT_WITH_PARAMETERS = $"insert [{DB_NAME}].[{SCHEMA_NAME}].[{TABLE_NAME}] ([Id]) values (@Id)";
+
+        public readonly static string QUERY_BASIC_UPDATE_WITH_PARAMETERS = $"update [{DB_NAME}].[{SCHEMA_NAME}].[{TABLE_NAME}] set [Id] = 99 where Id = @Id";
+
+        public readonly static string QUERY_BASIC_DELETE_WITH_PARAMETERS = $"delete [{DB_NAME}].[{SCHEMA_NAME}].[{TABLE_NAME}] where Id = @Id";
 
         public readonly static string STOREDPROC_SELECT_WITH_PARAMETERS = $"[{DB_NAME}].[{SCHEMA_NAME}].[{PROCEDURE_NAME}]";
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
         /// <summary>
         /// We are seeding the database with known values, so we can test the results.
         /// If any of the constants are altered, this function will need to be updated to match.
         /// </summary>
-        public static bool IsDbTestTableCorrect(DbTestTable input)
+        public static bool IsDbTestTableCorrect(DbTestTable input, int expectedId)
         {
-            if (input.Id < 1 || input.Id > 3)
+            if (input.Id != expectedId)
                 return false;
 
             if (input.bigintTest != long.MaxValue)
@@ -95,7 +101,7 @@ namespace UnitTests
             if (input.charTestNull != null)
                 return false;
 
-            if (input.dateTest != new DateTime(9999,12,31,0,0,0,0,DateTimeKind.Utc))
+            if (input.dateTest != new DateTime(9999, 12, 31, 0, 0, 0, 0, DateTimeKind.Utc))
                 return false;
 
             if (input.datetimeTest != new DateTime(9999, 12, 31, 23, 59, 59, 997, DateTimeKind.Unspecified))
@@ -152,6 +158,122 @@ namespace UnitTests
                 return false;
 
             if (input.moneyTestNull != null)
+                return false;
+
+            if (input.ncharTest != "你好")
+                return false;
+
+            if (input.moneyTestNull != null)
+                return false;
+
+            if (input.ntextTest != "你好")
+                return false;
+
+            if (input.ntextTestNull != null)
+                return false;
+
+            if (input.numericTest != 999999999999999999)
+                return false;
+
+            if (input.numericTestNull != null)
+                return false;
+
+            if (input.nvarcharTest != "你好")
+                return false;
+
+            if (input.nvarcharTestNull != null)
+                return false;
+
+            if (input.nvarcharMAXTest != "你好")
+                return false;
+
+            if (input.nvarcharMAXTestNull != null)
+                return false;
+
+            if (input.realTest != 1234567890.123456789f)
+                return false;
+
+            if (input.realTestNull != null)
+                return false;
+
+            if (input.smalldatetimeTest != new DateTime(2079, 6, 6, 0, 0, 0, 0, DateTimeKind.Unspecified))
+                return false;
+
+            if (input.smalldatetimeTestNull != null)
+                return false;
+
+            if (input.smallintTest != short.MaxValue)
+                return false;
+
+            if (input.smallintTestNull != null)
+                return false;
+
+            if (input.smallmoneyTest != 214748.3647m)
+                return false;
+
+            if (input.smallmoneyTestNull != null)
+                return false;
+
+            if (input.sqlvariantTest.Length == 1 && input.sqlvariantTest[0] != 0xFF)
+                return false;
+
+            if (input.sqlvariantTestNull != null)
+                return false;
+
+            if (input.textTest != "The quick brown fox Jumped over the lazy dog")
+                return false;
+
+            if (input.textTestNull != null)
+                return false;
+
+            if (input.timeTest != new TimeSpan(0, 23, 59, 59, 0))
+                return false;
+
+            if (input.timeTestNull != null)
+                return false;
+
+            if (input.tinyintTest != byte.MaxValue)
+                return false;
+
+            if (input.tinyintTestNull != null)
+                return false;
+
+            //NYI
+            //uniqueidentifierTest
+            //uniqueidentifierTestNull
+
+            if (input.varbinaryTest.Length == 1 && input.varbinaryTest[0] != 0xFF)
+                return false;
+
+            if (input.varbinaryTestNull != null)
+                return false;
+
+            if (input.varbinaryMAXTest.Length == 1 && input.varbinaryMAXTest[0] != 0xFF)
+                return false;
+
+            if (input.varbinaryMAXTestNull != null)
+                return false;
+
+            if (input.varcharTest != "abcdefghijklmnopqrstuvwxyz")
+                return false;
+
+            if (input.varcharTestNull != null)
+                return false;
+
+            if (input.varcharMAXTest != "abcdefghijklmnopqrstuvwxyz")
+                return false;
+
+            if (input.varcharMAXTestNull != null)
+                return false;
+
+            if (input.xmlTest != "<Root><ProductDescription ProductModelID=\"5\"><Summary>Some Text</Summary></ProductDescription></Root>")
+                return false;
+
+            if (input.xmlTestNull != null)
+                return false;
+
+            // cannot say a lot about this since we cannot set a specific value
+            if (input.timestampTest == null && input.timestampTest.Length == 26)
                 return false;
 
             return true;
@@ -213,62 +335,77 @@ namespace UnitTests
 
                     moneyTest = (decimal)reader["moneyTest"],
                     moneyTestNull = (reader["moneyTestNull"] == DBNull.Value) ? null : (decimal?)reader["moneyTestNull"],
+
+                    ncharTest = (string)reader["ncharTest"],
+                    ncharTestNull = (reader["ncharTestNull"] == DBNull.Value) ? null : (string)reader["ncharTestNull"],
+
+                    ntextTest = (string)reader["ntextTest"],
+                    ntextTestNull = (reader["ntextTestNull"] == DBNull.Value) ? null : (string)reader["ntextTestNull"],
+
+                    numericTest = (decimal)reader["numericTest"],
+                    numericTestNull = (reader["numericTestNull"] == DBNull.Value) ? null : (decimal?)reader["numericTestNull"],
+
+                    nvarcharTest = (string)reader["nvarcharTest"],
+                    nvarcharTestNull = (reader["nvarcharTestNull"] == DBNull.Value) ? null : (string)reader["nvarcharTestNull"],
+
+                    nvarcharMAXTest = (string)reader["nvarcharMAXTest"],
+                    nvarcharMAXTestNull = (reader["nvarcharMAXTestNull"] == DBNull.Value) ? null : (string)reader["nvarcharMAXTestNull"],
+
+                    realTest = (float)reader["realTest"],
+                    realTestNull = (reader["realTestNull"] == DBNull.Value) ? null : (float?)reader["realTestNull"],
+
+                    smalldatetimeTest = (DateTime)reader["smalldatetimeTest"],
+                    smalldatetimeTestNull = (reader["smalldatetimeTestNull"] == DBNull.Value) ? null : (DateTime?)reader["smalldatetimeTestNull"],
+
+                    smallintTest = (short)reader["smallintTest"],
+                    smallintTestNull = (reader["smallintTestNull"] == DBNull.Value) ? null : (short?)reader["smallintTestNull"],
+
+                    smallmoneyTest = (decimal)reader["smallmoneyTest"],
+                    smallmoneyTestNull = (reader["smallmoneyTestNull"] == DBNull.Value) ? null : (decimal?)reader["smallmoneyTestNull"],
+
+                    sqlvariantTest = (byte[])reader["sqlvariantTest"],
+                    sqlvariantTestNull = (reader["sqlvariantTestNull"] == DBNull.Value) ? null : (byte[])reader["sqlvariantTestNull"],
+
+                    textTest = (string)reader["textTest"],
+                    textTestNull = (reader["textTestNull"] == DBNull.Value) ? null : (string)reader["textTestNull"],
+
+                    timeTest = (TimeSpan)reader["timeTest"],
+                    timeTestNull = (reader["timeTestNull"] == DBNull.Value) ? null : (TimeSpan?)reader["timeTestNull"],
+
+                    tinyintTest = (byte)reader["tinyintTest"],
+                    tinyintTestNull = (reader["tinyintTestNull"] == DBNull.Value) ? null : (byte)reader["tinyintTestNull"],
+
+                    //NYI
+                    //uniqueidentifierTest
+                    //uniqueidentifierTestNull
+
+                    varbinaryTest = (byte[])reader["varbinaryTest"],
+                    varbinaryTestNull = (reader["varbinaryTestNull"] == DBNull.Value) ? null : (byte[])reader["varbinaryTestNull"],
+
+                    varbinaryMAXTest = (byte[])reader["varbinaryMAXTest"],
+                    varbinaryMAXTestNull = (reader["varbinaryMAXTestNull"] == DBNull.Value) ? null : (byte[])reader["varbinaryMAXTestNull"],
+
+                    varcharTest = (string)reader["varcharTest"],
+                    varcharTestNull = (reader["varcharTestNull"] == DBNull.Value) ? null : (string)reader["varcharTestNull"],
+
+                    varcharMAXTest = (string)reader["varcharMAXTest"],
+                    varcharMAXTestNull = (reader["varcharMAXTestNull"] == DBNull.Value) ? null : (string)reader["varcharMAXTestNull"],
+
+                    xmlTest = (string)reader["xmlTest"],
+                    xmlTestNull = (reader["xmlTestNull"] == DBNull.Value) ? null : (string)reader["xmlTestNull"],
+
+                    timestampTest = (byte[])reader["timestampTest"],
                 };
-
-
-
-                //public string ncharTest { get; set; }
-                //public string ncharTestNull { get; set; }
-                //public string ntextTest { get; set; }
-                //public string ntextTestNull { get; set; }
-                //public decimal numericTest { get; set; }
-                //public decimal? numericTestNull { get; set; }
-                //public string nvarcharTest { get; set; }
-                //public string nvarcharTestNull { get; set; }
-                //public string nvarcharMAXTest { get; set; }
-                //public string nvarcharMAXTestNull { get; set; }
-                //public float realTest { get; set; }
-                //public float? realTestNull { get; set; }
-                //public DateTime smalldatetimeTest { get; set; }
-                //public DateTime? smalldatetimeTestNull { get; set; }
-                //public short smallintTest { get; set; }
-                //public short? smallintTestNull { get; set; }
-                //public decimal smallmoneyTest { get; set; }
-                //public decimal? smallmoneyTestNull { get; set; }
-                //public object sql_variantTest { get; set; }
-                //public object sql_variantTestNull { get; set; }
-                //public string textTest { get; set; }
-                //public string textTestNull { get; set; }
-                //public TimeSpan timeTest { get; set; }
-                //public TimeSpan? timeTestNull { get; set; }
-                //public byte tinyintTest { get; set; }
-                //public byte? tinyintTestNull { get; set; }
-
-                ///// <summary>
-                ///// NYI - ADO does not support this type
-                ///// </summary>
-                //public byte[] uniqueidentifierTest { get; set; }
-                ///// <summary>
-                ///// NYI - ADO does not support this type
-                ///// </summary>
-                //public byte[] uniqueidentifierTestNull { get; set; }
-
-                //public byte[] varbinaryTest { get; set; }
-                //public byte[] varbinaryTestNull { get; set; }
-                //public byte[] varbinaryMAXTest { get; set; }
-                //public byte[] varbinaryMAXTestNull { get; set; }
-                //public string varcharTest { get; set; }
-                //public string varcharTestNull { get; set; }
-                //public string varcharMAXTest { get; set; }
-                //public string varcharMAXTestNull { get; set; }
-                //public string xmlTest { get; set; }
-                //public string xmlTestNull { get; set; }
-                //public byte[] timestampTest { get; set; }
 
                 output.Add(buffer);
             }
 
             return output;
+        }
+
+        public static async Task<List<DbTestTable>> ParseDatareaderAsync(SqlDataReader reader)
+        {
+            return await Task.Run(() => ParseDatareader(reader));
         }
     }
 }
