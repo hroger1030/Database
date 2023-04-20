@@ -124,7 +124,7 @@ namespace DAL.Net
             return default;
         }
 
-        public DataTable GetSchema(eCollectionType collection, string[]? restrictions = null)
+        public DataTable GetSchema(eCollectionType collection, string[] restrictions = null)
         {
             CommandHistory.Add($"Called GetSchema({collection}, {restrictions})");
 
@@ -254,7 +254,7 @@ namespace DAL.Net
             return default;
         }
 
-        public async Task<DataTable> GetSchemaAsync(eCollectionType collection, string[]? restrictions = null)
+        public async Task<DataTable> GetSchemaAsync(eCollectionType collection, string[] restrictions = null)
         {
             await Task.Run(() =>
             {

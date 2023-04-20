@@ -99,7 +99,7 @@ namespace DAL.Net
             return ExecuteScalar<T>(sqlQuery, parameters, _Connection, true);
         }
 
-        public DataTable GetSchema(eCollectionType collection, string[]? restrictions = null)
+        public DataTable GetSchema(eCollectionType collection, string[] restrictions = null)
         {
             var buffer = collection.ToString().Replace('_', ' ');
 
@@ -393,7 +393,7 @@ namespace DAL.Net
             return await ExecuteScalarAsync<T>(sqlQuery, parameters, _Connection, true);
         }
 
-        public async Task<DataTable> GetSchemaAsync(eCollectionType collection, string[]? restrictions = null)
+        public async Task<DataTable> GetSchemaAsync(eCollectionType collection, string[] restrictions = null)
         {
             var buffer = collection.ToString().Replace('_', ' ');
 
