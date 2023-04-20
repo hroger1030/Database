@@ -66,6 +66,7 @@
   <ItemGroup>
     <Compile Include="DataBase\DatabaseHelpers.cs" />
     <Compile Include="DataBase\eCollectionType.cs" />
+    <Compile Include="DataBase\QueryData.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="DataBase\DatabaseFake.cs" />
     <Compile Include="DataBase\Database.cs" />

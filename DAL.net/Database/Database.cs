@@ -59,6 +59,14 @@ namespace DAL.Net
             return ExecuteQuery(sqlQuery, parameters, _Connection, true);
         }
 
+        /// <summary>
+        /// This method retuyrns the result of a collection of queries in the form of a dataset.
+        /// </summary>
+        public DataSet ExecuteMultipleQueries(List<QueryData> queryList)
+        {
+            return ExecuteMultipleQueries(queryList, _Connection);
+        }
+
         public List<T> ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()
         {
             return ExecuteQuery<T>(sqlQuery, parameters, _Connection, false);
@@ -150,6 +158,57 @@ namespace DAL.Net
                 {
                     for (int i = 0; i < parameters.Count; i++)
                         ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
+                }
+
+                throw;
+            }
+        }
+
+        private DataSet ExecuteMultipleQueries(List<QueryData> queryList, string connection)
+        {
+            if (queryList == null || queryList.Count < 1)
+                throw new ArgumentNullException(nameof(queryList));
+
+            int index = 0;
+
+            try
+            {
+                var ds = new DataSet();
+                using var conn = new SqlConnection(connection);
+                conn.Open();
+
+                for (index = 0; index < queryList.Count; index++)
+                {
+                    using var cmd = new SqlCommand(queryList[index].Query, conn) { CommandType = (queryList[index].StoredProcedure) ? CommandType.StoredProcedure : CommandType.Text, };
+                    using var adapter = new SqlDataAdapter() { SelectCommand = cmd, };
+
+                    ReadInParameters(queryList[index].Parameters, cmd);
+
+#if (DEBUG)
+                    var sqlDebugString = GenerateSqlDebugString(queryList[index].Query, queryList[index].Parameters);
+                    Console.WriteLine($"Query{index}:{sqlDebugString}");
+#endif
+
+                    var dt = new DataTable();
+                    adapter.Fill(dt);
+                    ds.Tables.Add(dt);
+                    PersistOutputParameters(queryList[index].Parameters, cmd);
+                }
+
+                conn.Close();
+                return ds;
+            }
+            catch (Exception ex)
+            {
+                ex.Data.Add(EXCEPTION_KEY_QUERY, queryList[index].Query);
+
+                if (_LogConnection)
+                    ex.Data.Add(EXCEPTION_KEY_CONNECTION, connection);
+
+                if (_LogParameters && queryList[index].Parameters != null)
+                {
+                    for (int i = 0; i < queryList[i].Parameters.Count; i++)
+                        ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{queryList[index].Parameters[i].ParameterName} = {queryList[index].Parameters[i].Value}");
                 }
 
                 throw;
@@ -353,6 +412,14 @@ namespace DAL.Net
             return await ExecuteQueryAsync(sqlQuery, parameters, _Connection, true);
         }
 
+        /// <summary>
+        /// This method retuyrns the result of a collection of queries in the form of a dataset.
+        /// </summary>
+        public async Task<DataSet> ExecuteMultipleQueriesAsync(List<QueryData> queryList)
+        {
+            return await ExecuteMultipleQueriesAsync(queryList, _Connection);
+        }
+
         public async Task<List<T>> ExecuteQueryAsync<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()
         {
             return await ExecuteQueryAsync<T>(sqlQuery, parameters, _Connection, false);
@@ -444,6 +511,57 @@ namespace DAL.Net
                 {
                     for (int i = 0; i < parameters.Count; i++)
                         ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{parameters[i].ParameterName} = {parameters[i].Value}");
+                }
+
+                throw;
+            }
+        }
+
+        private async Task<DataSet> ExecuteMultipleQueriesAsync(List<QueryData> queryList, string connection)
+        {
+            if (queryList == null || queryList.Count < 1)
+                throw new ArgumentNullException(nameof(queryList));
+
+            int index = 0;
+
+            try
+            {
+                var ds = new DataSet();
+                using var conn = new SqlConnection(connection);
+                await conn.OpenAsync();
+
+                for (index = 0; index < queryList.Count; index++)
+                {
+                    using var cmd = new SqlCommand(queryList[index].Query, conn) { CommandType = (queryList[index].StoredProcedure) ? CommandType.StoredProcedure : CommandType.Text, };
+                    using var adapter = new SqlDataAdapter() { SelectCommand = cmd, };
+
+                    await ReadInParametersAsync(queryList[index].Parameters, cmd);
+
+#if (DEBUG)
+                    var sqlDebugString = await GenerateSqlDebugStringAsync(queryList[index].Query, queryList[index].Parameters);
+                    Console.WriteLine($"Query{index}:{sqlDebugString}");
+#endif
+
+                    var dt = new DataTable();
+                    adapter.Fill(dt);
+                    ds.Tables.Add(dt);
+                    await PersistOutputParametersAsync(queryList[index].Parameters, cmd);
+                }
+
+                await conn.CloseAsync();
+                return ds;
+            }
+            catch (Exception ex)
+            {
+                ex.Data.Add(EXCEPTION_KEY_QUERY, queryList[index].Query);
+
+                if (_LogConnection)
+                    ex.Data.Add(EXCEPTION_KEY_CONNECTION, connection);
+
+                if (_LogParameters && queryList[index].Parameters != null)
+                {
+                    for (int i = 0; i < queryList[i].Parameters.Count; i++)
+                        ex.Data.Add($"{EXCEPTION_SQL_PREFIX}{i + 1}", $"{queryList[index].Parameters[i].ParameterName} = {queryList[index].Parameters[i].Value}");
                 }
 
                 throw;

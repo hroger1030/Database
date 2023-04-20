@@ -16,7 +16,7 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-using DAL.Net;
+using DAL.Framework;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -238,6 +238,92 @@ namespace UnitTests
             Assert.IsNotNull(buffer);
             Assert.IsTrue(buffer.Rows.Count != 0);
             Assert.IsTrue(buffer.Columns.Count != 0);
+
+            // delete value
+            count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters());
+            Assert.IsTrue(count == 1);
+        }
+
+        [Test]
+        [Category("InlineSql")]
+        [Category("SynchronousTests")]
+        public void InlineSql_SelectAll_DataSet()
+        {
+            int count;
+
+            // insert a new value
+            count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_INSERT_WITH_PARAMETERS, CreateIdParameters());
+            Assert.IsTrue(count == 1);
+
+            // test loading multiple values
+            var queryCollection = new List<QueryData>()
+            {
+                new QueryData
+                {
+                    Parameters = new SqlParameter[] { new SqlParameter() { Value = 0, ParameterName = "@Id", DbType = DbType.Int32 } },
+                    Query = Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS,
+                    StoredProcedure = false,
+                },
+                new QueryData
+                {
+                    Parameters = new SqlParameter[] { new SqlParameter() { Value = 1, ParameterName = "@Id", DbType = DbType.Int32 } },
+                    Query = Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS,
+                    StoredProcedure = false,
+                },
+                new QueryData
+                {
+                    Parameters = new SqlParameter[] { new SqlParameter() { Value = 2, ParameterName = "@Id", DbType = DbType.Int32 } },
+                    Query = Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS,
+                    StoredProcedure = false,
+                },
+            };
+
+            // load multiple values
+            var output = _Db.ExecuteMultipleQueries(queryCollection);
+            Assert.NotNull(output);
+
+            // delete value
+            count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters());
+            Assert.IsTrue(count == 1);
+        }
+
+        [Test]
+        [Category("InlineSql")]
+        [Category("AsynchronousTests")]
+        public async Task InlineSql_SelectAllAsync_DataSet()
+        {
+            int count;
+
+            // insert a new value
+            count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_INSERT_WITH_PARAMETERS, CreateIdParameters());
+            Assert.IsTrue(count == 1);
+
+            // test loading multiple values
+            var queryCollection = new List<QueryData>()
+            {
+                new QueryData
+                {
+                    Parameters = new SqlParameter[] { new SqlParameter() { Value = 0, ParameterName = "@Id", DbType = DbType.Int32 } },
+                    Query = Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS,
+                    StoredProcedure = false,
+                },
+                new QueryData
+                {
+                    Parameters = new SqlParameter[] { new SqlParameter() { Value = 1, ParameterName = "@Id", DbType = DbType.Int32 } },
+                    Query = Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS,
+                    StoredProcedure = false,
+                },
+                new QueryData
+                {
+                    Parameters = new SqlParameter[] { new SqlParameter() { Value = 2, ParameterName = "@Id", DbType = DbType.Int32 } },
+                    Query = Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS,
+                    StoredProcedure = false,
+                },
+            };
+
+            // load multiple values
+            var output = await _Db.ExecuteMultipleQueriesAsync(queryCollection);
+            Assert.NotNull(output);
 
             // delete value
             count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters());

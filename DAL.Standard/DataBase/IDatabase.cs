@@ -16,11 +16,10 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-using System;
 using System.Collections.Generic;
+using System;
 using System.Data;
 using System.Data.SqlClient;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DAL.Standard
@@ -36,6 +35,8 @@ namespace DAL.Standard
         DataTable ExecuteQuery(string sqlQuery, IList<SqlParameter> parameters);
 
         DataTable ExecuteQuerySp(string sqlQuery, IList<SqlParameter> parameters);
+
+        DataSet ExecuteMultipleQueries(List<QueryData> queryCollection);
 
         T ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor);
 
@@ -62,6 +63,8 @@ namespace DAL.Standard
         Task<DataTable> ExecuteQueryAsync(string sqlQuery, IList<SqlParameter> parameters);
 
         Task<DataTable> ExecuteQuerySpAsync(string sqlQuery, IList<SqlParameter> parameters);
+
+        Task<DataSet> ExecuteMultipleQueriesAsync(List<QueryData> queryCollection);
 
         Task<T> ExecuteQueryAsync<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, Task<T>> processor);
 
