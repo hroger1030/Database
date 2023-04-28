@@ -129,6 +129,9 @@ namespace DAL.Net
         /// <returns></returns>
         public static List<T> ParseDatareaderResult<T>(SqlDataReader reader, bool throwUnmappedFieldsError) where T : class, new()
         {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
             var outputType = typeof(T);
             var results = new List<T>();
             var propertyLookup = new Dictionary<string, PropertyInfo>();
@@ -137,7 +140,7 @@ namespace DAL.Net
                 propertyLookup.Add(propertyInfo.Name, propertyInfo);
 
             T new_object;
-            object? fieldValue;
+            object fieldValue;
 
             while (reader.Read())
             {
@@ -147,7 +150,7 @@ namespace DAL.Net
                 {
                     string columnName = reader.GetName(i);
 
-                    if (propertyLookup.TryGetValue(columnName, out PropertyInfo? propertyInfo))
+                    if (propertyLookup.TryGetValue(columnName, out PropertyInfo propertyInfo))
                     {
                         Type propertyType = propertyInfo.PropertyType;
                         string propertyName = propertyInfo.PropertyType.FullName;
@@ -377,11 +380,11 @@ namespace DAL.Net
             if (cmd == null)
                 throw new ArgumentNullException(nameof(cmd));
 
-            if (parameters != null)
-            {
-                foreach (SqlParameter parameter in parameters)
-                    cmd.Parameters.Add(parameter);
-            }
+            if (parameters == null)
+                return;
+
+            foreach (SqlParameter parameter in parameters)
+                cmd.Parameters.Add(parameter);
         }
 
         /// <summary>
@@ -394,28 +397,39 @@ namespace DAL.Net
             if (cmd == null)
                 throw new ArgumentNullException(nameof(cmd));
 
-            if (parameters != null)
-            {
-                if (cmd.Parameters.Count != parameters.Count)
-                    throw new Exception($"Sql command parameter count ({cmd.Parameters.Count}) does not match input parameter count ({parameters.Count})");
+            // This covers the case where no parameters were passed in, but we have output parameters being returned.
+            if (parameters == null)
+                parameters = new List<SqlParameter>();
 
-                for (int i = 0; i < cmd.Parameters.Count; i++)
-                    parameters[i].Value = cmd.Parameters[i].Value;
-            }
+            if (cmd.Parameters.Count != parameters.Count)
+                throw new Exception($"Sql command parameter count ({cmd.Parameters.Count}) does not match input parameter count ({parameters.Count})");
+
+            for (int i = 0; i < cmd.Parameters.Count; i++)
+                parameters[i].Value = cmd.Parameters[i].Value;
         }
 
         /// <summary>
-        /// Generates a SqlParameter object from a generic object list. This allows you to pass in a list of N 
+        /// Generates a SqlParameter object from a generic poco list. This allows you to pass in a list of N 
         /// objects into a stored procedure as a single argument. The sqlTypeName type needs to exist in the db
         /// however, and be of the correct type.
         /// 
         /// Sample: ConvertObjectCollectionToParameter("@Foo", "dbo.SomeUserType", a_generic_object_collection);
         /// </summary>
-        public static SqlParameter ConvertObjectCollectionToParameter<T>(string parameterName, string sqlTypeName, IEnumerable<T> input)
+        public static SqlParameter ConvertPocoCollectionToParameter<T>(string parameterName, string sqlTypeName, IEnumerable<T> input) where T : class, new()
         {
+            if (string.IsNullOrWhiteSpace(parameterName))
+                throw new ArgumentNullException(nameof(parameterName));
+
+            if (string.IsNullOrWhiteSpace(sqlTypeName))
+                throw new ArgumentNullException(nameof(sqlTypeName));
+
+            if (input == null || input.Count() < 1)
+                throw new ArgumentException(nameof(input));
+
             var dt = new DataTable();
-            var outputType = typeof(T);
-            var objectProperties = outputType.GetProperties();
+            var genericType = typeof(T);
+
+            var objectProperties = genericType.GetProperties();
 
             foreach (var propertyInfo in objectProperties)
                 dt.Columns.Add(propertyInfo.Name);
@@ -425,15 +439,73 @@ namespace DAL.Net
                 var dr = dt.NewRow();
 
                 foreach (var property in objectProperties)
-                    dr[property.Name] = outputType.GetProperty(property.Name).GetValue(item, null);
+                    dr[property.Name] = genericType.GetProperty(property.Name).GetValue(item, null);
 
                 dt.Rows.Add(dr);
             }
 
-            var sql_parameter = new SqlParameter(parameterName, dt)
+            var sql_parameter = new SqlParameter()
             {
+                ParameterName = parameterName,
                 SqlDbType = SqlDbType.Structured,
                 TypeName = sqlTypeName,
+                Value = dt,
+            };
+
+            return sql_parameter;
+        }
+
+        /// <summary>
+        /// Generates a SqlParameter object from a generic object list. This allows you to pass in a list of N 
+        /// objects into a stored procedure as a single argument. The sqlTypeName type needs to exist in the db
+        /// however, and be of the correct type.
+        /// 
+        /// Sample: ConvertObjectCollectionToParameter("@Foo", "dbo.SomeUserType", a_generic_object_collection, "value");
+        /// </summary>
+        public static SqlParameter ConvertObjectCollectionToParameter<T>(string parameterName, string sqlTypeName, IEnumerable<T> input, string columnName)
+        {
+            if (string.IsNullOrWhiteSpace(parameterName))
+                throw new ArgumentNullException(nameof(parameterName));
+
+            if (string.IsNullOrWhiteSpace(sqlTypeName))
+                throw new ArgumentNullException(nameof(sqlTypeName));
+
+            if (input == null || input.Count() < 1)
+                throw new ArgumentException(nameof(input));
+
+            if (string.IsNullOrWhiteSpace(columnName))
+                throw new ArgumentNullException(nameof(columnName));
+
+            var dt = new DataTable();
+            dt.Columns.Add(columnName);
+
+            // only certain types are
+            var atomicTypes = new HashSet<string>()
+            {
+                typeof(int).FullName, typeof(string).FullName, typeof(double).FullName, typeof(float).FullName,
+                typeof(bool).FullName, typeof(DateTime).FullName, typeof(DateTimeOffset).FullName, typeof(TimeSpan).FullName,
+                typeof(Guid).FullName, typeof(float).FullName, typeof(decimal).FullName, typeof(byte).FullName,
+                typeof(byte[]).FullName, typeof(sbyte).FullName, typeof(char).FullName, typeof(uint).FullName,
+                typeof(long).FullName, typeof(ulong).FullName, typeof(object).FullName, typeof(short).FullName,
+            };
+
+            var genericType = typeof(T);
+            if (!atomicTypes.Contains(genericType.FullName))
+                throw new Exception($"'{genericType.FullName}' is not a known type that can be mapped to a SQL type");
+
+            foreach (var item in input)
+            {
+                var dr = dt.NewRow();
+                dr[columnName] = item;
+                dt.Rows.Add(dr);
+            }
+
+            var sql_parameter = new SqlParameter()
+            {
+                ParameterName = parameterName,
+                SqlDbType = SqlDbType.Structured,
+                TypeName = sqlTypeName,
+                Value = dt,
             };
 
             return sql_parameter;
@@ -487,15 +559,27 @@ namespace DAL.Net
         }
 
         /// <summary>
-        /// Generates a SqlParameter object from a generic object list. This allows you to pass in a list of N 
+        /// Generates a SqlParameter object from a generic poco list. This allows you to pass in a list of N 
         /// objects into a stored procedure as a single argument. The sqlTypeName type needs to exist in the db
         /// however, and be of the correct type.
         /// 
         /// Sample: ConvertObjectCollectionToParameter("@Foo", "dbo.SomeUserType", a_generic_object_collection);
         /// </summary>
-        public static async Task<SqlParameter> ConvertObjectCollectionToParameterAsync<T>(string parameterName, string sqlTypeName, IEnumerable<T> input)
+        public static async Task<SqlParameter> ConvertPocoCollectionToParameterAsync<T>(string parameterName, string sqlTypeName, IEnumerable<T> input) where T : class, new()
         {
-            return await Task.Run(() => ConvertObjectCollectionToParameter<T>(parameterName, sqlTypeName, input));
+            return await Task.Run(() => ConvertPocoCollectionToParameter<T>(parameterName, sqlTypeName, input));
+        }
+
+        /// <summary>
+        /// Generates a SqlParameter object from a generic object list. This allows you to pass in a list of N 
+        /// objects into a stored procedure as a single argument. The sqlTypeName type needs to exist in the db
+        /// however, and be of the correct type.
+        /// 
+        /// Sample: ConvertObjectCollectionToParameter("@Foo", "dbo.SomeUserType", a_generic_object_collection, "value");
+        /// </summary>
+        public static async Task<SqlParameter> ConvertObjectCollectionToParameterAsync<T>(string parameterName, string sqlTypeName, IEnumerable<T> input, string columnName)
+        {
+            return await Task.Run(() => ConvertObjectCollectionToParameter<T>(parameterName, sqlTypeName, input, columnName));
         }
 
         #endregion

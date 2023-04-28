@@ -719,7 +719,7 @@ namespace DAL.Net
 #endif
 
                 await conn.OpenAsync();
-                object? buffer = await cmd.ExecuteScalarAsync();
+                object buffer = await cmd.ExecuteScalarAsync();
                 await PersistOutputParametersAsync(parameters, cmd);
                 await conn.CloseAsync();
 

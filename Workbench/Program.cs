@@ -23,27 +23,68 @@ namespace Workbench
             // run integration tests against the testDb
             IDatabase test = new Database(SQL_CONN, true, true);
 
+            // build parameter string because we are lazy...
+            var nameslist = new string[] { "Mal", "Jayne", "Wash", "River", "Book", "Zoe", "Kaylee", "Simon" };
+            var parameter = Database.ConvertObjectCollectionToParameter("valueList", "tblStringList", nameslist, "value");
+
+            // test table variable
             var parameters = new SqlParameter[]
             {
-                new SqlParameter() { Value = 1, ParameterName = "@Id", DbType = DbType.Int32 },
+                //new SqlParameter() { Value = 1, ParameterName = "@Id", DbType = DbType.Int32 },
+                parameter,
             };
 
-            Func<SqlDataReader, Dictionary<int, string>> processor = delegate (SqlDataReader reader)
-            {
-                var output = new Dictionary<int, string>();
+            //Func<SqlDataReader, Dictionary<int, string>> processor = delegate (SqlDataReader reader)
+            //{
+            //    var output = new Dictionary<int, string>();
 
-                while (reader.Read())
+            //    while (reader.Read())
+            //    {
+            //        int id = (int)reader["Id"];
+            //        string name = (string)reader["Name"];
+
+            //        output.Add(id, name);
+            //    }
+
+            //    return output;
+            //};
+
+            // advanced example: parameter packing
+            //var result = test.ExecuteNonQuerySp("AdhocTests.dbo.BulkLoadExample", parameters);
+
+
+            //Advanced example: piggybacking
+           var queryList = new List<QueryData>()
+           {
+                new QueryData()
                 {
-                    int id = (int)reader["Id"];
-                    string name = (string)reader["Name"];
+                    Parameters = parameters,
+                    Query = "AdhocTests.dbo.BulkLoadExample",
+                    StoredProcedure = true,
+                },
+                new QueryData()
+                {
+                    Parameters = null,
+                    Query = "select * from AdhocTests.dbo.Example",
+                    StoredProcedure = false,
+                },
+                new QueryData()
+                {
+                    Parameters = null,
+                    Query = "select * from AdhocTests.dbo.Example2 order by [name]",
+                    StoredProcedure = false,
+                },
+                new QueryData()
+                {
+                    Parameters = null,
+                    Query = "select * from AdhocTests.dbo.Example2 where shoesize > 9",
+                    StoredProcedure = false,
+                },
 
-                    output.Add(id, name);
-                }
+           };
 
-                return output;
-            };
+            var result2 = test.ExecuteMultipleQueries(queryList);
 
-            //var result = test.ExecuteQuery("select * from dbo.users where id = @Id", parameters, processor);
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"Total run time: {sw.Elapsed}");

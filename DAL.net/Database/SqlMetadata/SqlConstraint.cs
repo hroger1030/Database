@@ -63,7 +63,7 @@ namespace DAL.Net.SqlMetadata
             ConstraintName = $"FK_{FKTable}_{PKTable}_{GetHashCode()}";
         }
 
-        public override bool Equals(object? obj)
+        public override bool Equals(object obj)
         {
             if (obj == null)
                 return false;

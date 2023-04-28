@@ -96,3 +96,93 @@ List<Employee> results = db.ExecuteQuerySp<Employee>("[dbo].[GetEmployeesByRole]
 This second use case is rather interesting, as it lets us simply generate containers that match the output of a stored 
 procedure and not worry about the details of how the object is loaded. This model also is able to correctly cast 
 to properties that are enumerated values, giving us a method to used strongly typed enumerations in our objects.
+
+
+### Passing in a list of values via a datatable parameter
+
+This is a slightly more advanced technique, desigened to allow you to pass in a collection
+of values to a stored procedure via a table valued parameter. This is useful when you want to
+insert, update or delete a collection of values in a single call.
+
+```
+
+// build parameter collection
+var nameslist = new string[] { "Mal", "Jayne", "Wash", "River", "Book", "Zoe", "Kaylee", "Simon" };
+
+// set up parameter
+var parameters = new SqlParameter[]
+{
+    Database.ConvertObjectCollectionToParameter("valueList", "tblStringList", nameslist, "value"),
+};
+
+// execute a store procedure
+var result = test.ExecuteNonQuerySp("[dbo].[BulkLoadExample]", parameters);
+```
+
+This particular example expects that the stored procedure accepts a user defined table parameter
+as an argument. The table type might be defined as follows:
+
+```
+CREATE TYPE [dbo].[tblStringList] AS TABLE
+(
+	[Value] varchar(50) NULL
+)
+GO
+
+CREATE PROCEDURE dbo.BulkLoadExample
+(
+	@valueList [tblStringList] READONLY
+)
+AS
+
+insert Example ([name])
+select [value]
+from @valuelist
+
+Return @@Rowcount
+GO
+```
+
+### Running multiple queries in a single call
+
+Occasionally, you might need to run multiple queries in a single call. This is useful when you want to
+pull back several result sets over a single connection to incease performance. The following example
+demonstrates this technique.
+
+```
+var queryList = new List<QueryData>()
+{
+    new QueryData()
+    {
+        Parameters = parameters,
+        Query = "[dbo].[RotateAllFiggits]",
+        StoredProcedure = true,
+    },
+    new QueryData()
+    {
+        Parameters = null,
+        Query = "select * from [dbo].[Example]",
+        StoredProcedure = false,
+    },
+    new QueryData()
+    {
+        Parameters = null,
+        Query = "select * from [dbo].[Example] order by [name]",
+        StoredProcedure = false,
+    },
+    new QueryData()
+    {
+        Parameters = null,
+        Query = "select * from [dbo].[Example] where [shoesize] > 9",
+        StoredProcedure = false,
+    },
+
+};
+
+var result = test.ExecuteMultipleQueries(queryList);
+```
+
+This particular example is executing a mixed set of queries, some stored procedures, some not. The results
+of each query will be placed in the output dataset, since it is possible to return differing datasets from
+the queries. The results of the first query will be placed in the first table of the dataset, the second 
+query in the second table, and so on.
