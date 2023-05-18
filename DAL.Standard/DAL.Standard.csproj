@@ -14,7 +14,7 @@
     <SignAssembly>false</SignAssembly>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
-    <Version>2.0.0.4</Version>
+    <Version>2.0.0.5</Version>
     <Description>DAL.Standard is a SQL db interface and data mapper, designed to probide a lightweight way to manager sql data.</Description>
     <PackageTags>ADO, SQL, Database, C#</PackageTags>
     <PackageReleaseNotes></PackageReleaseNotes>

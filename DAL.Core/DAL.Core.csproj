@@ -12,7 +12,7 @@
     <RepositoryType>git</RepositoryType>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
-    <Version>2.0.0.4</Version>
+    <Version>2.0.0.5</Version>
     <Title>DAL.Core</Title>
     <Description>DAL.Core is a SQL db interface and data mapper, designed to probide a lightweight way to manager sql data.</Description>
     <PackageIcon>gc.png</PackageIcon>

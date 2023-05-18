@@ -1,10 +1,12 @@
 ﻿using DAL.Net;
+using DAL.Net.SqlMetadata;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.IO;
 
 namespace Workbench
 {
@@ -20,19 +22,24 @@ namespace Workbench
             AppDomain.CurrentDomain.UnhandledException += Application_Error;
             var sw = Stopwatch.StartNew();
 
-            // run integration tests against the testDb
-            IDatabase test = new Database(SQL_CONN, true, true);
 
-            // build parameter string because we are lazy...
-            var nameslist = new string[] { "Mal", "Jayne", "Wash", "River", "Book", "Zoe", "Kaylee", "Simon" };
-            var parameter = Database.ConvertObjectCollectionToParameter("valueList", "tblStringList", nameslist, "value");
+            //// run integration tests against the testDb
+            //IDatabase test = new Database(SQL_CONN, true, true);
 
-            // test table variable
-            var parameters = new SqlParameter[]
-            {
-                //new SqlParameter() { Value = 1, ParameterName = "@Id", DbType = DbType.Int32 },
-                parameter,
-            };
+            var sql_database = new SqlDatabase();
+            sql_database.LoadDatabaseMetadata("WizardWar", SQL_CONN);
+
+
+            //// build parameter string because we are lazy...
+            //var nameslist = new string[] { "Mal", "Jayne", "Wash", "River", "Book", "Zoe", "Kaylee", "Simon" };
+            //var parameter = Database.ConvertObjectCollectionToParameter("valueList", "tblStringList", nameslist, "value");
+
+            //// test table variable
+            //var parameters = new SqlParameter[]
+            //{
+            //    //new SqlParameter() { Value = 1, ParameterName = "@Id", DbType = DbType.Int32 },
+            //    parameter,
+            //};
 
             //Func<SqlDataReader, Dictionary<int, string>> processor = delegate (SqlDataReader reader)
             //{
@@ -54,36 +61,36 @@ namespace Workbench
 
 
             //Advanced example: piggybacking
-           var queryList = new List<QueryData>()
-           {
-                new QueryData()
-                {
-                    Parameters = parameters,
-                    Query = "AdhocTests.dbo.BulkLoadExample",
-                    StoredProcedure = true,
-                },
-                new QueryData()
-                {
-                    Parameters = null,
-                    Query = "select * from AdhocTests.dbo.Example",
-                    StoredProcedure = false,
-                },
-                new QueryData()
-                {
-                    Parameters = null,
-                    Query = "select * from AdhocTests.dbo.Example2 order by [name]",
-                    StoredProcedure = false,
-                },
-                new QueryData()
-                {
-                    Parameters = null,
-                    Query = "select * from AdhocTests.dbo.Example2 where shoesize > 9",
-                    StoredProcedure = false,
-                },
+            //var queryList = new List<QueryData>()
+            //{
+            //     new QueryData()
+            //     {
+            //         Parameters = parameters,
+            //         Query = "AdhocTests.dbo.BulkLoadExample",
+            //         StoredProcedure = true,
+            //     },
+            //     new QueryData()
+            //     {
+            //         Parameters = null,
+            //         Query = "select * from AdhocTests.dbo.Example",
+            //         StoredProcedure = false,
+            //     },
+            //     new QueryData()
+            //     {
+            //         Parameters = null,
+            //         Query = "select * from AdhocTests.dbo.Example2 order by [name]",
+            //         StoredProcedure = false,
+            //     },
+            //     new QueryData()
+            //     {
+            //         Parameters = null,
+            //         Query = "select * from AdhocTests.dbo.Example2 where shoesize > 9",
+            //         StoredProcedure = false,
+            //     },
 
-           };
+            //};
 
-            var result2 = test.ExecuteMultipleQueries(queryList);
+            // var result2 = test.ExecuteMultipleQueries(queryList);
 
 
             Console.ForegroundColor = ConsoleColor.Green;

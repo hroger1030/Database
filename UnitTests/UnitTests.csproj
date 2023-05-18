@@ -2,11 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-
     <IsPackable>false</IsPackable>
-
     <Authors>Roger Hill</Authors>
-
     <Company>GlobalGonquestGames</Company>
   </PropertyGroup>
 

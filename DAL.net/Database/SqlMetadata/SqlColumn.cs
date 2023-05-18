@@ -22,7 +22,7 @@ namespace DAL.Net.SqlMetadata
 {
     public class SqlColumn
     {
-        public SqlTable? Table { get; set; }
+        public SqlTable Table { get; set; }
         public string Schema { get; set; }
         public string Name { get; set; }
         public string DataType { get; set; }

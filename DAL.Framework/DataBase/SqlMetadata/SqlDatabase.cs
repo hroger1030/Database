@@ -345,13 +345,15 @@ namespace DAL.Framework.SqlMetadata
         /// <summary>
         /// gets rid of characters that wrap a sql default value
         /// Ex: ('Something') -> Something
+        /// Note that this is not a perfect solution, but it works for the most common cases.
+        /// Unbalanced strings will cause problems. Ex: ('Something) will return Somethin
         /// </summary>
         protected string RemoveWrappingCharacters(string input)
         {
-            if (input.Length > 1 && (input[0] == '(' || input[0] == '\''))
+            if (input.Length > 2 && (input[0] == '(' || input[0] == '\''))
                 input = input.Substring(1, input.Length - 2);
 
-            if (input.Length > 1 && (input[0] == '(' || input[0] == '\''))
+            if (input.Length > 2 && (input[0] == '(' || input[0] == '\''))
                 input = input.Substring(1, input.Length - 2);
 
             return input;
