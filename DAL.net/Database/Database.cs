@@ -134,7 +134,7 @@ namespace DAL.Net
                 ReadInParameters(parameters, cmd);
 
 #if (DEBUG)
-                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters!);
+                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
                 Console.WriteLine(sqlDebugString);
 #endif
 
@@ -228,7 +228,7 @@ namespace DAL.Net
                 ReadInParameters(parameters, cmd);
 
 #if (DEBUG)
-                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters!);
+                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
                 Console.WriteLine(sqlDebugString);
 #endif
 
@@ -274,7 +274,7 @@ namespace DAL.Net
                 ReadInParameters(parameters, cmd);
 
 #if (DEBUG)
-                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters!);
+                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
                 Console.WriteLine(sqlDebugString);
 #endif
 
@@ -320,7 +320,7 @@ namespace DAL.Net
                 ReadInParameters(parameters, cmd);
 
 #if (DEBUG)
-                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters!);
+                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
                 Console.WriteLine(sqlDebugString);
 #endif
 
@@ -361,7 +361,7 @@ namespace DAL.Net
                 ReadInParameters(parameters, cmd);
 
 #if (DEBUG)
-                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters!);
+                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
                 Console.WriteLine(sqlDebugString);
 #endif
 
@@ -487,7 +487,7 @@ namespace DAL.Net
                 await ReadInParametersAsync(parameters, cmd);
 
 #if (DEBUG)
-                var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters!);
+                var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters);
                 Console.WriteLine(sqlDebugString);
 #endif
 
@@ -581,7 +581,7 @@ namespace DAL.Net
                 await ReadInParametersAsync(parameters, cmd);
 
 #if (DEBUG)
-                var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters!);
+                var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters);
                 Console.WriteLine(sqlDebugString);
 #endif
 
@@ -627,7 +627,7 @@ namespace DAL.Net
                 await ReadInParametersAsync(parameters, cmd);
 
 #if (DEBUG)
-                var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters!);
+                var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters);
                 Console.WriteLine(sqlDebugString);
 #endif
 
@@ -673,7 +673,7 @@ namespace DAL.Net
                 await ReadInParametersAsync(parameters, cmd);
 
 #if (DEBUG)
-                var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters!);
+                var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters);
                 Console.WriteLine(sqlDebugString);
 #endif
 
@@ -714,7 +714,7 @@ namespace DAL.Net
                 await ReadInParametersAsync(parameters, cmd);
 
 #if (DEBUG)
-                var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters!);
+                var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters);
                 Console.WriteLine(sqlDebugString);
 #endif
 

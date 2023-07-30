@@ -113,11 +113,11 @@ namespace DAL.Standard
                         case SqlDbType.Date:
                         case SqlDbType.Time:
                         case SqlDbType.DateTime2:
-                            value_list.Add($"@{item.ParameterName} = '{item.Value}'");
+                            value_list.Add($"{item.ParameterName} = '{item.Value}'");
                             break;
 
                         default:
-                            value_list.Add($"@{item.ParameterName} = {item.Value}");
+                            value_list.Add($"{item.ParameterName} = {item.Value}");
                             break;
                     }
                 }
@@ -427,8 +427,8 @@ namespace DAL.Standard
             if (string.IsNullOrWhiteSpace(sqlTypeName))
                 throw new ArgumentNullException(nameof(sqlTypeName));
 
-            if (input == null || input.Count() < 1)
-                throw new ArgumentException(nameof(input));
+            if (input == null || !input.Any())
+                throw new ArgumentException("One or more input elements must be passed in", nameof(input));
 
             var dt = new DataTable();
             var genericType = typeof(T);
@@ -474,8 +474,8 @@ namespace DAL.Standard
             if (string.IsNullOrWhiteSpace(sqlTypeName))
                 throw new ArgumentNullException(nameof(sqlTypeName));
 
-            if (input == null || input.Count() < 1)
-                throw new ArgumentException(nameof(input));
+            if (input == null || !input.Any())
+                throw new ArgumentException("One or more input elements must be passed in", nameof(input));
 
             if (string.IsNullOrWhiteSpace(columnName))
                 throw new ArgumentNullException(nameof(columnName));
