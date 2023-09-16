@@ -112,6 +112,11 @@ namespace DAL.Net
                             value_list.Add($"{item.ParameterName} = '{item.Value}'");
                             break;
 
+                        // structured data is not supported, very tricky to render in a debug string.
+                        case SqlDbType.Structured:
+                            value_list.Add("'(structured data)'");
+                            break;
+
                         default:
                             value_list.Add($"{item.ParameterName} = {item.Value}");
                             break;
