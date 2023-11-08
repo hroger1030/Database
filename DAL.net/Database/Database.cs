@@ -24,6 +24,7 @@ namespace DAL.Net
     public partial class Database : IDatabase
     {
         private readonly string _Connection;
+        private readonly bool _Debug;
         private readonly bool _LogConnection;
         private readonly bool _LogParameters;
         private readonly bool _ThrowUnmappedFieldsError;
@@ -34,14 +35,16 @@ namespace DAL.Net
         /// CTOR for Database object.
         /// </summary>
         /// <param name="connection">A sql connection string.</param>
+        /// <param name="debug">Allow console logging to occur. Defaults to false.</param>
         /// <param name="logConnection">Allow connection string to be included in thrown exceptions. Defaults to false.</param>
         /// <param name="logParameters">Allow query parameters to be included in thrown exceptions. Defaults to false.</param>
-        public Database(string connection, bool logConnection = false, bool logParameters = false, bool throwUnmappedFieldsError = true)
+        public Database(string connection, bool debug = false, bool logConnection = false, bool logParameters = false, bool throwUnmappedFieldsError = true)
         {
             if (string.IsNullOrWhiteSpace(connection))
                 throw new ArgumentNullException(nameof(connection));
 
             _Connection = connection;
+            _Debug = debug;
             _LogConnection = logConnection;
             _LogParameters = logParameters;
             _ThrowUnmappedFieldsError = throwUnmappedFieldsError;
@@ -133,10 +136,11 @@ namespace DAL.Net
 
                 ReadInParameters(parameters, cmd);
 
-#if (DEBUG)
-                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
-                Console.WriteLine(sqlDebugString);
-#endif
+                if (_Debug)
+                {
+                    var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
+                    Console.WriteLine(sqlDebugString);
+                }
 
                 var dt = new DataTable();
 
@@ -184,10 +188,11 @@ namespace DAL.Net
 
                     ReadInParameters(queryList[index].Parameters, cmd);
 
-#if (DEBUG)
-                    var sqlDebugString = GenerateSqlDebugString(queryList[index].Query, queryList[index].Parameters);
-                    Console.WriteLine($"Query{index}:{sqlDebugString}");
-#endif
+                    if (_Debug)
+                    {
+                        var sqlDebugString = GenerateSqlDebugString(queryList[index].Query, queryList[index].Parameters);
+                        Console.WriteLine($"Query{index}:{sqlDebugString}");
+                    }
 
                     var dt = new DataTable();
                     adapter.Fill(dt);
@@ -227,10 +232,11 @@ namespace DAL.Net
 
                 ReadInParameters(parameters, cmd);
 
-#if (DEBUG)
-                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
-                Console.WriteLine(sqlDebugString);
-#endif
+                if (_Debug)
+                {
+                    var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
+                    Console.WriteLine(sqlDebugString);
+                }
 
                 conn.Open();
                 using SqlDataReader data_reader = cmd.ExecuteReader();
@@ -273,10 +279,11 @@ namespace DAL.Net
 
                 ReadInParameters(parameters, cmd);
 
-#if (DEBUG)
-                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
-                Console.WriteLine(sqlDebugString);
-#endif
+                if (_Debug)
+                {
+                    var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
+                    Console.WriteLine(sqlDebugString);
+                }
 
                 conn.Open();
                 using SqlDataReader data_reader = cmd.ExecuteReader();
@@ -319,10 +326,11 @@ namespace DAL.Net
 
                 ReadInParameters(parameters, cmd);
 
-#if (DEBUG)
-                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
-                Console.WriteLine(sqlDebugString);
-#endif
+                if (_Debug)
+                {
+                    var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
+                    Console.WriteLine(sqlDebugString);
+                }
 
                 conn.Open();
                 int results = cmd.ExecuteNonQuery();
@@ -360,10 +368,11 @@ namespace DAL.Net
 
                 ReadInParameters(parameters, cmd);
 
-#if (DEBUG)
-                var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
-                Console.WriteLine(sqlDebugString);
-#endif
+                if (_Debug)
+                {
+                    var sqlDebugString = GenerateSqlDebugString(sqlQuery, parameters);
+                    Console.WriteLine(sqlDebugString);
+                }
 
                 conn.Open();
                 object buffer = cmd.ExecuteScalar();
@@ -486,10 +495,11 @@ namespace DAL.Net
 
                 await ReadInParametersAsync(parameters, cmd);
 
-#if (DEBUG)
-                var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters);
-                Console.WriteLine(sqlDebugString);
-#endif
+                if (_Debug)
+                {
+                    var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters);
+                    Console.WriteLine(sqlDebugString);
+                }
 
                 var dt = new DataTable();
 
@@ -537,10 +547,11 @@ namespace DAL.Net
 
                     await ReadInParametersAsync(queryList[index].Parameters, cmd);
 
-#if (DEBUG)
-                    var sqlDebugString = await GenerateSqlDebugStringAsync(queryList[index].Query, queryList[index].Parameters);
-                    Console.WriteLine($"Query{index}:{sqlDebugString}");
-#endif
+                    if (_Debug)
+                    {
+                        var sqlDebugString = await GenerateSqlDebugStringAsync(queryList[index].Query, queryList[index].Parameters);
+                        Console.WriteLine($"Query{index}:{sqlDebugString}");
+                    }
 
                     var dt = new DataTable();
                     adapter.Fill(dt);
@@ -580,10 +591,11 @@ namespace DAL.Net
 
                 await ReadInParametersAsync(parameters, cmd);
 
-#if (DEBUG)
-                var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters);
-                Console.WriteLine(sqlDebugString);
-#endif
+                if (_Debug)
+                {
+                    var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters);
+                    Console.WriteLine(sqlDebugString);
+                }
 
                 await conn.OpenAsync();
                 using SqlDataReader dataReader = await cmd.ExecuteReaderAsync();
@@ -626,10 +638,11 @@ namespace DAL.Net
 
                 await ReadInParametersAsync(parameters, cmd);
 
-#if (DEBUG)
-                var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters);
-                Console.WriteLine(sqlDebugString);
-#endif
+                if (_Debug)
+                {
+                    var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters);
+                    Console.WriteLine(sqlDebugString);
+                }
 
                 await conn.OpenAsync();
                 using SqlDataReader data_reader = await cmd.ExecuteReaderAsync();
@@ -672,10 +685,11 @@ namespace DAL.Net
 
                 await ReadInParametersAsync(parameters, cmd);
 
-#if (DEBUG)
-                var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters);
-                Console.WriteLine(sqlDebugString);
-#endif
+                if (_Debug)
+                {
+                    var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters);
+                    Console.WriteLine(sqlDebugString);
+                }
 
                 await conn.OpenAsync();
                 int results = await cmd.ExecuteNonQueryAsync();
@@ -713,10 +727,11 @@ namespace DAL.Net
 
                 await ReadInParametersAsync(parameters, cmd);
 
-#if (DEBUG)
-                var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters);
-                Console.WriteLine(sqlDebugString);
-#endif
+                if (_Debug)
+                {
+                    var sqlDebugString = await GenerateSqlDebugStringAsync(sqlQuery, parameters);
+                    Console.WriteLine(sqlDebugString);
+                }
 
                 await conn.OpenAsync();
                 object buffer = await cmd.ExecuteScalarAsync();
