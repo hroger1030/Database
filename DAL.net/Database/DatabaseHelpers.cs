@@ -449,7 +449,7 @@ namespace DAL.Net
                 dt.Rows.Add(dr);
             }
 
-            var sql_parameter = new SqlParameter()
+            var sqlParameter = new SqlParameter()
             {
                 ParameterName = parameterName,
                 SqlDbType = SqlDbType.Structured,
@@ -457,7 +457,7 @@ namespace DAL.Net
                 Value = dt,
             };
 
-            return sql_parameter;
+            return sqlParameter;
         }
 
         /// <summary>
@@ -505,7 +505,7 @@ namespace DAL.Net
                 dt.Rows.Add(dr);
             }
 
-            var sql_parameter = new SqlParameter()
+            var sqlParameter = new SqlParameter()
             {
                 ParameterName = parameterName,
                 SqlDbType = SqlDbType.Structured,
@@ -513,7 +513,7 @@ namespace DAL.Net
                 Value = dt,
             };
 
-            return sql_parameter;
+            return sqlParameter;
         }
 
         #endregion
