@@ -87,7 +87,7 @@ namespace DAL.Standard.SqlMetadata
                     };
 
                     if (Tables[fullTableName].Columns.ContainsKey(columnName))
-                        throw new Exception($"Column {columnName} already exists in table {Tables[tableName]}");
+                        throw new Exception($"Column {columnName} already exists in table {Tables[tableName]}. This might be caused by duplicate indexes.");
                     else
                         Tables[fullTableName].Columns.Add(columnName, sqlColumn);
                 }
