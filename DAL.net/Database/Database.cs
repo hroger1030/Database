@@ -239,10 +239,10 @@ namespace DAL.Net
                 }
 
                 conn.Open();
-                using SqlDataReader data_reader = cmd.ExecuteReader();
-                var output = ParseDatareaderResult<T>(data_reader, _ThrowUnmappedFieldsError);
+                using SqlDataReader dataReader = cmd.ExecuteReader();
+                var output = ParseDatareaderResult<T>(dataReader, _ThrowUnmappedFieldsError);
                 PersistOutputParameters(parameters, cmd);
-                data_reader.Close();
+                dataReader.Close();
                 conn.Close();
 
                 return output;
@@ -286,10 +286,10 @@ namespace DAL.Net
                 }
 
                 conn.Open();
-                using SqlDataReader data_reader = cmd.ExecuteReader();
-                var output = processor.Invoke(data_reader);
+                using SqlDataReader dataReader = cmd.ExecuteReader();
+                var output = processor.Invoke(dataReader);
                 PersistOutputParameters(parameters, cmd);
-                data_reader.Close();
+                dataReader.Close();
                 conn.Close();
 
                 return output;
@@ -645,10 +645,10 @@ namespace DAL.Net
                 }
 
                 await conn.OpenAsync();
-                using SqlDataReader data_reader = await cmd.ExecuteReaderAsync();
-                var output = await processor.Invoke(data_reader);
+                using SqlDataReader dataReader = await cmd.ExecuteReaderAsync();
+                var output = await processor.Invoke(dataReader);
                 await PersistOutputParametersAsync(parameters, cmd);
-                await data_reader.CloseAsync();
+                await dataReader.CloseAsync();
                 await conn.CloseAsync();
 
                 return output;

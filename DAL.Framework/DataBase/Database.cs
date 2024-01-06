@@ -253,11 +253,11 @@ namespace DAL.Framework
                         }
 
                         conn.Open();
-                        using (SqlDataReader data_reader = cmd.ExecuteReader())
+                        using (SqlDataReader dataReader = cmd.ExecuteReader())
                         {
-                            var output = ParseDatareaderResult<T>(data_reader, _ThrowUnmappedFieldsError);
+                            var output = ParseDatareaderResult<T>(dataReader, _ThrowUnmappedFieldsError);
                             PersistOutputParameters(parameters, cmd);
-                            data_reader.Close();
+                            dataReader.Close();
                             conn.Close();
 
                             return output;
@@ -305,11 +305,11 @@ namespace DAL.Framework
                         }
 
                         conn.Open();
-                        using (SqlDataReader data_reader = cmd.ExecuteReader())
+                        using (SqlDataReader dataReader = cmd.ExecuteReader())
                         {
-                            var output = processor.Invoke(data_reader);
+                            var output = processor.Invoke(dataReader);
                             PersistOutputParameters(parameters, cmd);
-                            data_reader.Close();
+                            dataReader.Close();
                             conn.Close();
 
                             return output;
@@ -691,11 +691,11 @@ namespace DAL.Framework
                         }
 
                         await conn.OpenAsync();
-                        using (SqlDataReader data_reader = await cmd.ExecuteReaderAsync())
+                        using (SqlDataReader dataReader = await cmd.ExecuteReaderAsync())
                         {
-                            var output = await processor.Invoke(data_reader);
+                            var output = await processor.Invoke(dataReader);
                             await PersistOutputParametersAsync(parameters, cmd);
-                            data_reader.Close();
+                            dataReader.Close();
                             conn.Close();
 
                             return output;
