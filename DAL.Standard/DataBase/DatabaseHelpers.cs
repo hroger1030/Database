@@ -488,7 +488,7 @@ namespace DAL.Standard
             var dt = new DataTable();
             dt.Columns.Add(columnName);
 
-            // only certain types are
+            // only certain types are allowed as input
             var atomicTypes = new HashSet<string>()
             {
                 typeof(int).FullName, typeof(string).FullName, typeof(double).FullName, typeof(float).FullName,
@@ -499,6 +499,7 @@ namespace DAL.Standard
             };
 
             var genericType = typeof(T);
+
             if (!atomicTypes.Contains(genericType.FullName))
                 throw new Exception($"'{genericType.FullName}' is not a known type that can be mapped to a SQL type");
 
@@ -518,6 +519,72 @@ namespace DAL.Standard
             };
 
             return sql_parameter;
+        }
+
+        /// <summary>
+        /// Generates a SqlParameter object from a KVP collection. This allows you to pass in a dictionary of N 
+        /// objects into a stored procedure as a single argument. The sqlTypeName type needs to exist in the db
+        /// however, and be of the correct type.
+        /// 
+        /// Sample: ConvertObjectCollectionToParameter("@Foo", "dbo.SomeUserType", a_dictionary, "key", "value");
+        /// </summary>
+        public static SqlParameter ConvertKvpCollectionToParameter<K, V>(string parameterName, string sqlTypeName, IEnumerable<KeyValuePair<K, V>> input, string keyName, string valueName)
+        {
+            if (string.IsNullOrWhiteSpace(parameterName))
+                throw new ArgumentNullException(nameof(parameterName));
+
+            if (string.IsNullOrWhiteSpace(sqlTypeName))
+                throw new ArgumentNullException(nameof(sqlTypeName));
+
+            if (input == null || !input.Any())
+                throw new ArgumentException("One or more input elements must be passed in", nameof(input));
+
+            if (string.IsNullOrWhiteSpace(keyName))
+                throw new ArgumentNullException(nameof(keyName));
+
+            if (string.IsNullOrWhiteSpace(valueName))
+                throw new ArgumentNullException(nameof(valueName));
+
+            var dt = new DataTable();
+            dt.Columns.Add(keyName);
+            dt.Columns.Add(valueName);
+
+            // only certain types are allowed as input
+            var atomicTypes = new HashSet<string>()
+            {
+                typeof(int).FullName, typeof(string).FullName, typeof(double).FullName, typeof(float).FullName,
+                typeof(bool).FullName, typeof(DateTime).FullName, typeof(DateTimeOffset).FullName, typeof(TimeSpan).FullName,
+                typeof(Guid).FullName, typeof(float).FullName, typeof(decimal).FullName, typeof(byte).FullName,
+                typeof(byte[]).FullName, typeof(sbyte).FullName, typeof(char).FullName, typeof(uint).FullName,
+                typeof(long).FullName, typeof(ulong).FullName, typeof(object).FullName, typeof(short).FullName,
+            };
+
+            var genericKey = typeof(K);
+            var genericValue = typeof(V);
+
+            if (!atomicTypes.Contains(genericKey.FullName))
+                throw new Exception($"The key, '{genericKey.FullName}' is not a known type that can be mapped to a SQL type");
+
+            if (!atomicTypes.Contains(genericValue.FullName))
+                throw new Exception($"The value, '{genericValue.FullName}' is not a known type that can be mapped to a SQL type");
+
+            foreach (var item in input)
+            {
+                var dr = dt.NewRow();
+                dr[keyName] = item.Key;
+                dr[valueName] = item.Value;
+                dt.Rows.Add(dr);
+            }
+
+            var sqlParameter = new SqlParameter()
+            {
+                ParameterName = parameterName,
+                SqlDbType = SqlDbType.Structured,
+                TypeName = sqlTypeName,
+                Value = dt,
+            };
+
+            return sqlParameter;
         }
 
         #endregion
