@@ -428,8 +428,8 @@ namespace DAL.Net
             if (string.IsNullOrWhiteSpace(sqlTypeName))
                 throw new ArgumentNullException(nameof(sqlTypeName));
 
-            if (input == null || !input.Any())
-                throw new ArgumentException("One or more input elements must be passed in", nameof(input));
+            if (input == null)
+                throw new ArgumentException("Collection cannot be null", nameof(input));
 
             var dt = new DataTable();
             var genericType = typeof(T);
@@ -475,8 +475,8 @@ namespace DAL.Net
             if (string.IsNullOrWhiteSpace(sqlTypeName))
                 throw new ArgumentNullException(nameof(sqlTypeName));
 
-            if (input == null || !input.Any())
-                throw new ArgumentException("One or more input elements must be passed in", nameof(input));
+            if (input == null)
+                throw new ArgumentException("Collection cannot be null", nameof(input));
 
             if (string.IsNullOrWhiteSpace(columnName))
                 throw new ArgumentNullException(nameof(columnName));
@@ -532,8 +532,8 @@ namespace DAL.Net
             if (string.IsNullOrWhiteSpace(sqlTypeName))
                 throw new ArgumentNullException(nameof(sqlTypeName));
 
-            if (input == null || !input.Any())
-                throw new ArgumentException("One or more input elements must be passed in", nameof(input));
+             if (input == null)
+                throw new ArgumentException("Collection cannot be null", nameof(input));
 
             if (string.IsNullOrWhiteSpace(keyName))
                 throw new ArgumentNullException(nameof(keyName));
