@@ -97,10 +97,9 @@ namespace UnitTests
 
             var dt = _Db.GetSchema(collection, restrictions);
 
-            Assert.IsNotNull(dt);
-            Assert.IsTrue(dt.Rows.Count != 0);
-            Assert.IsTrue(dt.Columns.Count != 0);
-
+            Assert.That(dt, Is.Not.Null);
+            Assert.That(dt.Rows.Count != 0, Is.True);
+            Assert.That(dt.Columns.Count != 0, Is.True);
             bool exists = false;
 
             foreach (DataRow dr in dt.Rows)
@@ -127,7 +126,7 @@ namespace UnitTests
                 }
             }
 
-            Assert.IsTrue(exists);
+            Assert.That(exists, Is.True);
         }
 
         [Test]
@@ -161,9 +160,9 @@ namespace UnitTests
 
             var dt = await _Db.GetSchemaAsync(collection, restrictions);
 
-            Assert.IsNotNull(dt);
-            Assert.IsTrue(dt.Rows.Count != 0);
-            Assert.IsTrue(dt.Columns.Count != 0);
+            Assert.That(dt, Is.Not.Null);
+            Assert.That(dt.Rows.Count > 0, Is.True);
+            Assert.That(dt.Columns.Count > 0, Is.True);
 
             bool exists = false;
 
@@ -191,7 +190,7 @@ namespace UnitTests
                 }
             }
 
-            Assert.IsTrue(exists);
+            Assert.That(exists, Is.True);
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -207,18 +206,18 @@ namespace UnitTests
 
             // insert a new value
             count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_INSERT_WITH_PARAMETERS, CreateIdParameters());
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
 
             // load value
             var buffer = _Db.ExecuteQuery(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters());
 
-            Assert.IsNotNull(buffer);
-            Assert.IsTrue(buffer.Rows.Count == 1);
-            Assert.IsTrue(buffer.Columns.Count != 0);
+            Assert.That(buffer, Is.Not.Null);
+            Assert.That(buffer.Rows.Count == 1, Is.True);
+            Assert.That(buffer.Columns.Count == 1, Is.True);
 
             // delete value
             count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters());
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
         }
 
         [Test]
@@ -230,18 +229,18 @@ namespace UnitTests
 
             // insert a new value
             count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_INSERT_WITH_PARAMETERS, CreateIdParameters());
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
 
             // load value
             var buffer = await _Db.ExecuteQueryAsync(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters());
 
-            Assert.IsNotNull(buffer);
-            Assert.IsTrue(buffer.Rows.Count != 0);
-            Assert.IsTrue(buffer.Columns.Count != 0);
+            Assert.That(buffer, Is.Not.Null);
+            Assert.That(buffer.Rows.Count == 1, Is.True);
+            Assert.That(buffer.Columns.Count != 0, Is.True);
 
             // delete value
             count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters());
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
         }
 
         [Test]
@@ -253,7 +252,7 @@ namespace UnitTests
 
             // insert a new value
             count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_INSERT_WITH_PARAMETERS, CreateIdParameters());
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
 
             // test loading multiple values
             var queryCollection = new List<QueryData>()
@@ -280,11 +279,11 @@ namespace UnitTests
 
             // load multiple values
             var output = _Db.ExecuteMultipleQueries(queryCollection);
-            Assert.NotNull(output);
+            Assert.That(output, Is.Not.Null);
 
             // delete value
             count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters());
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
         }
 
         [Test]
@@ -296,7 +295,7 @@ namespace UnitTests
 
             // insert a new value
             count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_INSERT_WITH_PARAMETERS, CreateIdParameters());
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
 
             // test loading multiple values
             var queryCollection = new List<QueryData>()
@@ -323,11 +322,11 @@ namespace UnitTests
 
             // load multiple values
             var output = await _Db.ExecuteMultipleQueriesAsync(queryCollection);
-            Assert.NotNull(output);
+            Assert.That(output, Is.Not.Null);
 
             // delete value
             count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters());
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -344,29 +343,29 @@ namespace UnitTests
 
             // insert a new value
             count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_INSERT_WITH_PARAMETERS, CreateIdParameters());
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
 
             // load value and check it
             buffer = _Db.ExecuteQuery<DbTestTable>(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters());
 
-            Assert.IsNotNull(buffer);
-            Assert.IsTrue(buffer.Count == 1);
-            Assert.IsTrue(Constants.IsDbTestTableCorrect(buffer[0], 1));
+            Assert.That(buffer, Is.Not.Null);
+            Assert.That(buffer.Count == 1, Is.True);
+            Assert.That(Constants.IsDbTestTableCorrect(buffer[0], 1), Is.True);
 
             // update value 
             count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_UPDATE_WITH_PARAMETERS, CreateIdParameters());
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
 
             // load value and check it
             buffer = _Db.ExecuteQuery<DbTestTable>(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(99));
 
-            Assert.IsNotNull(buffer);
-            Assert.IsTrue(buffer.Count == 1);
-            Assert.IsTrue(Constants.IsDbTestTableCorrect(buffer[0], 99));
+            Assert.That(buffer, Is.Not.Null);
+            Assert.That(buffer.Count == 1, Is.True);
+            Assert.That(Constants.IsDbTestTableCorrect(buffer[0], 99), Is.True);
 
             // delete value
             count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters(99));
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
         }
 
         [Test]
@@ -379,29 +378,29 @@ namespace UnitTests
 
             // insert a new value
             count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_INSERT_WITH_PARAMETERS, CreateIdParameters());
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
 
             // load value and check it
             buffer = await _Db.ExecuteQueryAsync<DbTestTable>(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters());
 
-            Assert.IsNotNull(buffer);
-            Assert.IsTrue(buffer.Count == 1);
-            Assert.IsTrue(Constants.IsDbTestTableCorrect(buffer[0], 1));
+            Assert.That(buffer, Is.Not.Null);
+            Assert.That(buffer.Count == 1, Is.True);
+            Assert.That(Constants.IsDbTestTableCorrect(buffer[0], 1), Is.True);
 
             // update value 
             count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_UPDATE_WITH_PARAMETERS, CreateIdParameters());
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
 
             // load value and check it
             buffer = await _Db.ExecuteQueryAsync<DbTestTable>(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(99));
 
-            Assert.IsNotNull(buffer);
-            Assert.IsTrue(buffer.Count == 1);
-            Assert.IsTrue(Constants.IsDbTestTableCorrect(buffer[0], 99));
+            Assert.That(buffer, Is.Not.Null);
+            Assert.That(buffer.Count == 1, Is.True);
+            Assert.That(Constants.IsDbTestTableCorrect(buffer[0], 99), Is.True);
 
             // delete value
             count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters(99));
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -416,29 +415,29 @@ namespace UnitTests
 
             // insert a new value
             count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_INSERT_WITH_PARAMETERS, CreateIdParameters());
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
 
             // load value and check it
             buffer = _Db.ExecuteQuery(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(), Constants.ParseDatareader);
 
-            Assert.IsNotNull(buffer);
-            Assert.IsTrue(buffer.Count == 1);
-            Assert.IsTrue(Constants.IsDbTestTableCorrect(buffer[0], 1));
+            Assert.That(buffer, Is.Not.Null);
+            Assert.That(buffer.Count == 1, Is.True);
+            Assert.That(Constants.IsDbTestTableCorrect(buffer[0], 1), Is.True);
 
             // update value 
             count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_UPDATE_WITH_PARAMETERS, CreateIdParameters());
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
 
             // load value and check it
             buffer = _Db.ExecuteQuery(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(99), Constants.ParseDatareader);
 
-            Assert.IsNotNull(buffer);
-            Assert.IsTrue(buffer.Count == 1);
-            Assert.IsTrue(Constants.IsDbTestTableCorrect(buffer[0], 99));
+            Assert.That(buffer, Is.Not.Null);
+            Assert.That(buffer.Count == 1, Is.True);
+            Assert.That(Constants.IsDbTestTableCorrect(buffer[0], 99), Is.True);
 
             // delete value
             count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters(99));
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
         }
 
         [Test]
@@ -451,29 +450,29 @@ namespace UnitTests
 
             // insert a new value
             count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_INSERT_WITH_PARAMETERS, CreateIdParameters());
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
 
             // load value and check it
             buffer = await _Db.ExecuteQueryAsync(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(), Constants.ParseDatareaderAsync);
 
-            Assert.IsNotNull(buffer);
-            Assert.IsTrue(buffer.Count == 1);
-            Assert.IsTrue(Constants.IsDbTestTableCorrect(buffer[0], 1));
+            Assert.That(buffer, Is.Not.Null);
+            Assert.That(buffer.Count == 1, Is.True);
+            Assert.That(Constants.IsDbTestTableCorrect(buffer[0], 1), Is.True);
 
             // update value 
             count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_UPDATE_WITH_PARAMETERS, CreateIdParameters());
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
 
             // load value and check it
             buffer = await _Db.ExecuteQueryAsync(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(99), Constants.ParseDatareaderAsync);
 
-            Assert.IsNotNull(buffer);
-            Assert.IsTrue(buffer.Count == 1);
-            Assert.IsTrue(Constants.IsDbTestTableCorrect(buffer[0], 99));
+            Assert.That(buffer, Is.Not.Null);
+            Assert.That(buffer.Count == 1, Is.True);
+            Assert.That(Constants.IsDbTestTableCorrect(buffer[0], 99), Is.True);
 
             // delete value
             count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters(99));
-            Assert.IsTrue(count == 1);
+            Assert.That(count == 1, Is.True);
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////

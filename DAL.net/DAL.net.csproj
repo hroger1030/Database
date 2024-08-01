@@ -9,13 +9,13 @@
     <PackageProjectUrl>https://github.com/hroger1030/Database</PackageProjectUrl>
     <Authors>Roger Hill</Authors>
     <Company>GlobalConquestGames</Company>
-    <Description>DAL.Net is a SQL db interface and data mapper, designed to probide a lightweight way to manager sql data.</Description>
+    <Description>DAL.Net is a SQL db interface and data mapper, designed to provide a lightweight way to manager sql data.</Description>
     <Version>2.0.0.5</Version>
     <RepositoryUrl>https://github.com/hroger1030/Database</RepositoryUrl>
     <PackageIcon>gc.png</PackageIcon>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageTags>database;DAL</PackageTags>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Title>DAL.Net</Title>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageReleaseNotes></PackageReleaseNotes>
