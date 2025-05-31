@@ -18,12 +18,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Collections.Generic;
-using Microsoft.Data.SqlClient;
+using System.Data.SqlClient;
 using System.Threading.Tasks;
 
 namespace UnitTests
 {
-    public static class Constants
+    public static class OldConstants
     {
         /// <summary>
         /// We are assuming that we are working off a local SQL Server instance by default.
