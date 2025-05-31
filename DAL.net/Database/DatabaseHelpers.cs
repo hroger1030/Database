@@ -82,21 +82,23 @@ namespace DAL.Net
 
             if (parameterList == null || parameterList.Count == 0)
                 return sqlQuery;
-
+            
+            // set up a structured parameter string builder
+            var spsb = new StringBuilder();
             var value_list = new List<string>();
 
-            foreach (var item in parameterList)
+            for (int i = 0; i < parameterList.Count; i++)
             {
-                if (item.Direction == ParameterDirection.ReturnValue)
+                if (parameterList[i].Direction == ParameterDirection.ReturnValue)
                     continue;
 
-                if (item.IsNullable)
+                if (parameterList[i].IsNullable)
                 {
-                    value_list.Add($"{item.ParameterName} = null");
+                    value_list.Add($"{parameterList[i].ParameterName} = null");
                 }
                 else
                 {
-                    switch (item.SqlDbType)
+                    switch (parameterList[i].SqlDbType)
                     {
                         case SqlDbType.Char:
                         case SqlDbType.NChar:
@@ -109,22 +111,58 @@ namespace DAL.Net
                         case SqlDbType.Date:
                         case SqlDbType.Time:
                         case SqlDbType.DateTime2:
-                            value_list.Add($"{item.ParameterName} = '{item.Value}'");
+                            value_list.Add($"{parameterList[i].ParameterName} = '{parameterList[i].Value}'");
                             break;
 
-                        // structured data is not supported, very tricky to render in a debug string.
+                        // structured data is partially supported, very tricky to render in a debug string.
                         case SqlDbType.Structured:
-                            value_list.Add("'(structured data)'");
+                            if (parameterList[i].Value is DataTable dt)
+                            {
+                                spsb.AppendLine($"DECLARE @StructuredParam{i} [{parameterList[i].TypeName}]");
+
+                                foreach (DataRow row in dt.Rows)
+                                {
+                                    var columnNames = dt.Columns
+                                        .Cast<DataColumn>()
+                                        .Select(col => $"[{col.ColumnName}]");
+
+                                    var columnValues = dt.Columns
+                                        .Cast<DataColumn>()
+                                        .Select(col =>
+                                        {
+                                            var value = row[col];
+                                            if (value == DBNull.Value)
+                                                return "NULL";
+
+                                            if (col.DataType == typeof(string) || col.DataType == typeof(DateTime) || col.DataType == typeof(Guid))
+                                                return $"'{value.ToString().Replace("'", "''")}'"; // escape single quotes
+
+                                            if (col.DataType == typeof(bool))
+                                                return ((bool)value) ? "1" : "0";
+
+                                            return value.ToString();
+                                        });
+
+                                    spsb.AppendLine($"INSERT @StructuredParam{i} ({string.Join(",", columnNames)}) VALUES ({string.Join(", ", columnValues)})");
+                                    spsb.AppendLine();
+                                }
+
+                                value_list.Add($"@{parameterList[i].ParameterName} = @StructuredParam{i}");
+                            }
+                            else
+                            {
+                                value_list.Add($"{parameterList[i].ParameterName} = [Structured] (unknown structure or null)");
+                            }
                             break;
 
                         default:
-                            value_list.Add($"{item.ParameterName} = {item.Value}");
+                            value_list.Add($"{parameterList[i].ParameterName} = {parameterList[i].Value}");
                             break;
                     }
                 }
             }
 
-            return $"{sqlQuery} {GenericListToStringList(value_list, null, null)}";
+            return $"{spsb.ToString()} {sqlQuery} {GenericListToStringList(value_list, null, null)}";
         }
 
         /// <summary>

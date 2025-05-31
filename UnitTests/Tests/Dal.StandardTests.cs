@@ -255,33 +255,6 @@ namespace UnitTests
             count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_INSERT_WITH_PARAMETERS, CreateIdParameters());
             Assert.That(count == 1, Is.True);
 
-            // test loading multiple values
-            var queryCollection = new List<QueryData>()
-            {
-                new QueryData
-                {
-                    Parameters = new SqlParameter[] { new SqlParameter() { Value = 0, ParameterName = "@Id", DbType = DbType.Int32 } },
-                    Query = Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS,
-                    StoredProcedure = false,
-                },
-                new QueryData
-                {
-                    Parameters = new SqlParameter[] { new SqlParameter() { Value = 1, ParameterName = "@Id", DbType = DbType.Int32 } },
-                    Query = Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS,
-                    StoredProcedure = false,
-                },
-                new QueryData
-                {
-                    Parameters = new SqlParameter[] { new SqlParameter() { Value = 2, ParameterName = "@Id", DbType = DbType.Int32 } },
-                    Query = Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS,
-                    StoredProcedure = false,
-                },
-            };
-
-            // load multiple values
-            var output = _Db.ExecuteMultipleQueries(queryCollection);
-            Assert.That(output, Is.Not.Null);
-
             // delete value
             count = _Db.ExecuteNonQuery(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters());
             Assert.That(count == 1, Is.True);
@@ -297,33 +270,6 @@ namespace UnitTests
             // insert a new value
             count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_INSERT_WITH_PARAMETERS, CreateIdParameters());
             Assert.That(count == 1, Is.True);
-
-            // test loading multiple values
-            var queryCollection = new List<QueryData>()
-            {
-                new QueryData
-                {
-                    Parameters = new SqlParameter[] { new SqlParameter() { Value = 0, ParameterName = "@Id", DbType = DbType.Int32 } },
-                    Query = Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS,
-                    StoredProcedure = false,
-                },
-                new QueryData
-                {
-                    Parameters = new SqlParameter[] { new SqlParameter() { Value = 1, ParameterName = "@Id", DbType = DbType.Int32 } },
-                    Query = Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS,
-                    StoredProcedure = false,
-                },
-                new QueryData
-                {
-                    Parameters = new SqlParameter[] { new SqlParameter() { Value = 2, ParameterName = "@Id", DbType = DbType.Int32 } },
-                    Query = Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS,
-                    StoredProcedure = false,
-                },
-            };
-
-            // load multiple values
-            var output = await _Db.ExecuteMultipleQueriesAsync(queryCollection);
-            Assert.That(output, Is.Not.Null);
 
             // delete value
             count = await _Db.ExecuteNonQueryAsync(Constants.QUERY_BASIC_DELETE_WITH_PARAMETERS, CreateIdParameters());
@@ -419,7 +365,7 @@ namespace UnitTests
             Assert.That(count == 1, Is.True);
 
             // load value and check it
-            buffer = _Db.ExecuteQuery(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(), Constants.ParseDatareader);
+            buffer = _Db.ExecuteQuery(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(), OldConstants.ParseDatareader);
 
             Assert.That(buffer, Is.Not.Null);
             Assert.That(buffer.Count == 1, Is.True);
@@ -430,7 +376,7 @@ namespace UnitTests
             Assert.That(count == 1, Is.True);
 
             // load value and check it
-            buffer = _Db.ExecuteQuery(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(99), Constants.ParseDatareader);
+            buffer = _Db.ExecuteQuery(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(99), OldConstants.ParseDatareader);
 
             Assert.That(buffer, Is.Not.Null);
             Assert.That(buffer.Count == 1, Is.True);
@@ -454,7 +400,7 @@ namespace UnitTests
             Assert.That(count == 1, Is.True);
 
             // load value and check it
-            buffer = await _Db.ExecuteQueryAsync(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(), Constants.ParseDatareaderAsync);
+            buffer = await _Db.ExecuteQueryAsync(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(), OldConstants.ParseDatareaderAsync);
 
             Assert.That(buffer, Is.Not.Null);
             Assert.That(buffer.Count == 1, Is.True);
@@ -465,7 +411,7 @@ namespace UnitTests
             Assert.That(count == 1, Is.True);
 
             // load value and check it
-            buffer = await _Db.ExecuteQueryAsync(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(99), Constants.ParseDatareaderAsync);
+            buffer = await _Db.ExecuteQueryAsync(Constants.QUERY_BASIC_SELECT_WITH_PARAMETERS, CreateIdParameters(99), OldConstants.ParseDatareaderAsync);
 
             Assert.That(buffer, Is.Not.Null);
             Assert.That(buffer.Count == 1, Is.True);
@@ -478,9 +424,17 @@ namespace UnitTests
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        public static SqlParameter[] CreateIdParameters(int id = 1)
+        public static IList<SqlParameter> CreateIdParameters(int id = 1)
         {
-            return new SqlParameter[] { new SqlParameter() { Value = id, ParameterName = "@Id", DbType = DbType.Int32 } };
+            return new List<SqlParameter>
+            {
+                new SqlParameter
+                {
+                    Value = id,
+                    ParameterName = "@Id",
+                    DbType = DbType.Int32
+                }
+            };
         }
     }
 }

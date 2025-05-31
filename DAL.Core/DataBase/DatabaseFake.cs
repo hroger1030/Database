@@ -55,16 +55,6 @@ namespace DAL.Core
             return new DataTable();
         }
 
-        public DataSet ExecuteMultipleQueries(List<QueryData> queryCollection)
-        {
-            CommandHistory.Add("Called ExecuteMultipleQueries()");
-
-            foreach (var item in queryCollection)
-                CommandHistory.Add(WriteArguments(item.Query, item.Parameters));
-
-            return new DataSet();
-        }
-
         public List<T> ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()
         {
             CommandHistory.Add("Called ExecuteQuery<T>()");
@@ -168,19 +158,6 @@ namespace DAL.Core
             });
 
             return new DataTable();
-        }
-
-        public async Task<DataSet> ExecuteMultipleQueriesAsync(List<QueryData> queryCollection)
-        {
-            await Task.Run(() =>
-            {
-                CommandHistory.Add("Called ExecuteMultipleQueries()");
-
-                foreach (var item in queryCollection)
-                    CommandHistory.Add(WriteArguments(item.Query, item.Parameters));
-            });
-
-            return new DataSet();
         }
 
         public async Task<List<T>> ExecuteQueryAsync<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()

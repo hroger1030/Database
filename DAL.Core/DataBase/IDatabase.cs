@@ -36,8 +36,6 @@ namespace DAL.Core
 
         DataTable ExecuteQuerySp(string sqlQuery, IList<SqlParameter> parameters);
 
-        DataSet ExecuteMultipleQueries(List<QueryData> queryCollection);
-
         T ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor);
 
         T ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor);
@@ -63,8 +61,6 @@ namespace DAL.Core
         Task<DataTable> ExecuteQueryAsync(string sqlQuery, IList<SqlParameter> parameters);
 
         Task<DataTable> ExecuteQuerySpAsync(string sqlQuery, IList<SqlParameter> parameters);
-
-        Task<DataSet> ExecuteMultipleQueriesAsync(List<QueryData> queryCollection);
 
         Task<T> ExecuteQueryAsync<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, Task<T>> processor);
 

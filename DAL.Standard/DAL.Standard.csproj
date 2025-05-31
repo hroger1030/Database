@@ -30,6 +30,10 @@
     <WarningsAsErrors />
   </PropertyGroup>
 
+  <PropertyGroup>
+    <NoWarn>CS0618</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Include="..\gc.png">
       <Pack>True</Pack>
@@ -46,7 +50,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
   </ItemGroup>
 
 </Project>

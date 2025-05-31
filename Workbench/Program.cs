@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
 
@@ -28,7 +28,6 @@ namespace Workbench
 
             var sql_database = new SqlDatabase();
             sql_database.LoadDatabaseMetadata("WizardWar", SQL_CONN);
-
 
             //// build parameter string because we are lazy...
             //var nameslist = new string[] { "Mal", "Jayne", "Wash", "River", "Book", "Zoe", "Kaylee", "Simon" };
@@ -58,40 +57,6 @@ namespace Workbench
 
             // advanced example: parameter packing
             //var result = test.ExecuteNonQuerySp("AdhocTests.dbo.BulkLoadExample", parameters);
-
-
-            //Advanced example: piggybacking
-            //var queryList = new List<QueryData>()
-            //{
-            //     new QueryData()
-            //     {
-            //         Parameters = parameters,
-            //         Query = "AdhocTests.dbo.BulkLoadExample",
-            //         StoredProcedure = true,
-            //     },
-            //     new QueryData()
-            //     {
-            //         Parameters = null,
-            //         Query = "select * from AdhocTests.dbo.Example",
-            //         StoredProcedure = false,
-            //     },
-            //     new QueryData()
-            //     {
-            //         Parameters = null,
-            //         Query = "select * from AdhocTests.dbo.Example2 order by [name]",
-            //         StoredProcedure = false,
-            //     },
-            //     new QueryData()
-            //     {
-            //         Parameters = null,
-            //         Query = "select * from AdhocTests.dbo.Example2 where shoesize > 9",
-            //         StoredProcedure = false,
-            //     },
-
-            //};
-
-            // var result2 = test.ExecuteMultipleQueries(queryList);
-
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"Total run time: {sw.Elapsed}");
