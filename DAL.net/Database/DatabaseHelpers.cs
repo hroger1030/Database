@@ -17,6 +17,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 using Microsoft.Data.SqlClient;
+using Microsoft.SqlServer.Types;
 using System.Data;
 using System.Reflection;
 using System.Text;
@@ -82,19 +83,19 @@ namespace DAL.Net
 
             if (parameterList == null || parameterList.Count == 0)
                 return sqlQuery;
-            
+
             // set up a structured parameter string builder
-            var spsb = new StringBuilder();
-            var value_list = new List<string>();
+            var sb = new StringBuilder();
+            var valueList = new List<string>();
 
             for (int i = 0; i < parameterList.Count; i++)
             {
                 if (parameterList[i].Direction == ParameterDirection.ReturnValue)
                     continue;
 
-                if (parameterList[i].IsNullable)
+                if (parameterList[i].Value == DBNull.Value || parameterList[i].Value == null)
                 {
-                    value_list.Add($"{parameterList[i].ParameterName} = null");
+                    valueList.Add($"{parameterList[i].ParameterName} = null");
                 }
                 else
                 {
@@ -111,14 +112,14 @@ namespace DAL.Net
                         case SqlDbType.Date:
                         case SqlDbType.Time:
                         case SqlDbType.DateTime2:
-                            value_list.Add($"{parameterList[i].ParameterName} = '{parameterList[i].Value}'");
+                            valueList.Add($"{parameterList[i].ParameterName} = '{parameterList[i].Value?.ToString().Replace("'", "''")}'");
                             break;
 
                         // structured data is partially supported, very tricky to render in a debug string.
                         case SqlDbType.Structured:
                             if (parameterList[i].Value is DataTable dt)
                             {
-                                spsb.AppendLine($"DECLARE @StructuredParam{i} [{parameterList[i].TypeName}]");
+                                sb.AppendLine($"DECLARE @StructuredParam{i} [{parameterList[i].TypeName}]");
 
                                 foreach (DataRow row in dt.Rows)
                                 {
@@ -143,26 +144,26 @@ namespace DAL.Net
                                             return value.ToString();
                                         });
 
-                                    spsb.AppendLine($"INSERT @StructuredParam{i} ({string.Join(",", columnNames)}) VALUES ({string.Join(", ", columnValues)})");
-                                    spsb.AppendLine();
+                                    sb.AppendLine($"INSERT @StructuredParam{i} ({string.Join(",", columnNames)}) VALUES ({string.Join(", ", columnValues)})");
+                                    sb.AppendLine();
                                 }
 
-                                value_list.Add($"@{parameterList[i].ParameterName} = @StructuredParam{i}");
+                                valueList.Add($"@{parameterList[i].ParameterName} = @StructuredParam{i}");
                             }
                             else
                             {
-                                value_list.Add($"{parameterList[i].ParameterName} = [Structured] (unknown structure or null)");
+                                valueList.Add($"{parameterList[i].ParameterName} = [Structured] (unknown structure or null)");
                             }
                             break;
 
                         default:
-                            value_list.Add($"{parameterList[i].ParameterName} = {parameterList[i].Value}");
+                            valueList.Add($"{parameterList[i].ParameterName} = {parameterList[i].Value}");
                             break;
                     }
                 }
             }
 
-            return $"{spsb.ToString()} {sqlQuery} {GenericListToStringList(value_list, null, null)}";
+            return $"{sb.ToString()} {sqlQuery} {GenericListToStringList(valueList, null, null)}";
         }
 
         /// <summary>
@@ -170,7 +171,7 @@ namespace DAL.Net
         /// have properties names that match column names. It can be configured to throw exceptions if there isn't a 1:1 mapping.
         /// </summary>
         /// <returns></returns>
-        public static List<T> ParseDatareaderResult<T>(SqlDataReader reader, bool throwUnmappedFieldsError) where T : class, new()
+        public static List<T> ParseDataReaderResult<T>(SqlDataReader reader, bool throwUnmappedFieldsError) where T : class, new()
         {
             if (reader == null)
                 throw new ArgumentNullException(nameof(reader));
@@ -188,6 +189,7 @@ namespace DAL.Net
             while (reader.Read())
             {
                 new_object = new T();
+                int ordinal;
 
                 for (int i = 0; i < reader.FieldCount; i++)
                 {
@@ -205,187 +207,121 @@ namespace DAL.Net
                             propertyType = Nullable.GetUnderlyingType(propertyType);
                         }
 
+                        ordinal = reader.GetOrdinal(columnName);
+
                         switch (propertyName)
                         {
                             case "System.Int32":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (int)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<int>(ordinal);
                                 break;
 
                             case "System.String":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (string)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<string>(ordinal);
                                 break;
 
                             case "System.Double":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (double)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<double>(ordinal);
                                 break;
 
                             case "System.Float":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (float)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<float>(ordinal);
                                 break;
 
                             case "System.Boolean":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (bool)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<bool>(ordinal);
                                 break;
 
                             case "System.DateTime":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (DateTime)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<DateTime>(ordinal);
                                 break;
 
                             case "System.DateTimeOffset":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (DateTimeOffset)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<DateTimeOffset>(ordinal);
                                 break;
 
                             case "System.TimeSpan":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (TimeSpan)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<TimeSpan>(ordinal);
                                 break;
 
                             case "System.Guid":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (Guid)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<Guid>(ordinal);
                                 break;
 
                             case "System.Single":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (float)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : Convert.ToSingle(reader.GetValue(ordinal));
                                 break;
 
                             case "System.Decimal":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (decimal)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<decimal>(ordinal);
                                 break;
 
                             case "System.Byte":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (byte)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<byte>(ordinal);
                                 break;
 
                             case "System.Byte[]":
-                                if (reader[i] == DBNull.Value)
-                                {
-                                    fieldValue = null;
-                                }
-                                else
-                                {
-                                    string byteArray = reader[columnName].ToString();
-
-                                    byte[] bytes = new byte[byteArray.Length * sizeof(char)];
-                                    Buffer.BlockCopy(byteArray.ToCharArray(), 0, bytes, 0, bytes.Length);
-                                    fieldValue = bytes;
-                                }
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<byte[]>(ordinal);
                                 break;
 
                             case "System.SByte":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (sbyte)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<sbyte>(ordinal);
                                 break;
 
                             case "System.Char":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (char)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<char>(ordinal);
                                 break;
 
                             case "System.UInt32":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (uint)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<uint>(ordinal);
                                 break;
 
                             case "System.Int64":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (long)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<long>(ordinal);
                                 break;
 
                             case "System.UInt64":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (ulong)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<ulong>(ordinal);
                                 break;
 
                             case "System.Object":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetValue(ordinal);
                                 break;
 
                             case "System.Int16":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (short)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<short>(ordinal);
                                 break;
 
                             case "System.UInt16":
-                                if (reader[i] == DBNull.Value)
-                                    fieldValue = null;
-                                else
-                                    fieldValue = (ushort)reader[columnName];
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<ushort>(ordinal);
                                 break;
 
                             case "System.Udt":
-                                // generated a Microsoft.SqlServer.Server.InvalidUdtException. Don't know how to fix it, seems like a reader bug.
+                                // generated a Microsoft.SqlServer.Server.InvalidUdtException. Udts will have unique datatypes.
                                 throw new NotImplementedException("System.Udt is an unsupported datatype");
 
                             case "Microsoft.SqlServer.Types.SqlGeometry":
-                                // generated a Microsoft.SqlServer.Server.InvalidUdtException. Don't know how to fix it, seems like a reader bug.
-                                throw new NotImplementedException("Microsoft.SqlServer.Types.SqlGeometry is an unsupported datatype");
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<SqlGeometry>(ordinal);
+                                break;
 
                             case "Microsoft.SqlServer.Types.SqlGeography":
-                                // generated a Microsoft.SqlServer.Server.InvalidUdtException. Don't know how to fix it, seems like a reader bug.
-                                throw new NotImplementedException("Microsoft.SqlServer.Types.SqlGeography is an unsupported datatype");
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<SqlGeography>(ordinal);
+                                break;
 
                             case "Microsoft.SqlServer.Types.SqlHierarchyId":
-                                // generated a Microsoft.SqlServer.Server.InvalidUdtException. Don't know how to fix it, seems like a reader bug.
-                                throw new NotImplementedException("Microsoft.SqlServer.Types.SqlHierarchyId is an unsupported datatype");
+                                fieldValue = reader.IsDBNull(ordinal) ? null : reader.GetFieldValue<SqlHierarchyId>(ordinal);
+                                break;
 
                             default:
                                 if (propertyType.IsEnum)
                                 {
-                                    // enums are common, but don't fit into the above buckets. 
-                                    if (reader[i] == DBNull.Value)
-                                        fieldValue = null;
-                                    else
-                                        fieldValue = Enum.ToObject(propertyType, reader[columnName]);
+                                    // Read as the *actual* underlying integer type of the enum
+                                    Type underlying = Enum.GetUnderlyingType(propertyType);
+                                    object raw = reader.GetFieldValue<object>(ordinal);
+
+                                    // Convert.ChangeType can handle int16/int32/int64, etc.
+                                    object converted = Convert.ChangeType(raw, underlying);
+
+                                    fieldValue = Enum.ToObject(propertyType, converted);
                                     break;
                                 }
                                 else
@@ -402,7 +338,7 @@ namespace DAL.Net
                         // might be an error, but it is dependent on the specific use case.
                         if (throwUnmappedFieldsError)
                         {
-                            throw new Exception($"Cannot map datareader field '{columnName}' to object property on object '{outputType}'");
+                            throw new Exception($"Cannot map data reader field '{columnName}' to object property on object '{outputType}'");
                         }
                     }
                 }
@@ -562,7 +498,7 @@ namespace DAL.Net
         /// 
         /// Sample: ConvertObjectCollectionToParameter("@Foo", "dbo.SomeUserType", a_dictionary, "key", "value");
         /// </summary>
-        public static SqlParameter ConvertKvpCollectionToParameter<K,V>(string parameterName, string sqlTypeName, IEnumerable<KeyValuePair<K,V>> input, string keyName, string valueName)
+        public static SqlParameter ConvertKvpCollectionToParameter<K, V>(string parameterName, string sqlTypeName, IEnumerable<KeyValuePair<K, V>> input, string keyName, string valueName)
         {
             if (string.IsNullOrWhiteSpace(parameterName))
                 throw new ArgumentNullException(nameof(parameterName));
@@ -570,7 +506,7 @@ namespace DAL.Net
             if (string.IsNullOrWhiteSpace(sqlTypeName))
                 throw new ArgumentNullException(nameof(sqlTypeName));
 
-             if (input == null)
+            if (input == null)
                 throw new ArgumentException("Collection cannot be null", nameof(input));
 
             if (string.IsNullOrWhiteSpace(keyName))
@@ -645,7 +581,7 @@ namespace DAL.Net
         /// <returns></returns>
         public static async Task<List<T>> ParseDatareaderResultAsync<T>(SqlDataReader reader, bool throwUnmappedFieldsError) where T : class, new()
         {
-            return await Task.Run(() => ParseDatareaderResult<T>(reader, throwUnmappedFieldsError));
+            return await Task.Run(() => ParseDataReaderResult<T>(reader, throwUnmappedFieldsError));
         }
 
         /// <summary>

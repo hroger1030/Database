@@ -180,7 +180,7 @@ namespace DAL.Net
 
                 conn.Open();
                 using SqlDataReader dataReader = cmd.ExecuteReader();
-                var output = ParseDatareaderResult<T>(dataReader, _ThrowUnmappedFieldsError);
+                var output = ParseDataReaderResult<T>(dataReader, _ThrowUnmappedFieldsError);
                 PersistOutputParameters(parameters, cmd);
                 dataReader.Close();
                 conn.Close();
