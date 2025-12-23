@@ -24,10 +24,10 @@ namespace DAL.Net.SqlMetadata
     public class SqlDatabase
     {
         public string Name { get; set; } = string.Empty;
-        public Dictionary<string, SqlTable> Tables { get; set; } = new Dictionary<string, SqlTable>();
-        public Dictionary<string, SqlScript> StoredProcedures { get; set; } = new Dictionary<string, SqlScript>();
-        public Dictionary<string, SqlScript> Functions { get; set; } = new Dictionary<string, SqlScript>();
-        public Dictionary<string, SqlConstraint> Constraints { get; set; } = new Dictionary<string, SqlConstraint>();
+        public Dictionary<string, SqlTable> Tables { get; set; } = new();
+        public Dictionary<string, SqlScript> StoredProcedures { get; set; } = new();
+        public Dictionary<string, SqlScript> Functions { get; set; } = new();
+        public Dictionary<string, SqlConstraint> Constraints { get; set; } = new();
         public string ConnectionString { get; set; } = string.Empty;
         public string FormattedDatabaseName => $"[{Name}]";
 
