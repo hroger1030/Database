@@ -60,18 +60,22 @@ namespace DAL.Net.SqlMetadata
 
                     // because tables are tied to the schema they are in, we need to make sure that
                     // the schema is included with the table name.
+
+                    // TODO: remove incorrectly indexed tables that do not include schema name? Is this a problem?
+
                     string fullTableName = $"{schemaName}.{tableName}";
 
-                    if (!Tables.ContainsKey(fullTableName))
+                    if (!Tables.TryGetValue(fullTableName, out SqlTable value))
                     {
                         var sqlTable = new SqlTable(this, schemaName, tableName);
-                        Tables.Add(fullTableName, sqlTable);
+                        value = sqlTable;
+                        Tables.Add(fullTableName, value);
                     }
 
-                    var sql_column = new SqlColumn
+                    var sqlColumn = new SqlColumn
                     {
                         Schema = (string)dr["SchemaName"],
-                        Table = Tables[fullTableName],
+                        Table = value,
                         Name = (string)dr["ColumnName"],
                         DataType = (string)dr["DataType"],
                         Length = Convert.ToInt32(dr["Length"]),
@@ -83,10 +87,10 @@ namespace DAL.Net.SqlMetadata
                         DefaultValue = dr["DefaultValue"] == DBNull.Value ? string.Empty : RemoveWrappingCharacters((string)dr["DefaultValue"])
                     };
 
-                    if (Tables[fullTableName].Columns.ContainsKey(columnName))
+                    if (value.Columns.ContainsKey(columnName))
                         throw new Exception($"Column {columnName} already exists in table {Tables[tableName]}");
                     else
-                        Tables[fullTableName].Columns.Add(columnName, sql_column);
+                        value.Columns.Add(columnName, sqlColumn);
                 }
             }
 
@@ -347,10 +351,15 @@ namespace DAL.Net.SqlMetadata
         /// </summary>
         protected string RemoveWrappingCharacters(string input)
         {
-            if (input.Length > 2 && (input[0] == '(' || input[0] == '\''))
+            if (string.IsNullOrEmpty(input) || input.Length < 2)
+                return input;
+
+            // Remove surrounding parentheses
+            if (input[0] == '(' && input[^1] == ')')
                 input = input.Substring(1, input.Length - 2);
 
-            if (input.Length > 2 && (input[0] == '(' || input[0] == '\''))
+            // Remove surrounding single quotes
+            if (input.Length >= 2 && input[0] == '\'' && input[^1] == '\'')
                 input = input.Substring(1, input.Length - 2);
 
             return input;

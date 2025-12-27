@@ -57,7 +57,7 @@ namespace DAL.Net
             CommandHistory.Add("Called ExecuteQuery<T>()");
             CommandHistory.Add(WriteArguments(sqlQuery, parameters));
 
-            return new List<T>();
+            return new();
         }
 
         public List<T> ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()
@@ -65,13 +65,12 @@ namespace DAL.Net
             CommandHistory.Add("Called ExecuteQuerySp<T>()");
             CommandHistory.Add(WriteArguments(sqlQuery, parameters));
 
-            return new List<T>();
+            return new();
         }
 
         public T ExecuteQuery<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor)
         {
-            if (processor == null)
-                throw new ArgumentException(nameof(processor));
+            ArgumentNullException.ThrowIfNull(processor);
 
             CommandHistory.Add("Called ExecuteQuery<T>()");
             CommandHistory.Add($"Processor: '{processor}'");
@@ -82,8 +81,7 @@ namespace DAL.Net
 
         public T ExecuteQuerySp<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, T> processor)
         {
-            if (processor == null)
-                throw new ArgumentException(nameof(processor));
+            ArgumentNullException.ThrowIfNull(processor);
 
             CommandHistory.Add("Called ExecuteQuerySp<T>()");
             CommandHistory.Add($"Processor: '{processor}'");
@@ -165,7 +163,7 @@ namespace DAL.Net
                 CommandHistory.Add(WriteArguments(sqlQuery, parameters));
             });
 
-            return new List<T>();
+            return new();
         }
 
         public async Task<List<T>> ExecuteQuerySpAsync<T>(string sqlQuery, IList<SqlParameter> parameters) where T : class, new()
@@ -176,13 +174,12 @@ namespace DAL.Net
                 CommandHistory.Add(WriteArguments(sqlQuery, parameters));
             });
 
-            return new List<T>();
+            return new();
         }
 
         public async Task<T> ExecuteQueryAsync<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, Task<T>> processor)
         {
-            if (processor == null)
-                throw new ArgumentException(nameof(processor));
+            ArgumentNullException.ThrowIfNull(processor);
 
             await Task.Run(() =>
             {
@@ -196,8 +193,7 @@ namespace DAL.Net
 
         public async Task<T> ExecuteQuerySpAsync<T>(string sqlQuery, IList<SqlParameter> parameters, Func<SqlDataReader, Task<T>> processor)
         {
-            if (processor == null)
-                throw new ArgumentException(nameof(processor));
+            ArgumentNullException.ThrowIfNull(processor);
 
             await Task.Run(() =>
             {
