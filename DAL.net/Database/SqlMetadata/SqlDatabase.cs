@@ -87,10 +87,8 @@ namespace DAL.Net.SqlMetadata
                         DefaultValue = dr["DefaultValue"] == DBNull.Value ? string.Empty : RemoveWrappingCharacters((string)dr["DefaultValue"])
                     };
 
-                    if (value.Columns.ContainsKey(columnName))
+                    if (!value.Columns.TryAdd(columnName, sqlColumn))
                         throw new Exception($"Column {columnName} already exists in table {Tables[tableName]}");
-                    else
-                        value.Columns.Add(columnName, sqlColumn);
                 }
             }
 
@@ -109,8 +107,8 @@ namespace DAL.Net.SqlMetadata
                         Body = (string)dr["Body"]
                     };
 
-                    if (StoredProcedures.ContainsKey(sql_script.Name))
-                        StoredProcedures[sql_script.Name].Body += sql_script.Body;
+                    if (StoredProcedures.TryGetValue(sql_script.Name, out SqlScript value))
+                        value.Body += sql_script.Body;
                     else
                         StoredProcedures.Add(sql_script.Name, sql_script);
                 }
@@ -131,8 +129,8 @@ namespace DAL.Net.SqlMetadata
                         Body = (string)dr["Body"]
                     };
 
-                    if (Functions.ContainsKey(sql_script.Name))
-                        Functions[sql_script.Name].Body += sql_script.Body;
+                    if (Functions.TryGetValue(sql_script.Name, out SqlScript value))
+                        value.Body += sql_script.Body;
                     else
                         Functions.Add(sql_script.Name, sql_script);
                 }
@@ -156,10 +154,8 @@ namespace DAL.Net.SqlMetadata
                         PKColumn = (string)dr["PKColumn"]
                     };
 
-                    if (Constraints.ContainsKey(sql_constraint.ConstraintName))
+                    if (!Constraints.TryAdd(sql_constraint.ConstraintName, sql_constraint))
                         throw new Exception($"Constraint {sql_constraint.ConstraintName} already exists");
-                    else
-                        Constraints.Add(sql_constraint.ConstraintName, sql_constraint);
                 }
             }
             return;
@@ -177,7 +173,7 @@ namespace DAL.Net.SqlMetadata
 
             SELECT	ss.[Name] AS [SchemaName],
 		            so.[Name] AS [TableName],
-                    sc.[Name] S [ColumnName],
+                    sc.[Name] AS [ColumnName],
                     st.[name] AS [DataType],
                     sc.[max_length] AS [Length],
                     sc.[precision] AS [Precision],
