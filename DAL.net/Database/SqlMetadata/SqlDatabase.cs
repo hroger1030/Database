@@ -194,6 +194,8 @@ namespace DAL.Net.SqlMetadata
             WHERE	so.type = 'U'
             AND     st.[name] NOT IN ('sysname','timestamp','hierarchyid','geometry','geography')
             AND     st.is_user_defined = 0
+			AND     so.[Name] NOT IN ('sysdiagrams')
+			AND     ss.[Name] NOT IN ('sys', 'INFORMATION_SCHEMA')
 
             ORDER	BY ss.[Name], so.[name], sc.[column_id]
             */
@@ -224,6 +226,9 @@ namespace DAL.Net.SqlMetadata
             sb.AppendLine("WHERE so.type = 'U'");
             sb.AppendLine("AND st.[name] NOT IN ('sysname','timestamp','hierarchyid','geometry','geography')");
             sb.AppendLine("AND st.is_user_defined = 0");
+            sb.AppendLine("AND so.[Name] NOT IN('sysdiagrams')");
+            sb.AppendLine("AND ss.[Name] NOT IN('sys', 'INFORMATION_SCHEMA')");
+
             sb.AppendLine("ORDER BY ss.[Name], so.[name], sc.[column_id]");
 
             return sb.ToString();
