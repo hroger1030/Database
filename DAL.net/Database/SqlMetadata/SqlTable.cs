@@ -123,7 +123,7 @@ namespace DAL.Net.SqlMetadata
 
         /// <summary>
         /// There are a number of cases where we need to get some sort of single Id column
-        /// for searches or hash collections. Uses identity first if avaialble, otherwise first pk.
+        /// for searches or hash collections. Uses identity first if available, otherwise first pk.
         /// This will return null if there are no pks or identity columns set, or if there is a 
         /// composite key on th table
         /// </summary>

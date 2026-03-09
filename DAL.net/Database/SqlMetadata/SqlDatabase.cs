@@ -355,7 +355,7 @@ namespace DAL.Net.SqlMetadata
                 input = input.Substring(1, input.Length - 2);
 
             // Remove surrounding single quotes
-            if (input.Length >= 2 && input[0] == '\'' && input[^1] == '\'')
+            if (input[0] == '\'' && input[^1] == '\'')
                 input = input.Substring(1, input.Length - 2);
 
             return input;
