@@ -33,7 +33,7 @@ namespace DAL.Net.SqlMetadata
 
         public SqlDatabase() { }
 
-        public void LoadDatabaseMetadata(string databaseName, string connectionString)
+        public async Task LoadDatabaseMetadata(string databaseName, string connectionString)
         {
             if (string.IsNullOrEmpty(databaseName))
                 throw new ArgumentNullException(nameof(databaseName));
@@ -48,7 +48,7 @@ namespace DAL.Net.SqlMetadata
             string sqlQuery = GetTableData();
 
             var db = new Database(ConnectionString);
-            var dt = db.ExecuteQuery(sqlQuery, null!);
+            var dt = await db.ExecuteQueryAsync(sqlQuery, null!);
 
             if (dt != null && dt.Rows.Count != 0 && dt.Columns.Count != 0)
             {

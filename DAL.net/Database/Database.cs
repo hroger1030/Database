@@ -436,7 +436,7 @@ namespace DAL.Net
                 var dt = new DataTable();
 
                 await conn.OpenAsync();
-                await Task.Run(() => adapter.Fill(dt));
+                adapter.Fill(dt);
                 await PersistOutputParametersAsync(parameters, cmd);
                 await conn.CloseAsync();
 
