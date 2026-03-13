@@ -25,10 +25,12 @@ error handling has been omitted.
 
 The details of the SQL call aren't really important, but we can suppose that it is something like, "select Id,Name from Employees where JobTitle = '<parameter>'"
 
-### Init object 
+### Initialize the object 
+
+Set up the database object with a connection string. The connection string can be any standard SQL connection string format. 
 
 ```
-IDatabase db = new Database("sql connection string");
+IDatabase db = new Database("Server=localhost;Database=Foo;Trusted_Connection=True;TrustServerCertificate=True;");
 ```
 
 ### Setup simple db call
@@ -61,6 +63,18 @@ Func<SqlDataReader, Dictionary<int, string>> processor = delegate (SqlDataReader
 // execute a store procedure and return the results
 var results = db.ExecuteQuerySp<Dictionary<int, string>>("[dbo].[GetEmployeeListByRole]", parameters, processor);
 ```
+Here is a basic example of how to execute a stored procedure and process the results with a delegate function. 
+The processor function is passed in as an argument to the DAL, which will execute the SQL call and then pass the 
+resulting data reader to the processor function for processing. The processor function can be used to read through 
+the data reader and map the results into any c# collection or object that you want.
+
+This is the basic way of using the DAL, and it gives you complete control over how the data is processed. You can do 
+some complicated processing in the processor function, or you can just read through the data reader and map it 
+into a simple collection. 
+
+This is used the DAL as a simple wrapper around ADO calls, but it isn't really the most interesting use case. Lets look at 
+a more powerful feature of the DAL, the ability to automatically map data reader values into c# objects with a single call.
+
 
 ### Setup ORM mapper call
 
@@ -93,14 +107,14 @@ var parameters = new SqlParameter[]
 List<Employee> results = db.ExecuteQuerySp<Employee>("[dbo].[GetEmployeesByRole]", parameters);
 ```
 
-This second use case is rather interesting, as it lets us simply generate containers that match the output of a stored 
+This second use case is interesting, as it lets us simply generate containers that match the output of a stored 
 procedure and not worry about the details of how the object is loaded. This model also is able to correctly cast 
 to properties that are enumerated values, giving us a method to used strongly typed enumerations in our objects.
 
 
-### Passing in a list of values via a datatable parameter
+### Passing in a list of values via a data table parameter
 
-This is a slightly more advanced technique, desigened to allow you to pass in a collection
+This is a slightly more advanced technique, designed to allow you to pass in a collection
 of values to a stored procedure via a table valued parameter. This is useful when you want to
 insert, update or delete a collection of values in a single call.
 
@@ -146,43 +160,58 @@ GO
 ### Running multiple queries in a single call
 
 Occasionally, you might need to run multiple queries in a single call. This is useful when you want to
-pull back several result sets over a single connection to incease performance. The following example
+pull back several result sets over a single connection to increase performance. The following example
 demonstrates this technique.
 
+Lets say we have a stored procedure that pulls back a user profile and a list of tags associated with that user. 
+The stored procedure queries might look something like this:
+
 ```
-var queryList = new List<QueryData>()
+SELECT Id, ScreenName, FirstName, LastName, CreatedDate FROM Users WHERE Id = @UserId;
+
+SELECT t.Id, t.TagName FROM Tags t INNER JOIN UserTags ut ON t.Id = ut.TagId WHERE ut.UserId = @UserId;
+```
+
+Here is the c# code to process the results of this stored procedure. 
+Note that we have to call 'NextResultAsync' on the data reader to move to the second result set after 
+we finish processing the first one.
+
+```
+public static async Task<User> UserProcessor(SqlDataReader reader)
 {
-    new QueryData()
-    {
-        Parameters = parameters,
-        Query = "[dbo].[RotateAllFiggits]",
-        StoredProcedure = true,
-    },
-    new QueryData()
-    {
-        Parameters = null,
-        Query = "select * from [dbo].[Example]",
-        StoredProcedure = false,
-    },
-    new QueryData()
-    {
-        Parameters = null,
-        Query = "select * from [dbo].[Example] order by [name]",
-        StoredProcedure = false,
-    },
-    new QueryData()
-    {
-        Parameters = null,
-        Query = "select * from [dbo].[Example] where [shoesize] > 9",
-        StoredProcedure = false,
-    },
+    if (!reader.HasRows)
+        return null;
 
-};
+    var output = new User();
 
-var result = test.ExecuteMultipleQueries(queryList);
+    while (await reader.ReadAsync())
+    {
+        output.Profile = new UserProfile
+        {
+            Id = (int)reader["Id"],
+            ScreenName = (string)reader["ScreenName"],
+            FirstName = (reader["FirstName"] == DBNull.Value) ? null : (string)reader["FirstName"],
+            LastName = (reader["LastName"] == DBNull.Value) ? null : (string)reader["LastName"],
+            CreatedDate = (DateTime)reader["CreatedDate"],
+        };
+    }
+
+    await reader.NextResultAsync();
+
+    while (await reader.ReadAsync())
+    {
+        var buffer = new Tag
+        {
+            Id = (int)reader["Id"],
+            Name = (string)reader["TagName"],
+        };
+
+        output.Tags.Add(buffer);
+    }
+
+    return output;
+}
 ```
+Any number of result sets can be processed in this way, allowing you to pull back sets of complex data 
+structures with a single call to the database.
 
-This particular example is executing a mixed set of queries, some stored procedures, some not. The results
-of each query will be placed in the output dataset, since it is possible to return differing datasets from
-the queries. The results of the first query will be placed in the first table of the dataset, the second 
-query in the second table, and so on.
