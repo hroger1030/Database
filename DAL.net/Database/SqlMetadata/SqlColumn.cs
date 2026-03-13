@@ -35,6 +35,10 @@ namespace DAL.Net.SqlMetadata
         public int ColumnOrdinal { get; set; }
         public string DefaultValue { get; set; }
 
+        /// <summary>
+        /// Returns an enumerated value representing the SQL data type of this column. 
+        /// Note that this is not necessarily the same as the value returned by the DataType property.
+        /// </summary>
         public SqlDbType SqlDataType
         {
             get
@@ -47,7 +51,11 @@ namespace DAL.Net.SqlMetadata
                 if (DataType == "sql_variant")
                     return SqlDbType.Variant;
 
-                return (SqlDbType)Enum.Parse(typeof(SqlDbType), DataType!, true);
+                SqlDbType result;
+                if (Enum.TryParse(DataType!, true, out result))
+                    return result;
+
+                throw new Exception($"Unable to map data type '{DataType}' to a SqlDbType value.");
             }
         }
         public eSqlBaseType BaseType
@@ -91,8 +99,6 @@ namespace DAL.Net.SqlMetadata
                 SqlDbType.DateTimeOffset => eSqlBaseType.Time,
                 SqlDbType.Decimal => eSqlBaseType.Float,
                 SqlDbType.Float => eSqlBaseType.Float,
-                //case SqlDbType.Geography: 
-                //case SqlDbType.Geometry: 
                 SqlDbType.Image => eSqlBaseType.BinaryData,
                 SqlDbType.Int => eSqlBaseType.Integer,
                 SqlDbType.Money => eSqlBaseType.Float,
@@ -114,6 +120,7 @@ namespace DAL.Net.SqlMetadata
                 SqlDbType.VarChar => eSqlBaseType.String,
                 SqlDbType.Variant => eSqlBaseType.String,
                 SqlDbType.Xml => eSqlBaseType.String,
+
                 _ => eSqlBaseType.Unknown,
             };
         }

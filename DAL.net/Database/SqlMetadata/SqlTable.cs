@@ -26,7 +26,7 @@ namespace DAL.Net.SqlMetadata
         public string Schema { get; set; }
         public string Name { get; set; }
         public Dictionary<string, SqlColumn> Columns { get; set; }
-        public Dictionary<string, SqlConstraint> TableConsraints
+        public Dictionary<string, SqlConstraint> TableConstraints
         {
             get
             {
@@ -46,6 +46,10 @@ namespace DAL.Net.SqlMetadata
 
                 return output;
             }
+        }
+        public List<SqlColumn> ColumnList
+        {
+            get { return Columns.Values.ToList(); }
         }
         public List<SqlColumn> PkList
         {
